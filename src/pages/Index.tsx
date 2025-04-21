@@ -29,7 +29,7 @@ const Index = () => {
           <img
             src="https://www.toagroup.com/themes/default/assets/static/images/logo.svg"
             alt="TOA Logo"
-            className="mx-auto w-48 h-auto mb-6"
+            className="mx-auto w-28 h-auto mb-6"
           />
           
           <h1 className="text-4xl md:text-5xl font-bold tracking-tighter">
@@ -90,3 +90,4 @@ const Index = () => {
 };
 
 export default Index;
+
