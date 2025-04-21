@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -45,8 +46,17 @@ const Navbar: React.FC = () => {
       <div className="container py-3 mx-auto">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link to="/" className="text-xl font-semibold text-primary">
-              FileQuest<span className="text-muted-foreground">Track</span>
+            {/* Logo */}
+            <Link to="/" className="flex items-center">
+              <img
+                src="/lovable-uploads/01267231-0273-4644-80ff-858515af3c1f.png"
+                alt="TOA Logo"
+                className="h-10 w-auto mr-3"
+                style={{ minWidth: 40 }}
+              />
+              <span className="text-xl font-semibold text-primary">
+                FileQuest<span className="text-muted-foreground">Track</span>
+              </span>
             </Link>
           </div>
 
@@ -150,3 +160,4 @@ const Navbar: React.FC = () => {
 };
 
 export default Navbar;
+
