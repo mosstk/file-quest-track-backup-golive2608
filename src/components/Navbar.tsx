@@ -45,9 +45,18 @@ const Navbar: React.FC = () => {
     <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b shadow-sm">
       <div className="container py-3 mx-auto">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Link to="/" className="text-xl font-semibold text-primary">
-              FileQuest<span className="text-muted-foreground">Track</span>
+          <div className="flex items-center gap-3">
+            {/* Logo */}
+            <Link to="/" className="flex items-center">
+              <img
+                src="/lovable-uploads/591d4830-333e-4fc9-b5c4-609decb47792.png"
+                alt="TOA Logo"
+                className="h-10 w-auto mr-2"
+                style={{ minWidth: 40 }}
+              />
+              <span className="text-xl font-semibold text-primary">
+                FileQuest<span className="text-muted-foreground">Track</span>
+              </span>
             </Link>
           </div>
 
@@ -151,3 +160,4 @@ const Navbar: React.FC = () => {
 };
 
 export default Navbar;
+
