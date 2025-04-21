@@ -75,7 +75,7 @@ const Index = () => {
       
       <footer className="bg-muted/30 py-8 px-6 border-t">
         <div className="max-w-5xl mx-auto text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} FileQuest Track. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} TOA. All rights reserved.</p>
         </div>
       </footer>
     </div>
