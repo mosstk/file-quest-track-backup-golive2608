@@ -40,7 +40,7 @@ const Layout: React.FC<LayoutProps> = ({
         {children}
       </main>
       <footer className="py-4 px-6 text-center text-sm text-muted-foreground">
-        <p>© {new Date().getFullYear()} File Quest Track. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} TOA. All rights reserved.</p>
       </footer>
     </div>
   );
