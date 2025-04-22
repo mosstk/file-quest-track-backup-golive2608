@@ -1,9 +1,8 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   session: Session | null;
@@ -12,7 +11,6 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, userData: Partial<User>) => Promise<void>;
   signOut: () => Promise<void>;
-  // Add the missing methods
   login: (role: UserRole) => void;
   logout: () => Promise<void>;
 }
@@ -25,7 +23,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check active sessions and get user profile
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
@@ -34,7 +31,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -107,9 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw error;
   };
 
-  // Add login function for demo purposes
   const login = (role: UserRole) => {
-    // For development/demo purposes only - create a mock user
     const mockUser: User = {
       id: `mock-${role}-id`,
       name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
@@ -127,16 +121,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  // Make logout an alias of signOut for API consistency
   const logout = async () => {
-    // For mock users, just clear the user state
     if (user && user.id.startsWith('mock-')) {
       setUser(null);
       toast.success('Logged out successfully');
       return;
     }
     
-    // For real users, call signOut
     return signOut();
   };
 
