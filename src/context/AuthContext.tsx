@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { UserRole } from '@/types';
 
 // Define our custom UserProfile type that extends the basic User type
 export interface UserProfile {
@@ -14,7 +15,7 @@ export interface UserProfile {
   company?: string;
   department?: string;
   division?: string;
-  role: 'fa_admin' | 'requester' | 'receiver';
+  role: UserRole;
 }
 
 interface AuthContextType {
@@ -45,6 +46,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
 
       if (data) {
+        // Validate and ensure role is one of the allowed values
+        const roleValue = data.role || 'requester';
+        const validatedRole: UserRole = 
+          (roleValue === 'fa_admin' || roleValue === 'requester' || roleValue === 'receiver') 
+            ? roleValue 
+            : 'requester'; // Default to requester if invalid role
+
         // Combine Supabase auth user data with profile data
         return {
           id: userId,
@@ -55,7 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           company: data.company,
           department: data.department,
           division: data.division,
-          role: data.role || 'requester',
+          role: validatedRole,
         };
       }
     } catch (error: any) {
@@ -66,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return {
       id: userId,
       email: session?.user?.email || '',
-      role: 'requester'
+      role: 'requester' as UserRole
     };
   };
 
