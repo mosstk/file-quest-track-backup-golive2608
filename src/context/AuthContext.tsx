@@ -1,8 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '@/types';
+import { User, UserRole } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
+import { toast } from '@/components/ui/sonner';
 
 interface AuthContextType {
   session: Session | null;
@@ -11,6 +12,9 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, userData: Partial<User>) => Promise<void>;
   signOut: () => Promise<void>;
+  // Add the missing methods
+  login: (role: UserRole) => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -103,8 +107,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw error;
   };
 
+  // Add login function for demo purposes
+  const login = (role: UserRole) => {
+    // For development/demo purposes only - create a mock user
+    const mockUser: User = {
+      id: `mock-${role}-id`,
+      name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+      email: `test-${role}@example.com`,
+      employeeId: `EMP-${Math.floor(Math.random() * 10000)}`,
+      company: 'TOA Group',
+      department: 'Information Technology',
+      division: 'Digital Solutions',
+      role: role,
+      avatar: `https://api.dicebear.com/6.x/avataaars/svg?seed=${role}`,
+    };
+    setUser(mockUser);
+    toast.success(`Logged in as ${mockUser.name}`, {
+      description: `Role: ${role}`
+    });
+  };
+
+  // Make logout an alias of signOut for API consistency
+  const logout = async () => {
+    // For mock users, just clear the user state
+    if (user && user.id.startsWith('mock-')) {
+      setUser(null);
+      toast.success('Logged out successfully');
+      return;
+    }
+    
+    // For real users, call signOut
+    return signOut();
+  };
+
   return (
-    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signOut, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
