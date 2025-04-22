@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -14,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Menu, X } from 'lucide-react';
 
 const Navbar: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -91,7 +92,7 @@ const Navbar: React.FC = () => {
                     <Avatar className="h-9 w-9">
                       <AvatarImage src={user.avatar} />
                       <AvatarFallback className="bg-primary text-primary-foreground">
-                        {getInitials(user.name)}
+                        {user.name ? getInitials(user.name) : "U"}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -99,7 +100,7 @@ const Navbar: React.FC = () => {
                 <DropdownMenuContent align="end" className="glass">
                   <DropdownMenuLabel>
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium">{user.name}</p>
+                      <p className="text-sm font-medium">{user.name || user.email}</p>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
                   </DropdownMenuLabel>
@@ -107,7 +108,7 @@ const Navbar: React.FC = () => {
                   <DropdownMenuItem className="text-sm cursor-pointer">Profile</DropdownMenuItem>
                   <DropdownMenuItem className="text-sm cursor-pointer">Settings</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-sm cursor-pointer" onClick={logout}>
+                  <DropdownMenuItem className="text-sm cursor-pointer" onClick={() => signOut()}>
                     Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>

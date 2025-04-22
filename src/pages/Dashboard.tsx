@@ -144,7 +144,7 @@ const Dashboard = () => {
           <div>
             <h1 className="text-3xl font-bold">แดชบอร์ด</h1>
             <p className="text-muted-foreground mt-1">
-              ยินดีต้อนรับ, {user?.name}
+              ยินดีต้อนรับ, {user?.name || user?.email || 'ผู้ใช้งาน'}
             </p>
           </div>
           

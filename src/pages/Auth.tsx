@@ -30,12 +30,10 @@ const Auth = () => {
         await signIn(email, password);
         toast.success('เข้าสู่ระบบสำเร็จ');
       } else {
+        // For signup, structure userData correctly
         await signUp(email, password, {
-          email,
-          data: {
-            full_name: name,
-            role: 'requester', // Default role for new users
-          }
+          full_name: name,
+          role: 'requester', // Default role for new users
         });
         toast.success('ลงทะเบียนสำเร็จ');
       }

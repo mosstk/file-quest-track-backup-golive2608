@@ -4,35 +4,98 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
+// Define our custom UserProfile type that extends the basic User type
+export interface UserProfile {
+  id: string;
+  email: string;
+  name?: string;
+  avatar?: string;
+  employeeId?: string;
+  company?: string;
+  department?: string;
+  division?: string;
+  role: 'fa_admin' | 'requester' | 'receiver';
+}
+
 interface AuthContextType {
   session: Session | null;
-  user: User | null;
+  user: UserProfile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, userData: Partial<User>) => Promise<void>;
-  signOut: () => Promise<void>;
+  signUp: (email: string, password: string, userData: Record<string, any>) => Promise<void>;
+  signOut: (callback?: () => void) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Function to fetch user profile data
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        // Combine Supabase auth user data with profile data
+        return {
+          id: userId,
+          email: session?.user?.email || '',
+          name: data.full_name,
+          avatar: data.avatar_url,
+          employeeId: data.employee_id,
+          company: data.company,
+          department: data.department,
+          division: data.division,
+          role: data.role || 'requester',
+        };
+      }
+    } catch (error: any) {
+      console.error("Error fetching user profile:", error);
+    }
+    
+    // Return basic user info if profile fetch fails
+    return {
+      id: userId,
+      email: session?.user?.email || '',
+      role: 'requester'
+    };
+  };
 
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+      async (event, currentSession) => {
+        setSession(currentSession);
+        
+        if (currentSession?.user) {
+          const userProfile = await fetchUserProfile(currentSession.user.id);
+          setUser(userProfile);
+        } else {
+          setUser(null);
+        }
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      
+      if (currentSession?.user) {
+        const userProfile = await fetchUserProfile(currentSession.user.id);
+        setUser(userProfile);
+      } else {
+        setUser(null);
+      }
+      
       setLoading(false);
     });
 
@@ -47,7 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw error;
   };
 
-  const signUp = async (email: string, password: string, userData: Partial<User>) => {
+  const signUp = async (email: string, password: string, userData: Record<string, any>) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -58,9 +121,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw error;
   };
 
-  const signOut = async () => {
+  const signOut = async (callback?: () => void) => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
+    if (callback) callback();
   };
 
   return (
