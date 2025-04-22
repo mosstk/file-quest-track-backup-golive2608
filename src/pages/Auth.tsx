@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -15,11 +15,13 @@ const Auth = () => {
   const [name, setName] = useState('');
   const navigate = useNavigate();
   const { signIn, signUp, user } = useAuth();
+  const intendedRole = localStorage.getItem('intended_role') || 'requester';
 
   // Redirect if already logged in
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       navigate('/dashboard');
+      localStorage.removeItem('intended_role'); // Clean up
     }
   }, [user, navigate]);
 
@@ -33,11 +35,12 @@ const Auth = () => {
         // For signup, structure userData correctly
         await signUp(email, password, {
           full_name: name,
-          role: 'requester', // Default role for new users
+          role: intendedRole, // Use the intended role from localStorage
         });
         toast.success('ลงทะเบียนสำเร็จ');
       }
       navigate('/dashboard');
+      localStorage.removeItem('intended_role'); // Clean up
     } catch (error: any) {
       toast.error(error.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
     }
