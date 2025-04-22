@@ -1,76 +1,110 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, UserRole } from '@/types';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { User } from '@/types';
+import { supabase } from '@/lib/supabase';
+import { Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
+  session: Session | null;
   user: User | null;
   loading: boolean;
-  login: (role: UserRole) => void;
-  logout: () => void;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, userData: Partial<User>) => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demo purposes
-const mockUsers: Record<UserRole, User> = {
-  fa_admin: {
-    id: 'admin-1',
-    name: 'Admin User',
-    email: 'admin@example.com',
-    employeeId: 'ADM001',
-    company: 'Example Corp',
-    department: 'Finance & Accounting',
-    division: 'Administration',
-    role: 'fa_admin',
-  },
-  requester: {
-    id: 'req-1',
-    name: 'Requester User',
-    email: 'requester@example.com',
-    employeeId: 'REQ001',
-    company: 'Example Corp',
-    department: 'Marketing',
-    division: 'Digital Marketing',
-    role: 'requester',
-  },
-  receiver: {
-    id: 'rec-1',
-    name: 'Receiver User',
-    email: 'receiver@example.com',
-    employeeId: 'REC001',
-    company: 'Partner Corp',
-    department: 'Operations',
-    division: 'Supply Chain',
-    role: 'receiver',
-  },
-};
-
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored user in localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    // Check active sessions and get user profile
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      }
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = (role: UserRole) => {
-    const selectedUser = mockUsers[role];
-    setUser(selectedUser);
-    localStorage.setItem('user', JSON.stringify(selectedUser));
+  const fetchUserProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user profile:', error);
+      return;
+    }
+
+    if (data) {
+      setUser({
+        id: data.id,
+        name: data.full_name || '',
+        email: session?.user?.email || '',
+        employeeId: data.employee_id || '',
+        company: data.company || '',
+        department: data.department || '',
+        division: data.division || '',
+        role: data.role,
+        avatar: data.avatar_url,
+      });
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+  };
+
+  const signUp = async (email: string, password: string, userData: Partial<User>) => {
+    const { error: signUpError, data } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: userData.name,
+          avatar_url: userData.avatar,
+          role: userData.role,
+        },
+      },
+    });
+
+    if (signUpError) throw signUpError;
+  };
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
