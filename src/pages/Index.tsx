@@ -33,7 +33,7 @@ const Index = () => {
           />
           
           <h1 className="text-4xl md:text-5xl font-bold tracking-tighter">
-            FileQuest<span className="text-primary">Track</span>
+            File Request<span className="text-primary">Track</span>
           </h1>
           
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
