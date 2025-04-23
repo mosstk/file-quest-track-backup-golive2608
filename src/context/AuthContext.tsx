@@ -1,72 +1,106 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from "@/integrations/supabase/client"; // assumes supabase sdk is set up
+
 import { User, UserRole } from '@/types';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (role: UserRole) => void;
-  logout: () => void;
+  login: (params: { email: string; password: string }) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demo purposes
-const mockUsers: Record<UserRole, User> = {
-  fa_admin: {
-    id: 'admin-1',
-    name: 'Admin User',
-    email: 'admin@example.com',
-    employeeId: 'ADM001',
-    company: 'Example Corp',
-    department: 'Finance & Accounting',
-    division: 'Administration',
-    role: 'fa_admin',
-  },
-  requester: {
-    id: 'req-1',
-    name: 'Requester User',
-    email: 'requester@example.com',
-    employeeId: 'REQ001',
-    company: 'Example Corp',
-    department: 'Marketing',
-    division: 'Digital Marketing',
-    role: 'requester',
-  },
-  receiver: {
-    id: 'rec-1',
-    name: 'Receiver User',
-    email: 'receiver@example.com',
-    employeeId: 'REC001',
-    company: 'Partner Corp',
-    department: 'Operations',
-    division: 'Supply Chain',
-    role: 'receiver',
-  },
-};
+/**
+ * Helper to fetch current profile from Supabase
+ */
+async function fetchUserProfile(supabaseUser: any): Promise<User | null> {
+  if (!supabaseUser) return null;
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', supabaseUser.id)
+    .maybeSingle();
 
-  useEffect(() => {
-    // Check for stored user in localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+  if (error) {
+    console.error("Failed to fetch profile:", error);
+    return null;
+  }
+
+  if (data) {
+    return {
+      id: data.id,
+      full_name: data.full_name,
+      email: supabaseUser.email,
+      username: data.username,
+      avatar_url: data.avatar_url,
+      employee_id: data.employee_id,
+      company: data.company,
+      department: data.department,
+      division: data.division,
+      role: data.role as UserRole
+    };
+  }
+  return null;
+}
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = React.useState<User | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  // Auth initialization & Supabase session restoration logic
+  React.useEffect(() => {
+    let mounted = true;
+    async function getSessionAndProfile() {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      const supabaseUser = session?.user;
+
+      if (!supabaseUser) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      const profile = await fetchUserProfile(supabaseUser);
+      if (mounted) setUser(profile);
+      setLoading(false);
     }
-    setLoading(false);
+    getSessionAndProfile();
+
+    // Listen to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const supaUser = session?.user;
+      if (supaUser) {
+        fetchUserProfile(supaUser).then((profile) => setUser(profile));
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+    return () => { mounted = false; subscription.unsubscribe(); }
   }, []);
 
-  const login = (role: UserRole) => {
-    const selectedUser = mockUsers[role];
-    setUser(selectedUser);
-    localStorage.setItem('user', JSON.stringify(selectedUser));
+  // Login: pass email + password and fetch profile if succeeded
+  const login = async ({ email, password }: { email: string; password: string }) => {
+    setLoading(true);
+    const { error, data } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      setLoading(false);
+      throw error;
+    }
+    const sessionUser = data.user;
+    const profile = await fetchUserProfile(sessionUser);
+    setUser(profile);
+    setLoading(false);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    setLoading(true);
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('user');
+    setLoading(false);
   };
 
   return (
@@ -76,10 +110,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export function useAuth() {
+  const ctx = React.useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
+}
