@@ -18,6 +18,7 @@ const Index = () => {
   const handleLogin = (defaultRole: string) => {
     // Save intended role in localStorage to prefill the login form
     localStorage.setItem('intended_role', defaultRole);
+    // Navigate to auth page
     navigate('/auth');
   };
 
