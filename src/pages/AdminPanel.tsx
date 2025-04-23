@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -39,7 +38,6 @@ import { UserRole, User } from '@/types';
 import { toast } from 'sonner';
 import { Search, Plus, Trash, Edit } from 'lucide-react';
 
-// Mock data
 const mockUsers: User[] = [
   {
     id: 'req-1',
@@ -94,6 +92,8 @@ const mockUsers: User[] = [
 ];
 
 const AdminPanel = () => {
+  console.log('Rendering AdminPanel page');
+  
   const [users, setUsers] = useState<User[]>(mockUsers);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<UserRole | 'all'>('all');
@@ -111,7 +111,6 @@ const AdminPanel = () => {
     role: 'requester',
   });
 
-  // Filter users based on active tab and search term
   const filteredUsers = users.filter(user => {
     const matchesRole = activeTab === 'all' || user.role === activeTab;
     const matchesSearch = 
@@ -152,13 +151,11 @@ const AdminPanel = () => {
   };
 
   const handleAddUser = () => {
-    // Validate form
     if (!newUser.name || !newUser.email || !newUser.employeeId) {
       toast.error('กรุณากรอกข้อมูลให้ครบถ้วน');
       return;
     }
     
-    // Add new user
     const user: User = {
       id: `user-${Date.now()}`,
       name: newUser.name || '',
@@ -188,13 +185,11 @@ const AdminPanel = () => {
   const handleEditUser = () => {
     if (!selectedUser) return;
     
-    // Validate form
     if (!selectedUser.name || !selectedUser.email || !selectedUser.employeeId) {
       toast.error('กรุณากรอกข้อมูลให้ครบถ้วน');
       return;
     }
     
-    // Update user
     const updatedUsers = users.map(user => 
       user.id === selectedUser.id ? selectedUser : user
     );
@@ -221,6 +216,12 @@ const AdminPanel = () => {
   return (
     <Layout requireAuth allowedRoles={['fa_admin']}>
       <div className="container py-8 animate-fade-in">
+        {process.env.NODE_ENV === 'development' && (
+          <div className="bg-yellow-100 border-yellow-400 border p-2 mb-4 rounded text-sm">
+            Debug mode: This page requires 'fa_admin' role
+          </div>
+        )}
+        
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <div>
             <h1 className="text-3xl font-bold">แผงควบคุมผู้ดูแลระบบ</h1>
