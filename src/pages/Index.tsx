@@ -16,9 +16,19 @@ const Index = () => {
     }
   }, [user, navigate]);
 
-  const handleRoleSelection = (role: UserRole) => {
-    login(role);
-    navigate('/dashboard');
+  // For demo purposes, we're using a mock login without real authentication
+  const handleRoleSelection = async (role: UserRole) => {
+    try {
+      // In a real app, replace with real authentication
+      // This is just for demo purposes
+      await login({ 
+        email: `demo-${role}@example.com`, 
+        password: 'password123'
+      });
+      navigate('/dashboard');
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
   };
 
   return (
@@ -90,4 +100,3 @@ const Index = () => {
 };
 
 export default Index;
-

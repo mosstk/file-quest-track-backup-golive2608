@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from "@/integrations/supabase/client"; // assumes supabase sdk is set up
 
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from "@/integrations/supabase/client";
 import { User, UserRole } from '@/types';
 
 interface AuthContextType {
@@ -30,18 +30,26 @@ async function fetchUserProfile(supabaseUser: any): Promise<User | null> {
   }
 
   if (data) {
-    return {
-      id: data.id,
-      full_name: data.full_name,
+    // Create a user object with the getters for compatibility
+    const user = {
+      ...data,
       email: supabaseUser.email,
-      username: data.username,
-      avatar_url: data.avatar_url,
-      employee_id: data.employee_id,
-      company: data.company,
-      department: data.department,
-      division: data.division,
-      role: data.role as UserRole
-    };
+      
+      // Add getters for backward compatibility
+      get name() {
+        return this.full_name;
+      },
+      
+      get employeeId() {
+        return this.employee_id;
+      },
+      
+      get avatar() {
+        return this.avatar_url;
+      }
+    } as User;
+    
+    return user;
   }
   return null;
 }

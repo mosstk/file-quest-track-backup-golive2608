@@ -5,7 +5,7 @@ export type UserRole = 'fa_admin' | 'requester' | 'receiver';
 export interface User {
   id: string;
   full_name: string | null;
-  email?: string; // Not present in profiles, but fetched separately for convenience
+  email?: string; 
   username?: string | null;
   avatar_url?: string | null;
   employee_id?: string | null;
@@ -13,6 +13,19 @@ export interface User {
   department?: string | null;
   division?: string | null;
   role: UserRole;
+  
+  // Aliased properties for backward compatibility with existing code
+  get name(): string | null {
+    return this.full_name;
+  }
+  
+  get employeeId(): string | null {
+    return this.employee_id;
+  }
+  
+  get avatar(): string | null {
+    return this.avatar_url;
+  }
 }
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected' | 'rework' | 'completed';
