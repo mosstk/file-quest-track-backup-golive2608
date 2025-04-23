@@ -1,157 +1,76 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-import { UserRole } from '@/types';
-
-// Define our custom UserProfile type that extends the basic User type
-export interface UserProfile {
-  id: string;
-  email: string;
-  name?: string;
-  avatar?: string;
-  employeeId?: string;
-  company?: string;
-  department?: string;
-  division?: string;
-  role: UserRole;
-}
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User, UserRole } from '@/types';
 
 interface AuthContextType {
-  session: Session | null;
-  user: UserProfile | null;
+  user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, userData: Record<string, any>) => Promise<void>;
-  signOut: (callback?: () => void) => Promise<void>;
+  login: (role: UserRole) => void;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<UserProfile | null>(null);
+// Mock users for demo purposes
+const mockUsers: Record<UserRole, User> = {
+  fa_admin: {
+    id: 'admin-1',
+    name: 'Admin User',
+    email: 'admin@example.com',
+    employeeId: 'ADM001',
+    company: 'Example Corp',
+    department: 'Finance & Accounting',
+    division: 'Administration',
+    role: 'fa_admin',
+  },
+  requester: {
+    id: 'req-1',
+    name: 'Requester User',
+    email: 'requester@example.com',
+    employeeId: 'REQ001',
+    company: 'Example Corp',
+    department: 'Marketing',
+    division: 'Digital Marketing',
+    role: 'requester',
+  },
+  receiver: {
+    id: 'rec-1',
+    name: 'Receiver User',
+    email: 'receiver@example.com',
+    employeeId: 'REC001',
+    company: 'Partner Corp',
+    department: 'Operations',
+    division: 'Supply Chain',
+    role: 'receiver',
+  },
+};
+
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Function to fetch user profile data
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      console.log('Fetching profile for user:', userId);
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        throw error;
-      }
-
-      if (data) {
-        console.log('Profile data received:', data);
-        
-        // Validate and ensure role is one of the allowed values
-        const roleValue = data.role || 'requester';
-        let validatedRole: UserRole;
-        
-        if (roleValue === 'fa_admin') {
-          validatedRole = 'fa_admin';
-        } else if (roleValue === 'requester') {
-          validatedRole = 'requester';
-        } else if (roleValue === 'receiver') {
-          validatedRole = 'receiver';
-        } else {
-          validatedRole = 'requester'; // Default
-          console.warn(`Invalid role "${roleValue}" found, defaulting to "requester"`);
-        }
-
-        // Combine Supabase auth user data with profile data
-        return {
-          id: userId,
-          email: session?.user?.email || '',
-          name: data.full_name,
-          avatar: data.avatar_url,
-          employeeId: data.employee_id,
-          company: data.company,
-          department: data.department,
-          division: data.division,
-          role: validatedRole,
-        };
-      }
-    } catch (error: any) {
-      console.error("Error fetching user profile:", error);
-    }
-    
-    // Return basic user info if profile fetch fails
-    return {
-      id: userId,
-      email: session?.user?.email || '',
-      role: 'requester' as UserRole
-    };
-  };
-
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        setSession(currentSession);
-        
-        if (currentSession?.user) {
-          const userProfile = await fetchUserProfile(currentSession.user.id);
-          setUser(userProfile);
-        } else {
-          setUser(null);
-        }
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      
-      if (currentSession?.user) {
-        const userProfile = await fetchUserProfile(currentSession.user.id);
-        setUser(userProfile);
-      } else {
-        setUser(null);
-      }
-      
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    // Check for stored user in localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setLoading(false);
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) throw error;
+  const login = (role: UserRole) => {
+    const selectedUser = mockUsers[role];
+    setUser(selectedUser);
+    localStorage.setItem('user', JSON.stringify(selectedUser));
   };
 
-  const signUp = async (email: string, password: string, userData: Record<string, any>) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: userData
-      }
-    });
-    if (error) throw error;
-  };
-
-  const signOut = async (callback?: () => void) => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    if (callback) callback();
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
