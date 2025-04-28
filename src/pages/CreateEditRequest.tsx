@@ -6,90 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import FileRequestForm from '@/components/FileRequestForm';
 import { FileRequest } from '@/types';
 import { toast } from 'sonner';
-
-// Mock data - Same as in other components
-const mockRequests: FileRequest[] = [
-  {
-    id: '1',
-    requesterName: 'John Doe',
-    requesterEmployeeId: 'EMP001',
-    requesterCompany: 'Example Corp',
-    requesterDepartment: 'Marketing',
-    requesterDivision: 'Digital Marketing',
-    documentName: 'Q3 Marketing Report',
-    requesterEmail: 'john@example.com',
-    receiverEmail: 'receiver@example.com',
-    fileAttachment: 'marketing_report_q3.pdf',
-    status: 'pending',
-    createdAt: '2023-10-15T09:30:00',
-    updatedAt: '2023-10-15T09:30:00',
-  },
-  {
-    id: '2',
-    requesterName: 'Jane Smith',
-    requesterEmployeeId: 'EMP002',
-    requesterCompany: 'Example Corp',
-    requesterDepartment: 'Finance',
-    requesterDivision: 'Accounting',
-    documentName: 'Annual Financial Statement',
-    requesterEmail: 'jane@example.com',
-    receiverEmail: 'client@example.com',
-    fileAttachment: 'financial_statement_2023.pdf',
-    status: 'approved',
-    createdAt: '2023-10-10T14:20:00',
-    updatedAt: '2023-10-12T11:45:00',
-    trackingNumber: 'TRK78901234',
-  },
-  {
-    id: '3',
-    requesterName: 'Mike Johnson',
-    requesterEmployeeId: 'EMP003',
-    requesterCompany: 'Example Corp',
-    requesterDepartment: 'HR',
-    requesterDivision: 'Recruitment',
-    documentName: 'New Employee Onboarding Pack',
-    requesterEmail: 'mike@example.com',
-    receiverEmail: 'newemployee@example.com',
-    fileAttachment: 'onboarding_pack.pdf',
-    status: 'rework',
-    createdAt: '2023-10-05T10:15:00',
-    updatedAt: '2023-10-06T16:30:00',
-    adminFeedback: 'Please update the company policy section.',
-  },
-  {
-    id: '4',
-    requesterName: 'Sarah Lee',
-    requesterEmployeeId: 'EMP004',
-    requesterCompany: 'Example Corp',
-    requesterDepartment: 'Legal',
-    requesterDivision: 'Compliance',
-    documentName: 'Vendor Contract',
-    requesterEmail: 'sarah@example.com',
-    receiverEmail: 'vendor@example.com',
-    fileAttachment: 'vendor_contract_2023.pdf',
-    status: 'rejected',
-    createdAt: '2023-10-02T08:45:00',
-    updatedAt: '2023-10-03T13:20:00',
-    adminFeedback: 'Contract terms do not meet company guidelines.',
-  },
-  {
-    id: '5',
-    requesterName: 'David Brown',
-    requesterEmployeeId: 'EMP005',
-    requesterCompany: 'Example Corp',
-    requesterDepartment: 'Sales',
-    requesterDivision: 'Enterprise',
-    documentName: 'Client Proposal',
-    requesterEmail: 'david@example.com',
-    receiverEmail: 'client@example.com',
-    fileAttachment: 'client_proposal.pdf',
-    status: 'completed',
-    createdAt: '2023-09-28T15:30:00',
-    updatedAt: '2023-09-30T09:45:00',
-    trackingNumber: 'TRK45678901',
-    isDelivered: true,
-  },
-];
+import { supabase } from '@/integrations/supabase/client';
 
 const CreateEditRequest = () => {
   const { id } = useParams<{ id: string }>();
@@ -100,50 +17,74 @@ const CreateEditRequest = () => {
   const [loading, setLoading] = useState(false);
   
   const isEditMode = !!id;
-  
+
   useEffect(() => {
-    if (isEditMode) {
-      setLoading(true);
-      const foundRequest = mockRequests.find(req => req.id === id);
-      
-      if (foundRequest) {
-        setRequest(foundRequest);
+    const fetchRequest = async () => {
+      if (!isEditMode || !user) return;
+
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('requests')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (error) throw error;
+        if (data) setRequest(data as FileRequest);
+      } catch (error) {
+        console.error('Error fetching request:', error);
+        toast.error('ไม่สามารถโหลดข้อมูลคำขอได้');
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
-    }
-  }, [id, isEditMode]);
+    };
+
+    fetchRequest();
+  }, [id, isEditMode, user]);
   
-  const handleSubmit = (formData: any) => {
-    if (isEditMode && request) {
-      // Update existing request
-      const updatedRequest = {
-        ...request,
-        ...formData,
-        status: user?.role === 'fa_admin' ? request.status : 'pending',
-        updatedAt: new Date().toISOString()
-      };
-      
-      console.log('Updated request:', updatedRequest);
-      toast.success('แก้ไขคำขอเรียบร้อย');
-      
-      // Redirect back to request detail
-      navigate(`/request/${id}`);
-    } else {
-      // Create new request
-      const newRequest: FileRequest = {
-        id: `request-${Date.now()}`,
-        ...formData,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      console.log('New request:', newRequest);
-      toast.success('สร้างคำขอเรียบร้อย');
-      
-      // Redirect to requests list
-      navigate('/requests');
+  const handleSubmit = async (formData: Partial<FileRequest>) => {
+    if (!user) {
+      toast.error('กรุณาเข้าสู่ระบบก่อนดำเนินการ');
+      return;
+    }
+
+    try {
+      if (isEditMode && request) {
+        const { error } = await supabase
+          .from('requests')
+          .update({
+            document_name: formData.documentName,
+            receiver_email: formData.receiverEmail,
+            file_path: formData.fileAttachment,
+            status: 'pending',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id);
+
+        if (error) throw error;
+        toast.success('แก้ไขคำขอเรียบร้อย');
+        navigate(`/request/${id}`);
+      } else {
+        const { data, error } = await supabase
+          .from('requests')
+          .insert([{
+            requester_id: user.id,
+            document_name: formData.documentName,
+            receiver_email: formData.receiverEmail,
+            file_path: formData.fileAttachment,
+            status: 'pending'
+          }])
+          .select()
+          .single();
+
+        if (error) throw error;
+        toast.success('สร้างคำขอเรียบร้อย');
+        navigate('/requests');
+      }
+    } catch (error) {
+      console.error('Error submitting request:', error);
+      toast.error('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     }
   };
   

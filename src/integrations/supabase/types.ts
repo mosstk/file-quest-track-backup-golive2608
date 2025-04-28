@@ -9,7 +9,105 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          company: string | null
+          department: string | null
+          division: string | null
+          employee_id: string | null
+          full_name: string | null
+          id: string
+          role: string
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          company?: string | null
+          department?: string | null
+          division?: string | null
+          employee_id?: string | null
+          full_name?: string | null
+          id: string
+          role: string
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          company?: string | null
+          department?: string | null
+          division?: string | null
+          employee_id?: string | null
+          full_name?: string | null
+          id?: string
+          role?: string
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      requests: {
+        Row: {
+          admin_feedback: string | null
+          approved_by: string | null
+          created_at: string
+          document_name: string
+          file_path: string | null
+          id: string
+          is_delivered: boolean | null
+          receiver_email: string
+          requester_id: string
+          status: Database["public"]["Enums"]["request_status"]
+          tracking_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_feedback?: string | null
+          approved_by?: string | null
+          created_at?: string
+          document_name: string
+          file_path?: string | null
+          id?: string
+          is_delivered?: boolean | null
+          receiver_email: string
+          requester_id: string
+          status?: Database["public"]["Enums"]["request_status"]
+          tracking_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_feedback?: string | null
+          approved_by?: string | null
+          created_at?: string
+          document_name?: string
+          file_path?: string | null
+          id?: string
+          is_delivered?: boolean | null
+          receiver_email?: string
+          requester_id?: string
+          status?: Database["public"]["Enums"]["request_status"]
+          tracking_number?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requests_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +116,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      request_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "rework"
+        | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +236,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      request_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "rework",
+        "completed",
+      ],
+    },
   },
 } as const

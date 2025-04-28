@@ -1,4 +1,3 @@
-
 import React, { useState, ChangeEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,10 +6,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
+import { FileRequest } from '@/types';
 
 interface FileRequestFormProps {
-  onSubmit: (data: any) => void;
-  initialData?: any;
+  onSubmit: (data: Partial<FileRequest>) => void;
+  initialData?: Partial<FileRequest>;
   isRework?: boolean;
 }
 
@@ -21,15 +21,9 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
 }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
-    requesterName: initialData.requesterName || user?.name || '',
-    requesterEmployeeId: initialData.requesterEmployeeId || user?.employeeId || '',
-    requesterCompany: initialData.requesterCompany || user?.company || '',
-    requesterDepartment: initialData.requesterDepartment || user?.department || '',
-    requesterDivision: initialData.requesterDivision || user?.division || '',
-    documentName: initialData.documentName || '',
-    requesterEmail: initialData.requesterEmail || user?.email || '',
-    receiverEmail: initialData.receiverEmail || '',
-    fileAttachment: initialData.fileAttachment || null,
+    document_name: initialData.document_name || '',
+    receiver_email: initialData.receiver_email || '',
+    file_path: initialData.file_path || null,
   });
 
   const [fileSelected, setFileSelected] = useState<File | null>(null);
@@ -68,27 +62,17 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
   const validateForm = () => {
     const errors: Record<string, string> = {};
     
-    if (!formData.requesterName.trim()) errors.requesterName = 'กรุณาระบุชื่อผู้ส่ง';
-    if (!formData.requesterEmployeeId.trim()) errors.requesterEmployeeId = 'กรุณาระบุรหัสพนักงาน';
-    if (!formData.requesterCompany.trim()) errors.requesterCompany = 'กรุณาระบุบริษัท';
-    if (!formData.requesterDepartment.trim()) errors.requesterDepartment = 'กรุณาระบุฝ่าย';
-    if (!formData.requesterDivision.trim()) errors.requesterDivision = 'กรุณาระบุแผนก';
-    if (!formData.documentName.trim()) errors.documentName = 'กรุณาระบุชื่อเอกสาร';
+    if (!formData.document_name?.trim()) errors.document_name = 'กรุณาระบุชื่อเอกสาร';
     
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.requesterEmail.trim()) {
-      errors.requesterEmail = 'กรุณาระบุอีเมลผู้ส่ง';
-    } else if (!emailRegex.test(formData.requesterEmail)) {
-      errors.requesterEmail = 'กรุณาระบุอีเมลให้ถูกต้อง';
+    
+    if (!formData.receiver_email?.trim()) {
+      errors.receiver_email = 'กรุณาระบุอีเมลผู้รับ';
+    } else if (!emailRegex.test(formData.receiver_email)) {
+      errors.receiver_email = 'กรุณาระบุอีเมลให้ถูกต้อง';
     }
     
-    if (!formData.receiverEmail.trim()) {
-      errors.receiverEmail = 'กรุณาระบุอีเมลผู้รับ';
-    } else if (!emailRegex.test(formData.receiverEmail)) {
-      errors.receiverEmail = 'กรุณาระบุอีเมลให้ถูกต้อง';
-    }
-    
-    if (!initialData.fileAttachment && !fileSelected && !isRework) {
+    if (!initialData.file_path && !fileSelected && !isRework) {
       errors.fileAttachment = 'กรุณาแนบไฟล์';
     }
     
@@ -104,13 +88,11 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
       return;
     }
     
-    // Prepare data for submission
-    const submitData = {
-      ...formData,
-      fileAttachment: fileSelected ? fileSelected.name : formData.fileAttachment,
-    };
-    
-    onSubmit(submitData);
+    onSubmit({
+      document_name: formData.document_name,
+      receiver_email: formData.receiver_email,
+      file_path: fileSelected ? fileSelected.name : formData.file_path,
+    });
   };
 
   const handleCancel = () => {
@@ -129,122 +111,35 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
       
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="requesterName">ชื่อ-นามสกุล</Label>
-              <Input
-                id="requesterName"
-                name="requesterName"
-                value={formData.requesterName}
-                onChange={handleInputChange}
-                className={formErrors.requesterName ? 'border-red-500' : ''}
-              />
-              {formErrors.requesterName && (
-                <p className="text-sm text-red-500">{formErrors.requesterName}</p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="requesterEmployeeId">รหัสพนักงาน</Label>
-              <Input
-                id="requesterEmployeeId"
-                name="requesterEmployeeId"
-                value={formData.requesterEmployeeId}
-                onChange={handleInputChange}
-                className={formErrors.requesterEmployeeId ? 'border-red-500' : ''}
-              />
-              {formErrors.requesterEmployeeId && (
-                <p className="text-sm text-red-500">{formErrors.requesterEmployeeId}</p>
-              )}
-            </div>
-          </div>
           
           <div className="space-y-2">
-            <Label htmlFor="requesterCompany">บริษัท</Label>
+            <Label htmlFor="document_name">ชื่อไฟล์เอกสาร</Label>
             <Input
-              id="requesterCompany"
-              name="requesterCompany"
-              value={formData.requesterCompany}
+              id="document_name"
+              name="document_name"
+              value={formData.document_name}
               onChange={handleInputChange}
-              className={formErrors.requesterCompany ? 'border-red-500' : ''}
+              className={formErrors.document_name ? 'border-red-500' : ''}
             />
-            {formErrors.requesterCompany && (
-              <p className="text-sm text-red-500">{formErrors.requesterCompany}</p>
+            {formErrors.document_name && (
+              <p className="text-sm text-red-500">{formErrors.document_name}</p>
             )}
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="requesterDepartment">ฝ่าย</Label>
-              <Input
-                id="requesterDepartment"
-                name="requesterDepartment"
-                value={formData.requesterDepartment}
-                onChange={handleInputChange}
-                className={formErrors.requesterDepartment ? 'border-red-500' : ''}
-              />
-              {formErrors.requesterDepartment && (
-                <p className="text-sm text-red-500">{formErrors.requesterDepartment}</p>
-              )}
-            </div>
             
             <div className="space-y-2">
-              <Label htmlFor="requesterDivision">แผนก</Label>
+              <Label htmlFor="receiver_email">อีเมล์ของผู้รับ</Label>
               <Input
-                id="requesterDivision"
-                name="requesterDivision"
-                value={formData.requesterDivision}
-                onChange={handleInputChange}
-                className={formErrors.requesterDivision ? 'border-red-500' : ''}
-              />
-              {formErrors.requesterDivision && (
-                <p className="text-sm text-red-500">{formErrors.requesterDivision}</p>
-              )}
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="documentName">ชื่อไฟล์เอกสาร</Label>
-            <Input
-              id="documentName"
-              name="documentName"
-              value={formData.documentName}
-              onChange={handleInputChange}
-              className={formErrors.documentName ? 'border-red-500' : ''}
-            />
-            {formErrors.documentName && (
-              <p className="text-sm text-red-500">{formErrors.documentName}</p>
-            )}
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="requesterEmail">อีเมล์ของผู้ส่ง</Label>
-              <Input
-                id="requesterEmail"
-                name="requesterEmail"
+                id="receiver_email"
+                name="receiver_email"
                 type="email"
-                value={formData.requesterEmail}
+                value={formData.receiver_email}
                 onChange={handleInputChange}
-                className={formErrors.requesterEmail ? 'border-red-500' : ''}
+                className={formErrors.receiver_email ? 'border-red-500' : ''}
               />
-              {formErrors.requesterEmail && (
-                <p className="text-sm text-red-500">{formErrors.requesterEmail}</p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="receiverEmail">อีเมล์ของผู้รับ</Label>
-              <Input
-                id="receiverEmail"
-                name="receiverEmail"
-                type="email"
-                value={formData.receiverEmail}
-                onChange={handleInputChange}
-                className={formErrors.receiverEmail ? 'border-red-500' : ''}
-              />
-              {formErrors.receiverEmail && (
-                <p className="text-sm text-red-500">{formErrors.receiverEmail}</p>
+              {formErrors.receiver_email && (
+                <p className="text-sm text-red-500">{formErrors.receiver_email}</p>
               )}
             </div>
           </div>
@@ -263,9 +158,9 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
             {formErrors.fileAttachment && (
               <p className="text-sm text-red-500">{formErrors.fileAttachment}</p>
             )}
-            {(initialData.fileAttachment || fileSelected) && (
+            {(initialData.file_path || fileSelected) && (
               <p className="text-sm text-muted-foreground">
-                ไฟล์ที่เลือก: {fileSelected ? fileSelected.name : initialData.fileAttachment}
+                ไฟล์ที่เลือก: {fileSelected ? fileSelected.name : initialData.file_path}
               </p>
             )}
           </div>
