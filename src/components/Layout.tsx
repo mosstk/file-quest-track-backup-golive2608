@@ -17,6 +17,14 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   const { user, loading } = useAuth();
 
+  // Debug output for troubleshooting
+  console.log('Layout rendered with:', { 
+    user, 
+    requireAuth, 
+    allowedRoles,
+    userRole: user?.role 
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -26,10 +34,15 @@ const Layout: React.FC<LayoutProps> = ({
   }
 
   if (requireAuth && !user) {
+    console.log('User not authenticated, redirecting to home');
     return <Navigate to="/" replace />;
   }
 
   if (user && allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+    console.log('User lacks permission, redirecting to dashboard', { 
+      userRole: user.role, 
+      allowedRoles 
+    });
     return <Navigate to="/dashboard" replace />;
   }
 

@@ -1,125 +1,166 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from "@/integrations/supabase/client";
-import { User, UserRole } from '@/types';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { UserRole } from '@/types';
+
+// Define our custom UserProfile type that extends the basic User type
+export interface UserProfile {
+  id: string;
+  email: string;
+  name?: string;
+  avatar?: string;
+  employeeId?: string;
+  company?: string;
+  department?: string;
+  division?: string;
+  role: UserRole;
+}
 
 interface AuthContextType {
-  user: User | null;
+  session: Session | null;
+  user: UserProfile | null;
   loading: boolean;
-  login: (params: { email: string; password: string }) => Promise<void>;
-  logout: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, userData: Record<string, any>) => Promise<void>;
+  signOut: (callback?: () => void) => Promise<void>;
 }
 
-const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
-
-/**
- * Helper to fetch current profile from Supabase
- */
-async function fetchUserProfile(supabaseUser: any): Promise<User | null> {
-  if (!supabaseUser) return null;
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', supabaseUser.id)
-    .maybeSingle();
-
-  if (error) {
-    console.error("Failed to fetch profile:", error);
-    return null;
-  }
-
-  if (data) {
-    // Create a user object with the getters for compatibility
-    const user = {
-      ...data,
-      email: supabaseUser.email,
-      
-      // Add getters for backward compatibility
-      get name() {
-        return this.full_name;
-      },
-      
-      get employeeId() {
-        return this.employee_id;
-      },
-      
-      get avatar() {
-        return this.avatar_url;
-      }
-    } as User;
-    
-    return user;
-  }
-  return null;
-}
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = React.useState<User | null>(null);
-  const [loading, setLoading] = React.useState(true);
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Auth initialization & Supabase session restoration logic
-  React.useEffect(() => {
-    let mounted = true;
-    async function getSessionAndProfile() {
-      setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      const supabaseUser = session?.user;
+  // Function to fetch user profile data
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      console.log('Fetching profile for user:', userId);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-      if (!supabaseUser) {
-        setUser(null);
-        setLoading(false);
-        return;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        throw error;
       }
-      const profile = await fetchUserProfile(supabaseUser);
-      if (mounted) setUser(profile);
-      setLoading(false);
-    }
-    getSessionAndProfile();
 
-    // Listen to auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      const supaUser = session?.user;
-      if (supaUser) {
-        fetchUserProfile(supaUser).then((profile) => setUser(profile));
+      if (data) {
+        console.log('Profile data received:', data);
+        
+        // Validate and ensure role is one of the allowed values
+        const roleValue = data.role || 'requester';
+        let validatedRole: UserRole;
+        
+        if (roleValue === 'fa_admin') {
+          validatedRole = 'fa_admin';
+        } else if (roleValue === 'requester') {
+          validatedRole = 'requester';
+        } else if (roleValue === 'receiver') {
+          validatedRole = 'receiver';
+        } else {
+          validatedRole = 'requester'; // Default
+          console.warn(`Invalid role "${roleValue}" found, defaulting to "requester"`);
+        }
+
+        // Combine Supabase auth user data with profile data
+        return {
+          id: userId,
+          email: session?.user?.email || '',
+          name: data.full_name,
+          avatar: data.avatar_url,
+          employeeId: data.employee_id,
+          company: data.company,
+          department: data.department,
+          division: data.division,
+          role: validatedRole,
+        };
+      }
+    } catch (error: any) {
+      console.error("Error fetching user profile:", error);
+    }
+    
+    // Return basic user info if profile fetch fails
+    return {
+      id: userId,
+      email: session?.user?.email || '',
+      role: 'requester' as UserRole
+    };
+  };
+
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        setSession(currentSession);
+        
+        if (currentSession?.user) {
+          const userProfile = await fetchUserProfile(currentSession.user.id);
+          setUser(userProfile);
+        } else {
+          setUser(null);
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      
+      if (currentSession?.user) {
+        const userProfile = await fetchUserProfile(currentSession.user.id);
+        setUser(userProfile);
       } else {
         setUser(null);
       }
+      
       setLoading(false);
     });
-    return () => { mounted = false; subscription.unsubscribe(); }
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Login: pass email + password and fetch profile if succeeded
-  const login = async ({ email, password }: { email: string; password: string }) => {
-    setLoading(true);
-    const { error, data } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setLoading(false);
-      throw error;
-    }
-    const sessionUser = data.user;
-    const profile = await fetchUserProfile(sessionUser);
-    setUser(profile);
-    setLoading(false);
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) throw error;
   };
 
-  const logout = async () => {
-    setLoading(true);
-    await supabase.auth.signOut();
-    setUser(null);
-    setLoading(false);
+  const signUp = async (email: string, password: string, userData: Record<string, any>) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: userData
+      }
+    });
+    if (error) throw error;
+  };
+
+  const signOut = async (callback?: () => void) => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    if (callback) callback();
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export function useAuth() {
-  const ctx = React.useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
-}
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

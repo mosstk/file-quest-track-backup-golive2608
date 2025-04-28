@@ -1,31 +1,16 @@
 
-/** Sync types with Supabase public.profiles table */
 export type UserRole = 'fa_admin' | 'requester' | 'receiver';
 
 export interface User {
   id: string;
-  full_name: string | null;
-  email?: string; 
-  username?: string | null;
-  avatar_url?: string | null;
-  employee_id?: string | null;
-  company?: string | null;
-  department?: string | null;
-  division?: string | null;
+  name: string;
+  email: string;
+  employeeId: string;
+  company: string;
+  department: string;
+  division: string;
   role: UserRole;
-  
-  // Aliased properties for backward compatibility with existing code
-  get name(): string | null {
-    return this.full_name;
-  }
-  
-  get employeeId(): string | null {
-    return this.employee_id;
-  }
-  
-  get avatar(): string | null {
-    return this.avatar_url;
-  }
+  avatar?: string;
 }
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected' | 'rework' | 'completed';

@@ -3,10 +3,9 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { UserRole } from '@/types';
 
 const Index = () => {
-  const { user, login } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   // If user is already logged in, redirect to dashboard
@@ -16,19 +15,11 @@ const Index = () => {
     }
   }, [user, navigate]);
 
-  // For demo purposes, we're using a mock login without real authentication
-  const handleRoleSelection = async (role: UserRole) => {
-    try {
-      // In a real app, replace with real authentication
-      // This is just for demo purposes
-      await login({ 
-        email: `demo-${role}@example.com`, 
-        password: 'password123'
-      });
-      navigate('/dashboard');
-    } catch (error) {
-      console.error("Login failed:", error);
-    }
+  const handleLogin = (defaultRole: string) => {
+    // Save intended role in localStorage to prefill the login form
+    localStorage.setItem('intended_role', defaultRole);
+    // Navigate to auth page
+    navigate('/auth');
   };
 
   return (
@@ -43,7 +34,7 @@ const Index = () => {
           />
           
           <h1 className="text-4xl md:text-5xl font-bold tracking-tighter">
-            FileQuest<span className="text-primary">Track</span>
+            File Request<span className="text-primary">Track</span>
           </h1>
           
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -51,39 +42,48 @@ const Index = () => {
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-            <div 
-              className="relative group overflow-hidden bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300"
-              onClick={() => handleRoleSelection('fa_admin')}
-            >
+            <div className="relative group overflow-hidden bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
               <h3 className="text-xl font-semibold mb-2">FA Admin</h3>
               <p className="text-muted-foreground text-sm">จัดการคำขอ อนุมัติเอกสาร และติดตามสถานะการจัดส่ง</p>
               <div className="mt-4">
-                <Button variant="outline" className="w-full">เข้าสู่ระบบ</Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  onClick={() => handleLogin('fa_admin')}
+                >
+                  เข้าสู่ระบบ
+                </Button>
               </div>
             </div>
             
-            <div 
-              className="relative group overflow-hidden bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300"
-              onClick={() => handleRoleSelection('requester')}
-            >
+            <div className="relative group overflow-hidden bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
               <h3 className="text-xl font-semibold mb-2">Requester</h3>
               <p className="text-muted-foreground text-sm">สร้างคำขอส่งไฟล์ ติดตามสถานะ และแก้ไขเอกสารตามคำขอ</p>
               <div className="mt-4">
-                <Button variant="outline" className="w-full">เข้าสู่ระบบ</Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  onClick={() => handleLogin('requester')}
+                >
+                  เข้าสู่ระบบ
+                </Button>
               </div>
             </div>
             
-            <div 
-              className="relative group overflow-hidden bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300"
-              onClick={() => handleRoleSelection('receiver')}
-            >
+            <div className="relative group overflow-hidden bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
               <h3 className="text-xl font-semibold mb-2">Receiver</h3>
               <p className="text-muted-foreground text-sm">รับแจ้งเตือน ตรวจสอบเลขพัสดุ และยืนยันการได้รับเอกสาร</p>
               <div className="mt-4">
-                <Button variant="outline" className="w-full">เข้าสู่ระบบ</Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  onClick={() => handleLogin('receiver')}
+                >
+                  เข้าสู่ระบบ
+                </Button>
               </div>
             </div>
           </div>

@@ -1,14 +1,12 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import RequestTable from '@/components/RequestTable';
-import { FileRequest, RequestStatus } from '@/types';
+import { FileRequest } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// Mock data - Same as in Dashboard
 const mockRequests: FileRequest[] = [
   {
     id: '1',
@@ -97,19 +95,21 @@ const Requests = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>('all');
   
-  // Filter requests based on user role and active tab
   const filteredRequests = React.useMemo(() => {
     if (!user) return [];
     
-    // First filter by user role
     let requests = [];
     if (user.role === 'fa_admin') {
       requests = mockRequests;
     } else if (user.role === 'requester') {
       requests = mockRequests.filter(req => req.requesterEmail === user.email);
+    } else if (user.role === 'receiver') {
+      requests = mockRequests.filter(req => 
+        req.receiverEmail === user.email && 
+        (req.status === 'approved' || req.status === 'completed')
+      );
     }
     
-    // Then filter by tab
     if (activeTab === 'all') {
       return requests;
     } else {
