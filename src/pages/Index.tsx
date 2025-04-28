@@ -15,12 +15,6 @@ const Index = () => {
     }
   }, [user, navigate]);
 
-  const handleLogin = async (defaultRole: string) => {
-    // Save intended role in localStorage to prefill the login form
-    localStorage.setItem('intended_role', defaultRole);
-    navigate('/auth');
-  };
-
   return (
     <div className="min-h-screen flex flex-col">
       <div className="flex-1 flex flex-col items-center justify-center p-6">
@@ -33,7 +27,7 @@ const Index = () => {
           />
           
           <h1 className="text-4xl md:text-5xl font-bold tracking-tighter">
-            File Request<span className="text-primary">Track</span>
+            FileQuest<span className="text-primary">Track</span>
           </h1>
           
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -46,11 +40,7 @@ const Index = () => {
               <h3 className="text-xl font-semibold mb-2">FA Admin</h3>
               <p className="text-muted-foreground text-sm">จัดการคำขอ อนุมัติเอกสาร และติดตามสถานะการจัดส่ง</p>
               <div className="mt-4">
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  onClick={() => handleLogin('fa_admin')}
-                >
+                <Button variant="outline" className="w-full" onClick={() => navigate('/auth')}>
                   เข้าสู่ระบบ
                 </Button>
               </div>
@@ -61,11 +51,7 @@ const Index = () => {
               <h3 className="text-xl font-semibold mb-2">Requester</h3>
               <p className="text-muted-foreground text-sm">สร้างคำขอส่งไฟล์ ติดตามสถานะ และแก้ไขเอกสารตามคำขอ</p>
               <div className="mt-4">
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  onClick={() => handleLogin('requester')}
-                >
+                <Button variant="outline" className="w-full" onClick={() => navigate('/auth')}>
                   เข้าสู่ระบบ
                 </Button>
               </div>
@@ -76,11 +62,7 @@ const Index = () => {
               <h3 className="text-xl font-semibold mb-2">Receiver</h3>
               <p className="text-muted-foreground text-sm">รับแจ้งเตือน ตรวจสอบเลขพัสดุ และยืนยันการได้รับเอกสาร</p>
               <div className="mt-4">
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  onClick={() => handleLogin('receiver')}
-                >
+                <Button variant="outline" className="w-full" onClick={() => navigate('/auth')}>
                   เข้าสู่ระบบ
                 </Button>
               </div>
