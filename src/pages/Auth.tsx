@@ -17,8 +17,6 @@ const Auth = () => {
   const { signIn, signUp, user } = useAuth();
   const intendedRole = localStorage.getItem('intended_role') || 'requester';
 
-  console.log('Auth component loaded, intended role:', intendedRole);
-
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
@@ -31,11 +29,9 @@ const Auth = () => {
     e.preventDefault();
     try {
       if (isLogin) {
-        console.log('Attempting login with:', email, password);
         await signIn(email, password);
         toast.success('เข้าสู่ระบบสำเร็จ');
       } else {
-        console.log('Attempting signup with role:', intendedRole);
         // For signup, structure userData correctly
         await signUp(email, password, {
           full_name: name,
@@ -46,7 +42,6 @@ const Auth = () => {
       navigate('/dashboard');
       localStorage.removeItem('intended_role'); // Clean up
     } catch (error: any) {
-      console.error('Auth error:', error);
       toast.error(error.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
     }
   };
@@ -61,13 +56,6 @@ const Auth = () => {
               ? 'เข้าสู่ระบบเพื่อใช้งาน FileQuestTrack'
               : 'สร้างบัญชีใหม่เพื่อเริ่มใช้งาน FileQuestTrack'}
           </CardDescription>
-          {intendedRole && (
-            <div className="mt-2 text-sm text-primary">
-              กำลังลงทะเบียนในบทบาท: {intendedRole === 'fa_admin' ? 'FA Admin' : 
-                                     intendedRole === 'requester' ? 'Requester' : 
-                                     intendedRole === 'receiver' ? 'Receiver' : intendedRole}
-            </div>
-          )}
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
