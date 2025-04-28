@@ -28,14 +28,11 @@ const Auth = () => {
     try {
       if (isLogin) {
         await signIn(email, password);
-        toast.success('เข้าสู่ระบบสำเร็จ');
+        toast.success('ลงชื่อเข้าใช้สำเร็จ');
       } else {
         await signUp(email, password, {
-          email,
-          data: {
-            full_name: name,
-            role: 'requester', // Default role for new users
-          }
+          name,
+          role: 'requester', // Default role for new users
         });
         toast.success('ลงทะเบียนสำเร็จ');
       }

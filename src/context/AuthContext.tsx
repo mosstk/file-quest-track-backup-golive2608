@@ -1,7 +1,7 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { User, UserRole } from '@/types';
 import { supabase } from '@/lib/supabase';
+import { Session } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
 interface AuthContextType {
@@ -11,6 +11,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, userData: Partial<User>) => Promise<void>;
   signOut: () => Promise<void>;
+  login: (role: UserRole) => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,41 +23,79 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-      }
-    );
-
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      }
+      setLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
+  const fetchUserProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user profile:', error);
+      return;
+    }
+
+    if (data) {
+      setUser({
+        id: data.id,
+        name: data.full_name || '',
+        email: session?.user?.email || '',
+        employeeId: data.employee_id || '',
+        company: data.company || '',
+        department: data.department || '',
+        division: data.division || '',
+        role: data.role,
+        avatar: data.avatar_url,
+      });
+    }
+  };
+
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
     if (error) throw error;
   };
 
   const signUp = async (email: string, password: string, userData: Partial<User>) => {
-    const { error } = await supabase.auth.signUp({
+    const { error: signUpError, data } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: userData
-      }
+        data: {
+          full_name: userData.name,
+          avatar_url: userData.avatar,
+          role: userData.role,
+        },
+      },
     });
-    if (error) throw error;
+
+    if (signUpError) throw signUpError;
   };
 
   const signOut = async () => {
@@ -63,8 +103,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw error;
   };
 
+  const login = (role: UserRole) => {
+    const mockUser: User = {
+      id: `mock-${role}-id`,
+      name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+      email: `test-${role}@example.com`,
+      employeeId: `EMP-${Math.floor(Math.random() * 10000)}`,
+      company: 'TOA Group',
+      department: 'Information Technology',
+      division: 'Digital Solutions',
+      role: role,
+      avatar: `https://api.dicebear.com/6.x/avataaars/svg?seed=${role}`,
+    };
+    setUser(mockUser);
+    toast.success(`Logged in as ${mockUser.name}`, {
+      description: `Role: ${role}`
+    });
+  };
+
+  const logout = async () => {
+    if (user && user.id.startsWith('mock-')) {
+      setUser(null);
+      toast.success('Logged out successfully');
+      return;
+    }
+    
+    return signOut();
+  };
+
   return (
-    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signOut, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
