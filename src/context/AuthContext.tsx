@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '@/types';
 import { supabase } from '@/lib/supabase';
@@ -62,13 +63,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser({
         id: data.id,
         name: data.full_name || '',
+        full_name: data.full_name || '',
         email: session?.user?.email || '',
         employeeId: data.employee_id || '',
+        employee_id: data.employee_id || '',
         company: data.company || '',
         department: data.department || '',
         division: data.division || '',
         role: data.role,
         avatar: data.avatar_url,
+        avatar_url: data.avatar_url,
       });
     }
   };
@@ -88,8 +92,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password,
       options: {
         data: {
-          full_name: userData.name,
-          avatar_url: userData.avatar,
+          full_name: userData.name || userData.full_name,
+          avatar_url: userData.avatar || userData.avatar_url,
           role: userData.role,
         },
       },
@@ -107,13 +111,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const mockUser: User = {
       id: `mock-${role}-id`,
       name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+      full_name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
       email: `test-${role}@example.com`,
       employeeId: `EMP-${Math.floor(Math.random() * 10000)}`,
+      employee_id: `EMP-${Math.floor(Math.random() * 10000)}`,
       company: 'TOA Group',
       department: 'Information Technology',
       division: 'Digital Solutions',
       role: role,
       avatar: `https://api.dicebear.com/6.x/avataaars/svg?seed=${role}`,
+      avatar_url: `https://api.dicebear.com/6.x/avataaars/svg?seed=${role}`,
     };
     setUser(mockUser);
     toast.success(`Logged in as ${mockUser.name}`, {

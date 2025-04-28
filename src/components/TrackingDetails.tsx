@@ -16,8 +16,8 @@ const TrackingDetails: React.FC<TrackingDetailsProps> = ({
   onConfirmDelivery 
 }) => {
   const { user } = useAuth();
-  const isReceiver = user?.email === request.receiverEmail;
-  const canConfirm = isReceiver && request.status === 'approved' && !request.isDelivered;
+  const isReceiver = user?.email === request.receiver_email || user?.email === request.receiverEmail;
+  const canConfirm = isReceiver && request.status === 'approved' && !(request.is_delivered || request.isDelivered);
 
   const handleConfirmDelivery = () => {
     if (onConfirmDelivery) {
@@ -36,21 +36,21 @@ const TrackingDetails: React.FC<TrackingDetailsProps> = ({
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-sm font-medium text-muted-foreground">สถานะการส่ง:</span>
-            <span className={`font-medium ${request.isDelivered ? 'text-green-600' : 'text-blue-600'}`}>
-              {request.isDelivered ? 'ได้รับเอกสารแล้ว' : 'กำลังจัดส่ง'}
+            <span className={`font-medium ${(request.is_delivered || request.isDelivered) ? 'text-green-600' : 'text-blue-600'}`}>
+              {(request.is_delivered || request.isDelivered) ? 'ได้รับเอกสารแล้ว' : 'กำลังจัดส่ง'}
             </span>
           </div>
           
-          {request.trackingNumber && (
+          {(request.tracking_number || request.trackingNumber) && (
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-muted-foreground">เลขพัสดุ:</span>
-              <span className="font-medium">{request.trackingNumber}</span>
+              <span className="font-medium">{request.tracking_number || request.trackingNumber}</span>
             </div>
           )}
           
           <div className="flex justify-between items-center">
             <span className="text-sm font-medium text-muted-foreground">ผู้รับ:</span>
-            <span className="font-medium">{request.receiverEmail}</span>
+            <span className="font-medium">{request.receiver_email || request.receiverEmail}</span>
           </div>
         </div>
         

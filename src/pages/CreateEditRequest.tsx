@@ -7,6 +7,7 @@ import FileRequestForm from '@/components/FileRequestForm';
 import { FileRequest } from '@/types';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { normalizeFileRequest, prepareFileRequestForApi } from '@/lib/utils/formatters';
 
 const CreateEditRequest = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,7 +32,7 @@ const CreateEditRequest = () => {
           .single();
 
         if (error) throw error;
-        if (data) setRequest(data as FileRequest);
+        if (data) setRequest(normalizeFileRequest(data as FileRequest));
       } catch (error) {
         console.error('Error fetching request:', error);
         toast.error('ไม่สามารถโหลดข้อมูลคำขอได้');
@@ -50,16 +51,15 @@ const CreateEditRequest = () => {
     }
 
     try {
+      const apiData = prepareFileRequestForApi({
+        ...formData,
+        status: 'pending'
+      });
+
       if (isEditMode && request) {
         const { error } = await supabase
           .from('requests')
-          .update({
-            document_name: formData.documentName,
-            receiver_email: formData.receiverEmail,
-            file_path: formData.fileAttachment,
-            status: 'pending',
-            updated_at: new Date().toISOString()
-          })
+          .update(apiData)
           .eq('id', id);
 
         if (error) throw error;
@@ -69,11 +69,8 @@ const CreateEditRequest = () => {
         const { data, error } = await supabase
           .from('requests')
           .insert([{
-            requester_id: user.id,
-            document_name: formData.documentName,
-            receiver_email: formData.receiverEmail,
-            file_path: formData.fileAttachment,
-            status: 'pending'
+            ...apiData,
+            requester_id: user.id
           }])
           .select()
           .single();

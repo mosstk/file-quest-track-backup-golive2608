@@ -1,3 +1,4 @@
+
 import React, { useState, ChangeEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,9 +22,9 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
 }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
-    document_name: initialData.document_name || '',
-    receiver_email: initialData.receiver_email || '',
-    file_path: initialData.file_path || null,
+    document_name: initialData.document_name || initialData.documentName || '',
+    receiver_email: initialData.receiver_email || initialData.receiverEmail || '',
+    file_path: initialData.file_path || initialData.fileAttachment || null,
   });
 
   const [fileSelected, setFileSelected] = useState<File | null>(null);
@@ -50,10 +51,10 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
       setFileSelected(e.target.files[0]);
       
       // Clear file error if previously set
-      if (formErrors.fileAttachment) {
+      if (formErrors.file_path) {
         setFormErrors({
           ...formErrors,
-          fileAttachment: '',
+          file_path: '',
         });
       }
     }
@@ -73,7 +74,7 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
     }
     
     if (!initialData.file_path && !fileSelected && !isRework) {
-      errors.fileAttachment = 'กรุณาแนบไฟล์';
+      errors.file_path = 'กรุณาแนบไฟล์';
     }
     
     setFormErrors(errors);
@@ -90,8 +91,11 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
     
     onSubmit({
       document_name: formData.document_name,
+      documentName: formData.document_name, // For backward compatibility
       receiver_email: formData.receiver_email,
+      receiverEmail: formData.receiver_email, // For backward compatibility
       file_path: fileSelected ? fileSelected.name : formData.file_path,
+      fileAttachment: fileSelected ? fileSelected.name : formData.file_path, // For backward compatibility
     });
   };
 
@@ -145,18 +149,18 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="fileAttachment">ไฟล์แนบ</Label>
+            <Label htmlFor="file_path">ไฟล์แนบ</Label>
             <div className="flex items-center gap-2">
               <Input
-                id="fileAttachment"
-                name="fileAttachment"
+                id="file_path"
+                name="file_path"
                 type="file"
                 onChange={handleFileChange}
-                className={`${formErrors.fileAttachment ? 'border-red-500' : ''} file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-primary file:text-primary-foreground hover:file:bg-primary/90`}
+                className={`${formErrors.file_path ? 'border-red-500' : ''} file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-primary file:text-primary-foreground hover:file:bg-primary/90`}
               />
             </div>
-            {formErrors.fileAttachment && (
-              <p className="text-sm text-red-500">{formErrors.fileAttachment}</p>
+            {formErrors.file_path && (
+              <p className="text-sm text-red-500">{formErrors.file_path}</p>
             )}
             {(initialData.file_path || fileSelected) && (
               <p className="text-sm text-muted-foreground">

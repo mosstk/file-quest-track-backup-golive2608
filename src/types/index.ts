@@ -11,6 +11,11 @@ export interface User {
   division?: string;
   full_name?: string;
   avatar_url?: string;
+  
+  // Add these properties to support existing code
+  name?: string;
+  avatar?: string;
+  employeeId?: string;
 }
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected' | 'rework' | 'completed';
@@ -28,4 +33,20 @@ export interface FileRequest {
   admin_feedback?: string;
   is_delivered?: boolean;
   approved_by?: string;
+  
+  // Add these properties to support existing code
+  documentName?: string;
+  receiverEmail?: string;
+  fileAttachment?: string;
+  requesterName?: string;
+  requesterEmail?: string;
+  requesterEmployeeId?: string;
+  requesterCompany?: string;
+  requesterDepartment?: string;
+  requesterDivision?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  trackingNumber?: string;
+  adminFeedback?: string;
+  isDelivered?: boolean;
 }
