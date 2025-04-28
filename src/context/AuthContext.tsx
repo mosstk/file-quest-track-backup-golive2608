@@ -37,36 +37,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Function to fetch user profile data
   const fetchUserProfile = async (userId: string) => {
     try {
-      console.log('Fetching profile for user:', userId);
-      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (error) {
-        console.error('Error fetching profile:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       if (data) {
-        console.log('Profile data received:', data);
-        
         // Validate and ensure role is one of the allowed values
         const roleValue = data.role || 'requester';
-        let validatedRole: UserRole;
-        
-        if (roleValue === 'fa_admin') {
-          validatedRole = 'fa_admin';
-        } else if (roleValue === 'requester') {
-          validatedRole = 'requester';
-        } else if (roleValue === 'receiver') {
-          validatedRole = 'receiver';
-        } else {
-          validatedRole = 'requester'; // Default
-          console.warn(`Invalid role "${roleValue}" found, defaulting to "requester"`);
-        }
+        const validatedRole: UserRole = 
+          (roleValue === 'fa_admin' || roleValue === 'requester' || roleValue === 'receiver') 
+            ? roleValue 
+            : 'requester'; // Default to requester if invalid role
 
         // Combine Supabase auth user data with profile data
         return {
