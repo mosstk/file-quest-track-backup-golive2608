@@ -58,20 +58,20 @@ export function normalizeUser(userData: Partial<User>): User {
 /**
  * Prepares a FileRequest object for submission to the API (converts camelCase to snake_case)
  */
-export function prepareFileRequestForApi(request: Partial<FileRequest>): Partial<FileRequest> {
-  // Make sure required fields are not undefined
-  if (!request.document_name && request.documentName) {
-    request.document_name = request.documentName;
+export function prepareFileRequestForApi(request: Partial<FileRequest>): Record<string, any> {
+  // Ensure required fields are present
+  const document_name = request.document_name || request.documentName;
+  const receiver_email = request.receiver_email || request.receiverEmail;
+  
+  if (!document_name || !receiver_email) {
+    throw new Error("Required fields missing: document_name and receiver_email are required");
   }
   
-  if (!request.receiver_email && request.receiverEmail) {
-    request.receiver_email = request.receiverEmail;
-  }
-  
+  // Return only the properties that match the database schema
   return {
+    document_name,
+    receiver_email,
     requester_id: request.requester_id,
-    document_name: request.document_name,
-    receiver_email: request.receiver_email,
     file_path: request.file_path || request.fileAttachment,
     status: request.status,
     tracking_number: request.tracking_number || request.trackingNumber,

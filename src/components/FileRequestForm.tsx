@@ -91,9 +91,6 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
       document_name: formData.document_name,
       receiver_email: formData.receiver_email,
       file_path: fileSelected ? fileSelected.name : formData.file_path,
-      documentName: formData.document_name,
-      receiverEmail: formData.receiver_email,
-      fileAttachment: fileSelected ? fileSelected.name : formData.file_path,
     });
   };
 
@@ -107,7 +104,7 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl">{isRework ? 'แก้ไขคำขอส่งไฟล์' : 'ใบคำขอส่งไฟล์'}</CardTitle>
         <CardDescription>
-          กรุณากรอกข้อมูลให้คร��ถ้วนเพื่อดำเนินการต่อ
+          กรุณากรอกข้อมูลให้ครบถ้วนเพื่อดำเนินการต่อ
         </CardDescription>
       </CardHeader>
       

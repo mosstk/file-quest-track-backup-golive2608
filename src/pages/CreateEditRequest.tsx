@@ -52,9 +52,23 @@ const CreateEditRequest = () => {
 
     try {
       // Make sure required fields are properly set
+      if (!formData.document_name && formData.documentName) {
+        formData.document_name = formData.documentName;
+      }
+      
+      if (!formData.receiver_email && formData.receiverEmail) {
+        formData.receiver_email = formData.receiverEmail;
+      }
+      
+      if (!formData.document_name || !formData.receiver_email) {
+        toast.error('กรุณากรอกข้อมูลให้ครบถ้วน');
+        return;
+      }
+
+      // Prepare data for API - this function now returns only valid DB fields
       const apiData = prepareFileRequestForApi({
         ...formData,
-        status: 'pending'
+        status: formData.status || 'pending'
       });
 
       if (isEditMode && request) {
@@ -67,13 +81,6 @@ const CreateEditRequest = () => {
         toast.success('แก้ไขคำขอเรียบร้อย');
         navigate(`/request/${id}`);
       } else {
-        // Ensure required fields are provided for new requests
-        if (!apiData.document_name || !apiData.receiver_email) {
-          toast.error('กรุณากรอกข้อมูลให้ครบถ้วน');
-          return;
-        }
-
-        // For new requests, we add requester_id
         const { data, error } = await supabase
           .from('requests')
           .insert({
