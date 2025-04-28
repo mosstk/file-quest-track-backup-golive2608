@@ -16,6 +16,7 @@ const TrackingDetails: React.FC<TrackingDetailsProps> = ({
   onConfirmDelivery 
 }) => {
   const { user } = useAuth();
+  // Check both property naming styles
   const isReceiver = user?.email === request.receiver_email || user?.email === request.receiverEmail;
   const canConfirm = isReceiver && request.status === 'approved' && !(request.is_delivered || request.isDelivered);
 

@@ -59,10 +59,19 @@ export function normalizeUser(userData: Partial<User>): User {
  * Prepares a FileRequest object for submission to the API (converts camelCase to snake_case)
  */
 export function prepareFileRequestForApi(request: Partial<FileRequest>): Partial<FileRequest> {
+  // Make sure required fields are not undefined
+  if (!request.document_name && request.documentName) {
+    request.document_name = request.documentName;
+  }
+  
+  if (!request.receiver_email && request.receiverEmail) {
+    request.receiver_email = request.receiverEmail;
+  }
+  
   return {
     requester_id: request.requester_id,
-    document_name: request.document_name || request.documentName,
-    receiver_email: request.receiver_email || request.receiverEmail,
+    document_name: request.document_name,
+    receiver_email: request.receiver_email,
     file_path: request.file_path || request.fileAttachment,
     status: request.status,
     tracking_number: request.tracking_number || request.trackingNumber,

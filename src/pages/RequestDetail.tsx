@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -13,90 +12,7 @@ import ApprovalForm from '@/components/ApprovalForm';
 import TrackingDetails from '@/components/TrackingDetails';
 import { FileRequest } from '@/types';
 import { toast } from 'sonner';
-
-// Mock data - using same data from other components
-const mockRequests: FileRequest[] = [
-  {
-    id: '1',
-    requesterName: 'John Doe',
-    requesterEmployeeId: 'EMP001',
-    requesterCompany: 'Example Corp',
-    requesterDepartment: 'Marketing',
-    requesterDivision: 'Digital Marketing',
-    documentName: 'Q3 Marketing Report',
-    requesterEmail: 'john@example.com',
-    receiverEmail: 'receiver@example.com',
-    fileAttachment: 'marketing_report_q3.pdf',
-    status: 'pending',
-    createdAt: '2023-10-15T09:30:00',
-    updatedAt: '2023-10-15T09:30:00',
-  },
-  {
-    id: '2',
-    requesterName: 'Jane Smith',
-    requesterEmployeeId: 'EMP002',
-    requesterCompany: 'Example Corp',
-    requesterDepartment: 'Finance',
-    requesterDivision: 'Accounting',
-    documentName: 'Annual Financial Statement',
-    requesterEmail: 'jane@example.com',
-    receiverEmail: 'client@example.com',
-    fileAttachment: 'financial_statement_2023.pdf',
-    status: 'approved',
-    createdAt: '2023-10-10T14:20:00',
-    updatedAt: '2023-10-12T11:45:00',
-    trackingNumber: 'TRK78901234',
-  },
-  {
-    id: '3',
-    requesterName: 'Mike Johnson',
-    requesterEmployeeId: 'EMP003',
-    requesterCompany: 'Example Corp',
-    requesterDepartment: 'HR',
-    requesterDivision: 'Recruitment',
-    documentName: 'New Employee Onboarding Pack',
-    requesterEmail: 'mike@example.com',
-    receiverEmail: 'newemployee@example.com',
-    fileAttachment: 'onboarding_pack.pdf',
-    status: 'rework',
-    createdAt: '2023-10-05T10:15:00',
-    updatedAt: '2023-10-06T16:30:00',
-    adminFeedback: 'Please update the company policy section.',
-  },
-  {
-    id: '4',
-    requesterName: 'Sarah Lee',
-    requesterEmployeeId: 'EMP004',
-    requesterCompany: 'Example Corp',
-    requesterDepartment: 'Legal',
-    requesterDivision: 'Compliance',
-    documentName: 'Vendor Contract',
-    requesterEmail: 'sarah@example.com',
-    receiverEmail: 'vendor@example.com',
-    fileAttachment: 'vendor_contract_2023.pdf',
-    status: 'rejected',
-    createdAt: '2023-10-02T08:45:00',
-    updatedAt: '2023-10-03T13:20:00',
-    adminFeedback: 'Contract terms do not meet company guidelines.',
-  },
-  {
-    id: '5',
-    requesterName: 'David Brown',
-    requesterEmployeeId: 'EMP005',
-    requesterCompany: 'Example Corp',
-    requesterDepartment: 'Sales',
-    requesterDivision: 'Enterprise',
-    documentName: 'Client Proposal',
-    requesterEmail: 'david@example.com',
-    receiverEmail: 'client@example.com',
-    fileAttachment: 'client_proposal.pdf',
-    status: 'completed',
-    createdAt: '2023-09-28T15:30:00',
-    updatedAt: '2023-09-30T09:45:00',
-    trackingNumber: 'TRK45678901',
-    isDelivered: true,
-  },
-];
+import { mockRequests } from '@/lib/mockData';
 
 const RequestDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -140,7 +56,9 @@ const RequestDetail = () => {
     setRequest({
       ...request,
       status: 'approved',
+      tracking_number: trackingNumber,
       trackingNumber,
+      updated_at: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
     
@@ -154,7 +72,9 @@ const RequestDetail = () => {
     setRequest({
       ...request,
       status: 'rework',
+      admin_feedback: feedback,
       adminFeedback: feedback,
+      updated_at: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
     
@@ -168,7 +88,9 @@ const RequestDetail = () => {
     setRequest({
       ...request,
       status: 'rejected',
+      admin_feedback: feedback,
       adminFeedback: feedback,
+      updated_at: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
     
@@ -181,8 +103,10 @@ const RequestDetail = () => {
     // Update request with delivered status
     setRequest({
       ...request,
+      is_delivered: true,
       isDelivered: true,
       status: 'completed',
+      updated_at: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
     
@@ -223,7 +147,7 @@ const RequestDetail = () => {
   
   const isAdmin = user?.role === 'fa_admin';
   const isRequester = user?.email === request.requesterEmail;
-  const isReceiver = user?.email === request.receiverEmail;
+  const isReceiver = user?.email === (request.receiver_email || request.receiverEmail);
   const canApprove = isAdmin && request.status === 'pending';
   const canEdit = (isRequester && request.status === 'rework') || isAdmin;
 
@@ -239,7 +163,7 @@ const RequestDetail = () => {
             >
               &larr; กลับ
             </Button>
-            <h1 className="text-2xl font-bold">{request.documentName}</h1>
+            <h1 className="text-2xl font-bold">{request.document_name || request.documentName}</h1>
             <div className="flex items-center gap-2 mt-1">
               <p className="text-muted-foreground">
                 คำขอส่งไฟล์ #{request.id}
@@ -294,7 +218,7 @@ const RequestDetail = () => {
                 
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-1">ชื่อไฟล์เอกสาร</h3>
-                  <p className="font-medium">{request.documentName}</p>
+                  <p className="font-medium">{request.document_name || request.documentName}</p>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -304,7 +228,7 @@ const RequestDetail = () => {
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground mb-1">อีเมล์ของผู้รับ</h3>
-                    <p className="font-medium">{request.receiverEmail}</p>
+                    <p className="font-medium">{request.receiver_email || request.receiverEmail}</p>
                   </div>
                 </div>
                 
@@ -312,7 +236,7 @@ const RequestDetail = () => {
                   <h3 className="text-sm font-medium text-muted-foreground mb-1">ไฟล์แนบ</h3>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="bg-muted/50">
-                      {request.fileAttachment}
+                      {request.file_path || request.fileAttachment}
                     </Badge>
                     <Button variant="outline" size="sm">
                       ดาวน์โหลด
@@ -323,15 +247,15 @@ const RequestDetail = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground mb-1">วันที่สร้าง</h3>
-                    <p className="font-medium">{formatDate(request.createdAt)}</p>
+                    <p className="font-medium">{formatDate(request.created_at || request.createdAt || '')}</p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground mb-1">อัปเดตล่าสุด</h3>
-                    <p className="font-medium">{formatDate(request.updatedAt)}</p>
+                    <p className="font-medium">{formatDate(request.updated_at || request.updatedAt || '')}</p>
                   </div>
                 </div>
                 
-                {request.adminFeedback && (
+                {(request.admin_feedback || request.adminFeedback) && (
                   <Alert className={`mt-2 ${
                     request.status === 'rejected' 
                       ? 'border-red-200 bg-red-50 text-red-800' 
@@ -344,7 +268,7 @@ const RequestDetail = () => {
                       }
                     </AlertTitle>
                     <AlertDescription>
-                      {request.adminFeedback}
+                      {request.admin_feedback || request.adminFeedback}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -379,7 +303,7 @@ const RequestDetail = () => {
                     <div className="h-2 w-2 rounded-full bg-green-500 mt-2"></div>
                     <div className="flex-1">
                       <p className="font-medium">สร้างคำขอส่งไฟล์</p>
-                      <p className="text-sm text-muted-foreground">{formatDate(request.createdAt)}</p>
+                      <p className="text-sm text-muted-foreground">{formatDate(request.created_at || request.createdAt || '')}</p>
                     </div>
                   </div>
                   
@@ -403,7 +327,7 @@ const RequestDetail = () => {
                                 : 'เสร็จสิ้น'
                           }
                         </p>
-                        <p className="text-sm text-muted-foreground">{formatDate(request.updatedAt)}</p>
+                        <p className="text-sm text-muted-foreground">{formatDate(request.updated_at || request.updatedAt || '')}</p>
                       </div>
                     </div>
                   )}
@@ -413,7 +337,7 @@ const RequestDetail = () => {
                       <div className="h-2 w-2 rounded-full bg-green-500 mt-2"></div>
                       <div className="flex-1">
                         <p className="font-medium">ได้รับเอกสารเรียบร้อย</p>
-                        <p className="text-sm text-muted-foreground">{formatDate(request.updatedAt)}</p>
+                        <p className="text-sm text-muted-foreground">{formatDate(request.updated_at || request.updatedAt || '')}</p>
                       </div>
                     </div>
                   )}

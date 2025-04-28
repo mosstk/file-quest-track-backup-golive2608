@@ -51,6 +51,7 @@ const CreateEditRequest = () => {
     }
 
     try {
+      // Make sure required fields are properly set
       const apiData = prepareFileRequestForApi({
         ...formData,
         status: 'pending'
@@ -66,14 +67,19 @@ const CreateEditRequest = () => {
         toast.success('แก้ไขคำขอเรียบร้อย');
         navigate(`/request/${id}`);
       } else {
+        // Ensure required fields are provided for new requests
+        if (!apiData.document_name || !apiData.receiver_email) {
+          toast.error('กรุณากรอกข้อมูลให้ครบถ้วน');
+          return;
+        }
+
+        // For new requests, we add requester_id
         const { data, error } = await supabase
           .from('requests')
-          .insert([{
+          .insert({
             ...apiData,
             requester_id: user.id
-          }])
-          .select()
-          .single();
+          });
 
         if (error) throw error;
         toast.success('สร้างคำขอเรียบร้อย');

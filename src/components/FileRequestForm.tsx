@@ -1,10 +1,8 @@
-
 import React, { useState, ChangeEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { FileRequest } from '@/types';
@@ -91,11 +89,11 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
     
     onSubmit({
       document_name: formData.document_name,
-      documentName: formData.document_name, // For backward compatibility
       receiver_email: formData.receiver_email,
-      receiverEmail: formData.receiver_email, // For backward compatibility
       file_path: fileSelected ? fileSelected.name : formData.file_path,
-      fileAttachment: fileSelected ? fileSelected.name : formData.file_path, // For backward compatibility
+      documentName: formData.document_name,
+      receiverEmail: formData.receiver_email,
+      fileAttachment: fileSelected ? fileSelected.name : formData.file_path,
     });
   };
 
@@ -109,7 +107,7 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl">{isRework ? 'แก้ไขคำขอส่งไฟล์' : 'ใบคำขอส่งไฟล์'}</CardTitle>
         <CardDescription>
-          กรุณากรอกข้อมูลให้ครบถ้วนเพื่อดำเนินการต่อ
+          กรุณากรอกข้อมูลให้คร��ถ้วนเพื่อดำเนินการต่อ
         </CardDescription>
       </CardHeader>
       

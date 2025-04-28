@@ -28,12 +28,16 @@ const RequestTable: React.FC<RequestTableProps> = ({
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   
-  const filteredRequests = requests.filter(request => 
-    request.documentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.requesterName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.requesterEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.receiverEmail.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredRequests = requests.filter(request => {
+    const searchFields = [
+      request.document_name || request.documentName || '',
+      request.requesterName || '',
+      request.requesterEmail || '',
+      request.receiver_email || request.receiverEmail || ''
+    ].map(field => field.toLowerCase());
+    
+    return searchFields.some(field => field.includes(searchTerm.toLowerCase()));
+  });
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -83,11 +87,11 @@ const RequestTable: React.FC<RequestTableProps> = ({
               filteredRequests.map((request) => (
                 <TableRow key={request.id} className="hover:bg-muted/50">
                   <TableCell className="font-medium">
-                    {formatDate(request.createdAt)}
+                    {formatDate(request.created_at || request.createdAt || '')}
                   </TableCell>
-                  <TableCell>{request.documentName}</TableCell>
+                  <TableCell>{request.document_name || request.documentName}</TableCell>
                   <TableCell>{request.requesterName}</TableCell>
-                  <TableCell>{request.receiverEmail}</TableCell>
+                  <TableCell>{request.receiver_email || request.receiverEmail}</TableCell>
                   <TableCell>
                     <RequestStatusBadge status={request.status} />
                   </TableCell>
