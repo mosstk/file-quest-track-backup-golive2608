@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -43,53 +42,73 @@ import { Search, Plus, Trash, Edit } from 'lucide-react';
 const mockUsers: User[] = [
   {
     id: 'req-1',
+    full_name: 'John Doe',
     name: 'John Doe',
     email: 'john@example.com',
+    employee_id: 'EMP001',
     employeeId: 'EMP001',
     company: 'Example Corp',
     department: 'Marketing',
     division: 'Digital Marketing',
     role: 'requester',
+    avatar_url: null,
+    avatar: null
   },
   {
     id: 'req-2',
+    full_name: 'Jane Smith',
     name: 'Jane Smith',
     email: 'jane@example.com',
+    employee_id: 'EMP002',
     employeeId: 'EMP002',
     company: 'Example Corp',
     department: 'Finance',
     division: 'Accounting',
     role: 'requester',
+    avatar_url: null,
+    avatar: null
   },
   {
     id: 'req-3',
+    full_name: 'Mike Johnson',
     name: 'Mike Johnson',
     email: 'mike@example.com',
+    employee_id: 'EMP003',
     employeeId: 'EMP003',
     company: 'Example Corp',
     department: 'HR',
     division: 'Recruitment',
     role: 'requester',
+    avatar_url: null,
+    avatar: null
   },
   {
     id: 'rec-1',
+    full_name: 'Sarah Lee',
     name: 'Sarah Lee',
     email: 'sarah@example.com',
+    employee_id: 'EMP004',
     employeeId: 'EMP004',
     company: 'Partner Corp',
     department: 'Operations',
     division: 'Supply Chain',
     role: 'receiver',
+    avatar_url: null,
+    avatar: null
   },
   {
     id: 'rec-2',
+    full_name: 'David Brown',
     name: 'David Brown',
     email: 'david@example.com',
+    employee_id: 'EMP005',
     employeeId: 'EMP005',
     company: 'Client Corp',
     department: 'Executive',
     division: 'Management',
     role: 'receiver',
+    avatar_url: null,
+    avatar: null
   },
 ];
 
@@ -102,8 +121,10 @@ const AdminPanel = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
   const [newUser, setNewUser] = useState<Partial<User>>({
+    full_name: '',
     name: '',
     email: '',
+    employee_id: '',
     employeeId: '',
     company: '',
     department: '',
@@ -115,9 +136,9 @@ const AdminPanel = () => {
   const filteredUsers = users.filter(user => {
     const matchesRole = activeTab === 'all' || user.role === activeTab;
     const matchesSearch = 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.employeeId.toLowerCase().includes(searchTerm.toLowerCase());
+      (user.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (user.employeeId?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     
     return matchesRole && matchesSearch;
   });
@@ -125,15 +146,45 @@ const AdminPanel = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (isEditUserOpen && selectedUser) {
-      setSelectedUser({
-        ...selectedUser,
-        [name]: value,
-      });
+      // Set both new and legacy field names for compatibility
+      if (name === 'name') {
+        setSelectedUser({
+          ...selectedUser,
+          name: value,
+          full_name: value
+        });
+      } else if (name === 'employeeId') {
+        setSelectedUser({
+          ...selectedUser,
+          employeeId: value,
+          employee_id: value
+        });
+      } else {
+        setSelectedUser({
+          ...selectedUser,
+          [name]: value,
+        });
+      }
     } else {
-      setNewUser({
-        ...newUser,
-        [name]: value,
-      });
+      // Set both new and legacy field names for compatibility
+      if (name === 'name') {
+        setNewUser({
+          ...newUser,
+          name: value,
+          full_name: value
+        });
+      } else if (name === 'employeeId') {
+        setNewUser({
+          ...newUser,
+          employeeId: value,
+          employee_id: value
+        });
+      } else {
+        setNewUser({
+          ...newUser,
+          [name]: value,
+        });
+      }
     }
   };
 
@@ -161,19 +212,25 @@ const AdminPanel = () => {
     // Add new user
     const user: User = {
       id: `user-${Date.now()}`,
-      name: newUser.name || '',
-      email: newUser.email || '',
-      employeeId: newUser.employeeId || '',
-      company: newUser.company || '',
-      department: newUser.department || '',
-      division: newUser.division || '',
-      role: newUser.role as UserRole || 'requester',
+      full_name: newUser.name,
+      name: newUser.name,
+      email: newUser.email,
+      employee_id: newUser.employeeId,
+      employeeId: newUser.employeeId,
+      company: newUser.company,
+      department: newUser.department,
+      division: newUser.division,
+      role: newUser.role as UserRole,
+      avatar_url: null,
+      avatar: null
     };
     
     setUsers([...users, user]);
     setNewUser({
+      full_name: '',
       name: '',
       email: '',
+      employee_id: '',
       employeeId: '',
       company: '',
       department: '',

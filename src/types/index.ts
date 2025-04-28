@@ -14,18 +14,10 @@ export interface User {
   division?: string | null;
   role: UserRole;
   
-  // Aliased properties for backward compatibility with existing code
-  get name(): string | null {
-    return this.full_name;
-  }
-  
-  get employeeId(): string | null {
-    return this.employee_id;
-  }
-  
-  get avatar(): string | null {
-    return this.avatar_url;
-  }
+  // Define as properties rather than getters to avoid implementation in interface
+  name?: string | null;
+  employeeId?: string | null;
+  avatar?: string | null;
 }
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected' | 'rework' | 'completed';

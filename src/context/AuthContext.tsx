@@ -30,24 +30,24 @@ async function fetchUserProfile(supabaseUser: any): Promise<User | null> {
   }
 
   if (data) {
-    // Create a user object with the getters for compatibility
-    const user = {
-      ...data,
+    // Create a user object that maps DB fields to our interface including compatibility properties
+    const user: User = {
+      id: data.id,
+      full_name: data.full_name,
       email: supabaseUser.email,
+      username: data.username,
+      avatar_url: data.avatar_url,
+      employee_id: data.employee_id,
+      company: data.company,
+      department: data.department,
+      division: data.division,
+      role: data.role as UserRole,
       
-      // Add getters for backward compatibility
-      get name() {
-        return this.full_name;
-      },
-      
-      get employeeId() {
-        return this.employee_id;
-      },
-      
-      get avatar() {
-        return this.avatar_url;
-      }
-    } as User;
+      // Add properties for backward compatibility
+      name: data.full_name,
+      employeeId: data.employee_id,
+      avatar: data.avatar_url
+    };
     
     return user;
   }
