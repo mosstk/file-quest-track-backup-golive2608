@@ -11,6 +11,7 @@ import Requests from "./pages/Requests";
 import RequestDetail from "./pages/RequestDetail";
 import CreateEditRequest from "./pages/CreateEditRequest";
 import AdminPanel from "./pages/AdminPanel";
+import UserSystemPathsPage from "./pages/UserSystemPathsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => {
               <Route path="/requests/edit/:id" element={<CreateEditRequest />} />
               <Route path="/request/:id" element={<RequestDetail />} />
               <Route path="/admin" element={<AdminPanel />} />
+              <Route path="/system-paths" element={<UserSystemPathsPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>

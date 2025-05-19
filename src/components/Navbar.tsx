@@ -1,17 +1,67 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Menu, X } from 'lucide-react';
+} from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/context/AuthContext';
+import { UserRole } from '@/types';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { MenuIcon, FileText, LayoutDashboard, UserCog, FolderTree } from 'lucide-react';
+import { useMobile } from '@/hooks/use-mobile';
+
+const NavbarMenuItems = ({ onClose }: { onClose?: () => void }) => {
+  const { user } = useAuth();
+  const location = useLocation();
+
+  const isActive = (path: string) => location.pathname === path;
+  const linkClass = (path: string) => 
+    `flex items-center gap-2 px-3 py-2 rounded-md transition-colors ${isActive(path) 
+      ? 'bg-primary text-primary-foreground font-medium' 
+      : 'hover:bg-accent hover:text-accent-foreground'
+    }`;
+
+  const handleClick = () => {
+    if (onClose) onClose();
+  };
+
+  if (!user) return null;
+
+  return (
+    <div className="flex flex-col gap-1">
+      <Link to="/dashboard" className={linkClass('/dashboard')} onClick={handleClick}>
+        <LayoutDashboard size={18} />
+        <span>หน้าหลัก</span>
+      </Link>
+      
+      <Link to="/requests" className={linkClass('/requests')} onClick={handleClick}>
+        <FileText size={18} />
+        <span>คำขอส่งไฟล์</span>
+      </Link>
+
+      {(user.role === 'fa_admin' || user.role === 'requester') && (
+        <Link to="/system-paths" className={linkClass('/system-paths')} onClick={handleClick}>
+          <FolderTree size={18} />
+          <span>จัดการ System Path</span>
+        </Link>
+      )}
+      
+      {user.role === 'fa_admin' && (
+        <Link to="/admin" className={linkClass('/admin')} onClick={handleClick}>
+          <UserCog size={18} />
+          <span>จัดการระบบ</span>
+        </Link>
+      )}
+    </div>
+  );
+};
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
