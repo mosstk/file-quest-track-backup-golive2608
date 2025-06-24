@@ -23,9 +23,19 @@ export async function getUserPaths() {
  * Creates a new path for the current authenticated user
  */
 export async function createUserPath(path: UserPathInput) {
+  const { data: userData, error: authError } = await supabase.auth.getUser();
+  
+  if (authError || !userData.user) {
+    console.error('User not authenticated:', authError);
+    throw new Error('User not authenticated');
+  }
+
   const { data, error } = await supabase
     .from('user_paths')
-    .insert(path)
+    .insert({
+      ...path,
+      user_id: userData.user.id
+    })
     .select()
     .single();
 

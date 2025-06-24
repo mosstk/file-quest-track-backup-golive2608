@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,8 +15,8 @@ import { useAuth } from '@/context/AuthContext';
 import { UserRole } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { MenuIcon, FileText, LayoutDashboard, UserCog, FolderTree } from 'lucide-react';
-import { useMobile } from '@/hooks/use-mobile';
+import { MenuIcon, FileText, LayoutDashboard, UserCog, FolderTree, X, Menu } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const NavbarMenuItems = ({ onClose }: { onClose?: () => void }) => {
   const { user } = useAuth();
