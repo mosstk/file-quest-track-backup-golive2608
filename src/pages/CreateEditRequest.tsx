@@ -66,7 +66,7 @@ const CreateEditRequest = () => {
 
       console.log('Form data before API preparation:', formData);
 
-      // Prepare data for API - this function now returns only valid DB fields
+      // Prepare data for API - this function now returns properly typed data
       const apiData = prepareFileRequestForApi({
         ...formData,
         status: formData.status || 'pending',

@@ -56,27 +56,43 @@ export function normalizeUser(userData: Partial<User>): User {
 }
 
 /**
+ * Type for database insert/update operations
+ */
+type DatabaseRequestData = {
+  document_name: string;
+  receiver_email: string;
+  requester_id: string;
+  file_path?: string | null;
+  status?: 'pending' | 'approved' | 'rejected' | 'rework' | 'completed';
+  tracking_number?: string | null;
+  admin_feedback?: string | null;
+  is_delivered?: boolean | null;
+  approved_by?: string | null;
+};
+
+/**
  * Prepares a FileRequest object for submission to the API (converts camelCase to snake_case)
  */
-export function prepareFileRequestForApi(request: Partial<FileRequest>): Record<string, any> {
+export function prepareFileRequestForApi(request: Partial<FileRequest>): DatabaseRequestData {
   // Ensure required fields are present
   const document_name = request.document_name || request.documentName;
   const receiver_email = request.receiver_email || request.receiverEmail;
+  const requester_id = request.requester_id;
   
-  if (!document_name || !receiver_email) {
-    throw new Error("Required fields missing: document_name and receiver_email are required");
+  if (!document_name || !receiver_email || !requester_id) {
+    throw new Error("Required fields missing: document_name, receiver_email, and requester_id are required");
   }
   
   // Return only the properties that match the database schema
   return {
     document_name,
     receiver_email,
-    requester_id: request.requester_id,
-    file_path: request.file_path || request.fileAttachment,
-    status: request.status,
-    tracking_number: request.tracking_number || request.trackingNumber,
-    admin_feedback: request.admin_feedback || request.adminFeedback,
-    is_delivered: request.is_delivered || request.isDelivered,
-    approved_by: request.approved_by,
+    requester_id,
+    file_path: request.file_path || request.fileAttachment || null,
+    status: request.status || 'pending',
+    tracking_number: request.tracking_number || request.trackingNumber || null,
+    admin_feedback: request.admin_feedback || request.adminFeedback || null,
+    is_delivered: request.is_delivered || request.isDelivered || null,
+    approved_by: request.approved_by || null,
   };
 }
