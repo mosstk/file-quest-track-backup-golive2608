@@ -64,11 +64,16 @@ const CreateEditRequest = () => {
         return;
       }
 
+      console.log('Form data before API preparation:', formData);
+
       // Prepare data for API - this function now returns only valid DB fields
       const apiData = prepareFileRequestForApi({
         ...formData,
-        status: formData.status || 'pending'
+        status: formData.status || 'pending',
+        requester_id: user.id
       });
+
+      console.log('API data after preparation:', apiData);
 
       if (isEditMode && request) {
         const { error } = await supabase
@@ -82,10 +87,7 @@ const CreateEditRequest = () => {
       } else {
         const { data, error } = await supabase
           .from('requests')
-          .insert([{
-            ...apiData,
-            requester_id: user.id
-          }]);
+          .insert([apiData]);
 
         if (error) throw error;
         toast.success('สร้างคำขอเรียบร้อย');
