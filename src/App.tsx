@@ -14,6 +14,7 @@ import AdminPanel from "./pages/AdminPanel";
 import UserSystemPathsPage from "./pages/UserSystemPathsPage";
 import NotFound from "./pages/NotFound";
 import DebugPanel from "./components/DebugPanel";
+import MockUserDebugPanel from "./components/MockUserDebugPanel";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
             <DebugPanel />
+            <MockUserDebugPanel />
           </TooltipProvider>
         </BrowserRouter>
       </AuthProvider>

@@ -94,6 +94,41 @@ const CreateEditRequest = () => {
 
       console.log('API data prepared:', apiData);
 
+      // สำหรับ Mock Users ให้ bypass การตรวจสอบ auth.uid()
+      if (user.name?.startsWith('Test ')) {
+        console.log('Processing mock user request...');
+        
+        // ตรวจสอบว่า mock user มี profile หรือไม่
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError && profileError.code === 'PGRST116') {
+          // Profile ไม่มี ให้สร้างใหม่
+          console.log('Creating profile for mock user...');
+          const { error: createProfileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              full_name: user.full_name,
+              email: user.email,
+              employee_id: user.employee_id,
+              company: user.company,
+              department: user.department,
+              division: user.division,
+              role: user.role,
+              avatar_url: user.avatar_url,
+            });
+
+          if (createProfileError) {
+            console.error('Error creating profile:', createProfileError);
+            // ไม่ต้อง throw error เพราะอาจจะเป็นปัญหาของ RLS
+          }
+        }
+      }
+
       if (isEditMode && request) {
         console.log('Updating existing request:', id);
         
@@ -138,9 +173,12 @@ const CreateEditRequest = () => {
       let errorMessage = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
       
       if (error?.message?.includes('permission denied')) {
-        errorMessage = 'ไม่มีสิทธิ์ในการบันทึกข้อมูล กรุณาติดต่อผู้ดูแลระบบ';
+        errorMessage = 'ไม่มีสิทธิ์ในการบันทึกข้อมูล - ตรวจสอบการตั้งค่า RLS policies';
+        console.error('RLS Policy Error - Mock user ID:', user.id);
+        console.error('Mock user detection:', user.name?.startsWith('Test '));
       } else if (error?.message?.includes('violates row-level security')) {
         errorMessage = 'การตั้งค่าความปลอดภัยของระบบไม่อนุญาตให้บันทึกข้อมูล';
+        console.error('RLS Violation - User ID:', user.id);
       } else if (error?.message) {
         errorMessage = `ข้อผิดพลาด: ${error.message}`;
       }
@@ -195,6 +233,9 @@ const CreateEditRequest = () => {
               </p>
               <p className="text-xs text-green-600 mt-1">
                 ID: {user.id} | Type: {user.name?.startsWith('Test ') ? 'Mock User' : 'Real User'}
+              </p>
+              <p className="text-xs text-green-600">
+                RLS Ready: {user.id && ['11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', '33333333-3333-3333-3333-333333333333'].includes(user.id) ? 'Yes' : 'No'}
               </p>
             </div>
           )}
