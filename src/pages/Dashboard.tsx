@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/context/AuthContext';
@@ -27,7 +26,7 @@ const Dashboard = () => {
         
         let query = supabase.from('requests').select('*');
         
-        // Filter based on user role
+        // Filter based on user role - เอาการ filter ผ่าน auth.users ออก
         switch (user.role) {
           case 'fa_admin':
             // Admin can see all requests
@@ -36,8 +35,7 @@ const Dashboard = () => {
             query = query.eq('requester_id', user.id);
             break;
           case 'receiver':
-            // For receivers, we need to join with auth.users to get email
-            // But since we can't access auth.users directly, we'll filter by receiver_email
+            // สำหรับ receiver ให้ filter ด้วย email โดยตรง
             query = query.eq('receiver_email', user.email).eq('status', 'approved');
             break;
           default:

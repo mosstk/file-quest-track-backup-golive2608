@@ -135,8 +135,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       avatar_url: `https://api.dicebear.com/6.x/avataaars/svg?seed=${role}`,
     };
     
-    // สร้าง profile ใน database สำหรับ mock user
-    createMockProfile(mockUser);
+    // สร้าง profile ใน database สำหรับ mock user (ไม่บล็อกการ login)
+    createMockProfile(mockUser).catch(error => {
+      console.error('Error creating mock profile (non-blocking):', error);
+    });
     
     setUser(mockUser);
     toast.success(`เข้าสู่ระบบสำเร็จ: ${mockUser.name}`, {
@@ -153,7 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .select('id')
         .eq('id', mockUser.id)
-        .single();
+        .maybeSingle(); // ใช้ maybeSingle แทน single
 
       if (existingProfile) {
         console.log('Mock profile already exists, skipping creation');
@@ -175,34 +177,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Error creating mock profile:', error);
-        // ไม่แสดง toast error เพื่อไม่ให้รบกวนผู้ใช้
-        // mock user ยังคงใช้งานได้แม้ไม่มี profile ใน database
       } else {
         console.log('Mock profile created successfully');
       }
     } catch (error) {
       console.error('Error in createMockProfile:', error);
-      // ไม่แสดง toast error เพื่อไม่ให้รบกวนผู้ใช้
     }
   };
 
   const logout = async () => {
     if (user && user.full_name?.startsWith('Test ')) {
-      // ทำความสะอาด mock profile (ไม่บังคับ)
-      try {
-        console.log('Cleaning up mock profile for user:', user.id);
-        
-        await supabase
-          .from('profiles')
-          .delete()
-          .eq('id', user.id);
-          
-        console.log('Mock profile cleaned up successfully');
-      } catch (error) {
-        console.error('Error cleaning up mock profile:', error);
-        // ไม่แสดง error เพราะไม่สำคัญ
-      }
-      
       setUser(null);
       toast.success('ออกจากระบบเรียบร้อย');
       return;

@@ -7,7 +7,7 @@ import FileRequestForm from '@/components/FileRequestForm';
 import { FileRequest } from '@/types';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { normalizeFileRequest, prepareFileRequestForApi } from '@/lib/utils/formatters';
+import { normalizeFileRequest } from '@/lib/utils/formatters';
 
 const CreateEditRequest = () => {
   const { id } = useParams<{ id: string }>();
@@ -80,11 +80,11 @@ const CreateEditRequest = () => {
       console.log('Submitting request with user ID:', user.id);
       console.log('Form data:', formData);
 
-      // เตรียมข้อมูลสำหรับ API
+      // เตรียมข้อมูลสำหรับ API - ใช้ user.id โดยตรงสำหรับ mock users
       const apiData = {
         document_name,
         receiver_email,
-        requester_id: user.id,
+        requester_id: user.id, // ใช้ user.id ที่มาจาก mock user
         file_path: formData.file_path || null,
         status: formData.status || 'pending'
       };
