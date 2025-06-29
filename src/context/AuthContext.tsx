@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '@/types';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
@@ -133,19 +133,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Login error:', error);
-        
-        // If password doesn't work, try to sign in with the mock password from database
-        console.log('Trying alternative login method...');
-        const { error: fallbackError } = await supabase.auth.signInWithPassword({
-          email: credentials.email,
-          password: 'mockpassword', // Alternative password
-        });
-        
-        if (fallbackError) {
-          throw new Error(`ไม่สามารถเข้าสู่ระบบได้: ${fallbackError.message}`);
-        }
+        throw new Error(`ไม่สามารถเข้าสู่ระบบได้: ${error.message}`);
       }
 
+      console.log('Login successful:', data);
       toast.success(`เข้าสู่ระบบสำเร็จ: ${role}`, {
         description: `ยินดีต้อนรับเข้าสู่ระบบ FileQuestTrack`
       });
@@ -153,6 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: any) {
       console.error('Login failed:', error);
       toast.error(`เข้าสู่ระบบไม่สำเร็จ: ${error.message}`);
+      throw error;
     } finally {
       setLoading(false);
     }

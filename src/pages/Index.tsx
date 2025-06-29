@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { UserRole } from '@/types';
+import { toast } from 'sonner';
 
 const Index = () => {
-  const { user, login } = useAuth();
+  const { user, login, loading } = useAuth();
   const navigate = useNavigate();
 
   // If user is already logged in, redirect to dashboard
@@ -16,9 +17,14 @@ const Index = () => {
     }
   }, [user, navigate]);
 
-  const handleRoleSelection = (role: UserRole) => {
-    login(role);
-    navigate('/dashboard');
+  const handleRoleSelection = async (role: UserRole) => {
+    try {
+      await login(role);
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Login failed:', error);
+      // Error handling is already done in the login function
+    }
   };
 
   return (
@@ -42,38 +48,56 @@ const Index = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
             <div 
-              className="relative group overflow-hidden bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300"
+              className="relative group overflow-hidden bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
               onClick={() => handleRoleSelection('fa_admin')}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
               <h3 className="text-xl font-semibold mb-2">FA Admin</h3>
               <p className="text-muted-foreground text-sm">จัดการคำขอ อนุมัติเอกสาร และติดตามสถานะการจัดส่ง</p>
               <div className="mt-4">
-                <Button variant="outline" className="w-full">เข้าสู่ระบบ</Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  disabled={loading}
+                >
+                  {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+                </Button>
               </div>
             </div>
             
             <div 
-              className="relative group overflow-hidden bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300"
+              className="relative group overflow-hidden bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
               onClick={() => handleRoleSelection('requester')}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
               <h3 className="text-xl font-semibold mb-2">Requester</h3>
               <p className="text-muted-foreground text-sm">สร้างคำขอส่งไฟล์ ติดตามสถานะ และแก้ไขเอกสารตามคำขอ</p>
               <div className="mt-4">
-                <Button variant="outline" className="w-full">เข้าสู่ระบบ</Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  disabled={loading}
+                >
+                  {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+                </Button>
               </div>
             </div>
             
             <div 
-              className="relative group overflow-hidden bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300"
+              className="relative group overflow-hidden bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
               onClick={() => handleRoleSelection('receiver')}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
               <h3 className="text-xl font-semibold mb-2">Receiver</h3>
               <p className="text-muted-foreground text-sm">รับแจ้งเตือน ตรวจสอบเลขพัสดุ และยืนยันการได้รับเอกสาร</p>
               <div className="mt-4">
-                <Button variant="outline" className="w-full">เข้าสู่ระบบ</Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  disabled={loading}
+                >
+                  {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+                </Button>
               </div>
             </div>
           </div>
@@ -90,4 +114,3 @@ const Index = () => {
 };
 
 export default Index;
-
