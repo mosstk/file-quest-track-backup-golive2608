@@ -37,22 +37,23 @@ export const createUser = async (userData: {
   console.log('Creating user with data:', userData);
   
   try {
-    // Step 1: Create auth user via admin function
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    // Step 1: Create auth user using regular signup
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email: userData.email,
       password: 'TempPass123!',
-      email_confirm: true, // Skip email verification
-      user_metadata: {
-        full_name: userData.name,
-        role: userData.role,
-        employee_id: userData.employeeId,
-        company: userData.company,
-        department: userData.department,
-        division: userData.division,
+      options: {
+        data: {
+          full_name: userData.name,
+          role: userData.role,
+          employee_id: userData.employeeId,
+          company: userData.company,
+          department: userData.department,
+          division: userData.division,
+        }
       }
     });
 
-    console.log('Auth admin createUser result:', { authData, authError });
+    console.log('Auth signup result:', { authData, authError });
 
     if (authError) {
       console.error('Error creating auth user:', authError);
@@ -63,28 +64,22 @@ export const createUser = async (userData: {
       throw new Error('Failed to create auth user');
     }
 
-    // Step 2: The trigger should create the profile automatically
-    // Let's wait a bit and then verify
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Step 2: Wait for the trigger to create the profile
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Verify profile was created
-    const { data: profile, error: profileError } = await supabase
+    // Step 3: Check if profile was created by the trigger
+    const { data: existingProfile, error: checkError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', authData.user.id)
       .single();
     
-    console.log('Profile verification result:', { profile, profileError });
+    console.log('Profile check result:', { existingProfile, checkError });
     
-    if (profileError && profileError.code !== 'PGRST116') {
-      console.error('Error verifying profile:', profileError);
-      throw profileError;
-    }
-
-    // If profile doesn't exist, create it manually
-    if (!profile) {
+    // Step 4: If profile doesn't exist, create it manually
+    if (!existingProfile) {
       console.log('Creating profile manually...');
-      const { data: manualProfile, error: manualError } = await supabase
+      const { data: newProfile, error: profileError } = await supabase
         .from('profiles')
         .insert({
           id: authData.user.id,
@@ -98,11 +93,30 @@ export const createUser = async (userData: {
         .select()
         .single();
       
-      console.log('Manual profile creation result:', { manualProfile, manualError });
+      console.log('Manual profile creation result:', { newProfile, profileError });
       
-      if (manualError) {
-        console.error('Error creating profile manually:', manualError);
-        throw manualError;
+      if (profileError) {
+        console.error('Error creating profile manually:', profileError);
+        throw profileError;
+      }
+    } else {
+      // Update existing profile with complete data
+      console.log('Updating existing profile...');
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: userData.name,
+          role: userData.role,
+          employee_id: userData.employeeId,
+          company: userData.company,
+          department: userData.department,
+          division: userData.division,
+        })
+        .eq('id', authData.user.id);
+      
+      if (updateError) {
+        console.error('Error updating profile:', updateError);
+        throw updateError;
       }
     }
 
