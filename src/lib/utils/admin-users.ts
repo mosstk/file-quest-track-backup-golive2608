@@ -59,8 +59,9 @@ export const createUser = async (userData: {
     throw new Error('Failed to create user');
   }
 
-  // The profile will be automatically created by the trigger
-  // But we might need to update it with additional info
+  // Wait a moment for the trigger to complete, then update the profile with additional info
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
   const { error: profileError } = await supabase
     .from('profiles')
     .update({
