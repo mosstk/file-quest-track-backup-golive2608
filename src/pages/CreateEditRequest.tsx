@@ -82,10 +82,10 @@ const CreateEditRequest = () => {
       } else {
         const { data, error } = await supabase
           .from('requests')
-          .insert({
+          .insert([{
             ...apiData,
             requester_id: user.id
-          });
+          }]);
 
         if (error) throw error;
         toast.success('สร้างคำขอเรียบร้อย');
