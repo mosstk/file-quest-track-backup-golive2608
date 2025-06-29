@@ -108,8 +108,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const login = (role: UserRole) => {
+    // Create a proper UUID for mock user instead of string
+    const mockUserId = crypto.randomUUID();
     const mockUser: User = {
-      id: `mock-${role}-id`,
+      id: mockUserId, // Use proper UUID
       name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
       full_name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
       email: `test-${role}@example.com`,
@@ -122,14 +124,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       avatar: `https://api.dicebear.com/6.x/avataaars/svg?seed=${role}`,
       avatar_url: `https://api.dicebear.com/6.x/avataaars/svg?seed=${role}`,
     };
+    
+    // Create a corresponding profile entry in the database for the mock user
+    createMockProfile(mockUser);
+    
     setUser(mockUser);
     toast.success(`Logged in as ${mockUser.name}`, {
       description: `Role: ${role}`
     });
   };
 
+  const createMockProfile = async (mockUser: User) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: mockUser.id,
+          full_name: mockUser.full_name,
+          avatar_url: mockUser.avatar_url,
+          role: mockUser.role,
+          employee_id: mockUser.employee_id,
+          company: mockUser.company,
+          department: mockUser.department,
+          division: mockUser.division,
+        });
+
+      if (error) {
+        console.error('Error creating mock profile:', error);
+      }
+    } catch (error) {
+      console.error('Error in createMockProfile:', error);
+    }
+  };
+
   const logout = async () => {
-    if (user && user.id.startsWith('mock-')) {
+    if (user && user.id.length === 36) { // Check if it's a proper UUID (mock user)
+      // Clean up mock profile
+      try {
+        await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', user.id);
+      } catch (error) {
+        console.error('Error cleaning up mock profile:', error);
+      }
+      
       setUser(null);
       toast.success('Logged out successfully');
       return;
