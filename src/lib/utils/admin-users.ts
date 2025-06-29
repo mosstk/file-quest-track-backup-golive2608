@@ -37,23 +37,22 @@ export const createUser = async (userData: {
   console.log('Creating user with data:', userData);
   
   try {
-    // Step 1: Create auth user first
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // Step 1: Create auth user via admin function
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: userData.email,
-      password: 'TempPass123!', // Temporary password - user should change this
-      options: {
-        data: {
-          full_name: userData.name,
-          role: userData.role,
-          employee_id: userData.employeeId,
-          company: userData.company,
-          department: userData.department,
-          division: userData.division,
-        }
+      password: 'TempPass123!',
+      email_confirm: true, // Skip email verification
+      user_metadata: {
+        full_name: userData.name,
+        role: userData.role,
+        employee_id: userData.employeeId,
+        company: userData.company,
+        department: userData.department,
+        division: userData.division,
       }
     });
 
-    console.log('Auth signup result:', { authData, authError });
+    console.log('Auth admin createUser result:', { authData, authError });
 
     if (authError) {
       console.error('Error creating auth user:', authError);
@@ -64,30 +63,47 @@ export const createUser = async (userData: {
       throw new Error('Failed to create auth user');
     }
 
-    // Step 2: Create profile directly with admin privileges
-    console.log('Creating profile with user ID:', authData.user.id);
+    // Step 2: The trigger should create the profile automatically
+    // Let's wait a bit and then verify
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Verify profile was created
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .insert({
-        id: authData.user.id,
-        full_name: userData.name,
-        role: userData.role,
-        employee_id: userData.employeeId,
-        company: userData.company,
-        department: userData.department,
-        division: userData.division,
-      })
-      .select()
+      .select('*')
+      .eq('id', authData.user.id)
       .single();
     
-    console.log('Profile creation result:', { profile, profileError });
+    console.log('Profile verification result:', { profile, profileError });
     
-    if (profileError) {
-      console.error('Error creating profile:', profileError);
-      // If profile creation fails, we should clean up the auth user
-      // Note: We can't delete auth users with the client, so we log this
-      console.error('Profile creation failed for user:', authData.user.id);
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.error('Error verifying profile:', profileError);
       throw profileError;
+    }
+
+    // If profile doesn't exist, create it manually
+    if (!profile) {
+      console.log('Creating profile manually...');
+      const { data: manualProfile, error: manualError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
+          full_name: userData.name,
+          role: userData.role,
+          employee_id: userData.employeeId,
+          company: userData.company,
+          department: userData.department,
+          division: userData.division,
+        })
+        .select()
+        .single();
+      
+      console.log('Manual profile creation result:', { manualProfile, manualError });
+      
+      if (manualError) {
+        console.error('Error creating profile manually:', manualError);
+        throw manualError;
+      }
     }
 
     return authData.user;
