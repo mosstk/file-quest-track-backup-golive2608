@@ -152,6 +152,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      is_mock_user_by_id: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       request_status:
