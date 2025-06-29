@@ -37,10 +37,10 @@ export const createUser = async (userData: {
   console.log('Creating user with data:', userData);
   
   try {
-    // Step 1: Create auth user using regular signup
+    // Step 1: Create auth user
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: userData.email,
-      password: 'TempPass123!',
+      password: 'TempPass123!', // Temporary password
       options: {
         data: {
           full_name: userData.name,
@@ -64,60 +64,29 @@ export const createUser = async (userData: {
       throw new Error('Failed to create auth user');
     }
 
-    // Step 2: Wait for the trigger to create the profile
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Step 2: Wait a moment for the trigger to potentially create the profile
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Step 3: Check if profile was created by the trigger
-    const { data: existingProfile, error: checkError } = await supabase
+    // Step 3: Try to insert the profile directly (the new RLS policy allows this)
+    const { data: newProfile, error: profileError } = await supabase
       .from('profiles')
-      .select('*')
-      .eq('id', authData.user.id)
+      .upsert({
+        id: authData.user.id,
+        full_name: userData.name,
+        role: userData.role,
+        employee_id: userData.employeeId,
+        company: userData.company,
+        department: userData.department,
+        division: userData.division,
+      })
+      .select()
       .single();
     
-    console.log('Profile check result:', { existingProfile, checkError });
+    console.log('Profile upsert result:', { newProfile, profileError });
     
-    // Step 4: If profile doesn't exist, create it manually
-    if (!existingProfile) {
-      console.log('Creating profile manually...');
-      const { data: newProfile, error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: authData.user.id,
-          full_name: userData.name,
-          role: userData.role,
-          employee_id: userData.employeeId,
-          company: userData.company,
-          department: userData.department,
-          division: userData.division,
-        })
-        .select()
-        .single();
-      
-      console.log('Manual profile creation result:', { newProfile, profileError });
-      
-      if (profileError) {
-        console.error('Error creating profile manually:', profileError);
-        throw profileError;
-      }
-    } else {
-      // Update existing profile with complete data
-      console.log('Updating existing profile...');
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          full_name: userData.name,
-          role: userData.role,
-          employee_id: userData.employeeId,
-          company: userData.company,
-          department: userData.department,
-          division: userData.division,
-        })
-        .eq('id', authData.user.id);
-      
-      if (updateError) {
-        console.error('Error updating profile:', updateError);
-        throw updateError;
-      }
+    if (profileError) {
+      console.error('Error creating/updating profile:', profileError);
+      throw profileError;
     }
 
     return authData.user;

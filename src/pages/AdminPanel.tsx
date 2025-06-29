@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -68,7 +67,9 @@ const AdminPanel = () => {
   const loadUsers = async () => {
     try {
       setLoading(true);
+      console.log('Loading users...');
       const data = await fetchAllUsers();
+      console.log('Users loaded:', data);
       setUsers(data);
     } catch (error) {
       console.error('Failed to load users:', error);
@@ -118,14 +119,18 @@ const AdminPanel = () => {
   };
 
   const handleAddUser = async () => {
+    console.log('handleAddUser called with:', newUser);
+    
     // Validate form
     if (!newUser.name || !newUser.email || !newUser.employeeId) {
-      toast.error('กรุณากรอกข้อมูลให้ครบถ้วน');
+      toast.error('กรุณากรอกข้อมูลให้ครบถ้วน (ชื่อ, อีเมล, รหัสพนักงาน)');
       return;
     }
     
     setIsSubmitting(true);
     try {
+      console.log('Starting user creation process...');
+      
       await createUser({
         name: newUser.name,
         email: newUser.email,
@@ -135,6 +140,8 @@ const AdminPanel = () => {
         division: newUser.division || '',
         role: newUser.role as UserRole || 'requester',
       });
+      
+      console.log('User created successfully');
       
       // Reset form
       setNewUser({
@@ -150,11 +157,18 @@ const AdminPanel = () => {
       setIsAddUserOpen(false);
       toast.success('เพิ่มผู้ใช้งานเรียบร้อย');
       
-      // Reload users
-      await loadUsers();
-    } catch (error) {
+      // Wait a moment then reload users
+      setTimeout(() => {
+        loadUsers();
+      }, 2000);
+      
+    } catch (error: any) {
       console.error('Failed to create user:', error);
-      toast.error('ไม่สามารถเพิ่มผู้ใช้งานได้');
+      if (error.message?.includes('User already registered')) {
+        toast.error('อีเมลนี้ถูกใช้งานแล้ว');
+      } else {
+        toast.error('ไม่สามารถเพิ่มผู้ใช้งานได้: ' + (error.message || 'Unknown error'));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -214,6 +228,9 @@ const AdminPanel = () => {
     setIsEditUserOpen(true);
   };
 
+  console.log('Current users:', users);
+  console.log('Filtered users:', filteredUsers);
+
   return (
     <Layout requireAuth allowedRoles={['fa_admin']}>
       <div className="container py-8 animate-fade-in">
@@ -242,33 +259,36 @@ const AdminPanel = () => {
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">ชื่อ-นามสกุล</Label>
+                    <Label htmlFor="name">ชื่อ-นามสกุล *</Label>
                     <Input 
                       id="name" 
                       name="name" 
-                      value={newUser.name} 
+                      value={newUser.name || ''} 
                       onChange={handleInputChange}
+                      required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="employeeId">รหัสพนักงาน</Label>
+                    <Label htmlFor="employeeId">รหัสพนักงาน *</Label>
                     <Input 
                       id="employeeId" 
                       name="employeeId" 
-                      value={newUser.employeeId} 
+                      value={newUser.employeeId || ''} 
                       onChange={handleInputChange}
+                      required
                     />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="email">อีเมล</Label>
+                  <Label htmlFor="email">อีเมล *</Label>
                   <Input 
                     id="email" 
                     name="email" 
                     type="email" 
-                    value={newUser.email} 
+                    value={newUser.email || ''} 
                     onChange={handleInputChange}
+                    required
                   />
                 </div>
                 
@@ -277,7 +297,7 @@ const AdminPanel = () => {
                   <Input 
                     id="company" 
                     name="company" 
-                    value={newUser.company} 
+                    value={newUser.company || ''} 
                     onChange={handleInputChange}
                   />
                 </div>
@@ -288,7 +308,7 @@ const AdminPanel = () => {
                     <Input 
                       id="department" 
                       name="department" 
-                      value={newUser.department} 
+                      value={newUser.department || ''} 
                       onChange={handleInputChange}
                     />
                   </div>
@@ -297,7 +317,7 @@ const AdminPanel = () => {
                     <Input 
                       id="division" 
                       name="division" 
-                      value={newUser.division} 
+                      value={newUser.division || ''} 
                       onChange={handleInputChange}
                     />
                   </div>
@@ -437,7 +457,7 @@ const AdminPanel = () => {
           <CardHeader>
             <CardTitle>จัดการผู้ใช้งาน</CardTitle>
             <CardDescription>
-              เพิ่ม แก้ไข และลบผู้ใช้งานในระบบ
+              เพิ่ม แก้ไข และลบผู้ใช้งานในระบบ ({users.length} คน)
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -460,21 +480,21 @@ const AdminPanel = () => {
                     onClick={() => setActiveTab('all')}
                     className="min-w-[80px]"
                   >
-                    ทั้งหมด
+                    ทั้งหมด ({users.length})
                   </Button>
                   <Button
                     variant={activeTab === 'requester' ? 'default' : 'outline'}
                     onClick={() => setActiveTab('requester')}
                     className="min-w-[80px]"
                   >
-                    Requester
+                    Requester ({users.filter(u => u.role === 'requester').length})
                   </Button>
                   <Button
                     variant={activeTab === 'receiver' ? 'default' : 'outline'}
                     onClick={() => setActiveTab('receiver')}
                     className="min-w-[80px]"
                   >
-                    Receiver
+                    Receiver ({users.filter(u => u.role === 'receiver').length})
                   </Button>
                 </div>
               </div>
@@ -545,7 +565,7 @@ const AdminPanel = () => {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
-                          ไม่พบข้อมูล
+                          {users.length === 0 ? 'ไม่มีผู้ใช้งานในระบบ' : 'ไม่พบข้อมูลที่ค้นหา'}
                         </TableCell>
                       </TableRow>
                     )}
