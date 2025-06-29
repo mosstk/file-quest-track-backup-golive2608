@@ -34,7 +34,7 @@ export const createUser = async (userData: {
   division: string;
   role: 'fa_admin' | 'requester' | 'receiver';
 }) => {
-  // Use regular signup instead of admin API
+  // Use regular signup with all metadata
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: userData.email,
     password: 'TempPass123!', // Temporary password - user should change this
@@ -59,26 +59,7 @@ export const createUser = async (userData: {
     throw new Error('Failed to create user');
   }
 
-  // Wait a moment for the trigger to complete, then update the profile with additional info
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .update({
-      full_name: userData.name,
-      employee_id: userData.employeeId,
-      company: userData.company,
-      department: userData.department,
-      division: userData.division,
-      role: userData.role,
-    })
-    .eq('id', authData.user.id);
-
-  if (profileError) {
-    console.error('Error updating profile:', profileError);
-    // Don't throw here as the user was created successfully
-  }
-
+  // The trigger will now automatically create the profile with all metadata
   return authData.user;
 };
 
