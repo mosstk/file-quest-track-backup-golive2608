@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '@/types';
 import { supabase } from '@/lib/supabase';
@@ -122,6 +123,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw error;
   };
 
+  const createTestUserIfNeeded = async (email: string, password: string, role: UserRole) => {
+    try {
+      // Try to sign up first (this will fail if user already exists)
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+            role: role,
+            employee_id: `EMP${role.toUpperCase()}001`,
+            company: 'TOA Group',
+            department: role === 'fa_admin' ? 'Finance' : role === 'requester' ? 'Operations' : 'Receiving',
+            division: 'Bangkok'
+          }
+        }
+      });
+
+      if (signUpError && !signUpError.message.includes('User already registered')) {
+        throw signUpError;
+      }
+
+      console.log('Test user created or already exists:', email);
+      return true;
+    } catch (error) {
+      console.error('Error creating test user:', error);
+      return false;
+    }
+  };
+
   const login = async (role: UserRole) => {
     try {
       setLoading(true);
@@ -137,17 +168,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log(`Attempting to sign in as ${role} with email: ${credentials.email}`);
       
+      // First try to login
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
       });
 
-      if (error) {
-        console.error('Login error:', error);
+      // If login fails with invalid credentials, try to create the user
+      if (error && error.message.includes('Invalid login credentials')) {
+        console.log('User not found, creating test user...');
+        await createTestUserIfNeeded(credentials.email, credentials.password, role);
+        
+        // Wait a moment for the user to be created
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Try to login again
+        const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
+          email: credentials.email,
+          password: credentials.password,
+        });
+
+        if (retryError) {
+          throw new Error(`ไม่สามารถเข้าสู่ระบบได้: ${retryError.message}`);
+        }
+
+        console.log('Login successful after creating user:', retryData);
+      } else if (error) {
         throw new Error(`ไม่สามารถเข้าสู่ระบบได้: ${error.message}`);
+      } else {
+        console.log('Login successful:', data);
       }
 
-      console.log('Login successful:', data);
       toast.success(`เข้าสู่ระบบสำเร็จ: ${role}`, {
         description: `ยินดีต้อนรับเข้าสู่ระบบ FileQuestTrack`
       });
