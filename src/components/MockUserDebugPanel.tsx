@@ -17,7 +17,7 @@ const MockUserDebugPanel = () => {
     '22222222-2222-2222-2222-222222222222', 
     '33333333-3333-3333-3333-333333333333'
   ];
-  const isRLSReady = mockUserIds.includes(user.id);
+  const isKnownMockUser = mockUserIds.includes(user.id);
 
   return (
     <div className="fixed bottom-4 right-4 z-50 max-w-sm">
@@ -34,9 +34,9 @@ const MockUserDebugPanel = () => {
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="text-xs text-blue-700">RLS Ready:</span>
-            <Badge variant={isRLSReady ? "default" : "destructive"}>
-              {isRLSReady ? "Ready" : "Not Ready"}
+            <span className="text-xs text-blue-700">Known ID:</span>
+            <Badge variant={isKnownMockUser ? "default" : "destructive"}>
+              {isKnownMockUser ? "Known" : "Unknown"}
             </Badge>
           </div>
           
@@ -55,7 +55,7 @@ const MockUserDebugPanel = () => {
           </div>
           
           <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
-            ✅ สิทธิ์ในการสร้างข้อมูลพร้อมใช้งาน
+            ✅ ระบบพร้อมทำงานกับ RLS policies
           </div>
         </CardContent>
       </Card>

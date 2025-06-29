@@ -90,29 +90,6 @@ const CreateEditRequest = () => {
         status: formData.status || 'pending'
       };
 
-      // สำหรับ Mock Users ให้ใช้ service_role key
-      if (user.name?.startsWith('Test ')) {
-        console.log('Processing mock user request with service role...');
-        
-        // ใช้ service role สำหรับ mock users เพื่อ bypass RLS
-        const { data, error } = await fetch('/api/create-request', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(apiData),
-        }).then(res => res.json());
-
-        if (error) {
-          throw error;
-        }
-
-        console.log('Mock user request created:', data);
-        toast.success('สร้างคำขอเรียบร้อย');
-        navigate('/requests');
-        return;
-      }
-
       if (isEditMode && request) {
         console.log('Updating existing request:', id);
         
@@ -134,7 +111,10 @@ const CreateEditRequest = () => {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error details:', error);
+          throw error;
+        }
         
         console.log('Request created successfully:', data);
         toast.success('สร้างคำขอเรียบร้อย');
@@ -147,6 +127,8 @@ const CreateEditRequest = () => {
       
       if (error?.message?.includes('permission denied')) {
         errorMessage = 'ไม่มีสิทธิ์ในการบันทึกข้อมูล กรุณาติดต่อผู้ดูแลระบบ';
+      } else if (error?.message?.includes('policy')) {
+        errorMessage = 'ไม่ผ่านเงื่อนไขการรักษาความปลอดภัย กรุณาเข้าสู่ระบบใหม่';
       } else if (error?.message) {
         errorMessage = `ข้อผิดพลาด: ${error.message}`;
       }

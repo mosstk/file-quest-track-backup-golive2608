@@ -113,6 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (role: UserRole) => {
     try {
+      // ใช้ mock authentication โดยดึงข้อมูลจากฐานข้อมูลจริง
       const mockUserIds = {
         'fa_admin': '11111111-1111-1111-1111-111111111111',
         'requester': '22222222-2222-2222-2222-222222222222',
@@ -120,28 +121,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       const mockUserId = mockUserIds[role];
-      const mockUser: User = {
-        id: mockUserId,
-        name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
-        full_name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
-        email: `test-${role}@example.com`,
-        employeeId: `EMP-${role.toUpperCase()}`,
-        employee_id: `EMP-${role.toUpperCase()}`,
-        company: 'TOA Group',
-        department: 'Information Technology',
-        division: 'Digital Solutions',
-        role: role,
-        avatar: `https://api.dicebear.com/6.x/avataaars/svg?seed=${role}`,
-        avatar_url: `https://api.dicebear.com/6.x/avataaars/svg?seed=${role}`,
-      };
       
-      // ตั้งค่า user ทันที
-      setUser(mockUser);
-      toast.success(`เข้าสู่ระบบสำเร็จ: ${mockUser.name}`, {
-        description: `บทบาท: ${role}`
-      });
+      // ตรวจสอบว่ามี profile ในฐานข้อมูลหรือไม่
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', mockUserId)
+        .single();
+
+      if (error || !profile) {
+        // ถ้าไม่มี profile ให้สร้าง mock user ในหน่วยความจำ
+        const mockUser: User = {
+          id: mockUserId,
+          name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+          full_name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+          email: `test-${role}@example.com`,
+          employeeId: `EMP-${role.toUpperCase()}`,
+          employee_id: `EMP-${role.toUpperCase()}`,
+          company: 'TOA Group',
+          department: 'Information Technology',
+          division: 'Digital Solutions',
+          role: role,
+          avatar: `https://api.dicebear.com/6.x/avataaars/svg?seed=${role}`,
+          avatar_url: `https://api.dicebear.com/6.x/avataaars/svg?seed=${role}`,
+        };
+        
+        setUser(mockUser);
+        toast.success(`เข้าสู่ระบบสำเร็จ: ${mockUser.name} (Mock User)`, {
+          description: `บทบาท: ${role}`
+        });
+      } else {
+        // ถ้ามี profile ใช้ข้อมูลจากฐานข้อมูล
+        const mockUser: User = {
+          id: profile.id,
+          name: profile.full_name || `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+          full_name: profile.full_name || `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+          email: `test-${role}@example.com`,
+          employeeId: profile.employee_id || `EMP-${role.toUpperCase()}`,
+          employee_id: profile.employee_id || `EMP-${role.toUpperCase()}`,
+          company: profile.company || 'TOA Group',
+          department: profile.department || 'Information Technology',
+          division: profile.division || 'Digital Solutions',
+          role: profile.role,
+          avatar: profile.avatar_url || `https://api.dicebear.com/6.x/avataaars/svg?seed=${role}`,
+          avatar_url: profile.avatar_url || `https://api.dicebear.com/6.x/avataaars/svg?seed=${role}`,
+        };
+        
+        setUser(mockUser);
+        toast.success(`เข้าสู่ระบบสำเร็จ: ${mockUser.name} (Database User)`, {
+          description: `บทบาท: ${role}`
+        });
+      }
       
-      console.log('Mock user logged in:', mockUser);
+      console.log('Mock user logged in:', mockUserId, role);
     } catch (error) {
       console.error('Error in mock login:', error);
       toast.error('เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
