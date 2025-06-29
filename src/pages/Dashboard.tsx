@@ -15,6 +15,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [requests, setRequests] = useState<FileRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     const fetchRequests = async () => {
@@ -22,6 +23,8 @@ const Dashboard = () => {
       
       try {
         setLoading(true);
+        setError(null);
+        
         let query = supabase.from('requests').select('*');
         
         // Filter based on user role
@@ -33,6 +36,8 @@ const Dashboard = () => {
             query = query.eq('requester_id', user.id);
             break;
           case 'receiver':
+            // For receivers, we need to join with auth.users to get email
+            // But since we can't access auth.users directly, we'll filter by receiver_email
             query = query.eq('receiver_email', user.email).eq('status', 'approved');
             break;
           default:
@@ -41,12 +46,17 @@ const Dashboard = () => {
         
         const { data, error } = await query.order('created_at', { ascending: false });
         
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching requests:', error);
+          setError('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+          return;
+        }
         
         const normalizedRequests = data?.map(normalizeFileRequest) || [];
         setRequests(normalizedRequests);
       } catch (error) {
         console.error('Error fetching requests:', error);
+        setError('เกิดข้อผิดพลาดในการโหลดข้อมูล');
       } finally {
         setLoading(false);
       }
@@ -157,14 +167,41 @@ const Dashboard = () => {
                   : 'เอกสารที่จัดส่งมาถึงคุณ'
               }
             </h2>
-            <RequestTable requests={requests.slice(0, 5)} />
             
-            {requests.length > 5 && (
-              <div className="mt-4 text-center">
-                <Button variant="outline" onClick={() => navigate('/requests')}>
-                  ดูทั้งหมด
-                </Button>
-              </div>
+            {error ? (
+              <Card className="bg-red-50 border-red-200">
+                <CardContent className="pt-6">
+                  <p className="text-red-600">{error}</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                <RequestTable requests={requests.slice(0, 5)} />
+                
+                {requests.length > 5 && (
+                  <div className="mt-4 text-center">
+                    <Button variant="outline" onClick={() => navigate('/requests')}>
+                      ดูทั้งหมด
+                    </Button>
+                  </div>
+                )}
+                
+                {requests.length === 0 && !loading && (
+                  <Card className="bg-gray-50 border-gray-200">
+                    <CardContent className="pt-6 text-center">
+                      <p className="text-gray-600">ยังไม่มีคำขอในระบบ</p>
+                      {user?.role === 'requester' && (
+                        <Button 
+                          className="mt-4" 
+                          onClick={handleCreateRequest}
+                        >
+                          สร้างคำขอแรกของคุณ
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )}
           </div>
         </div>

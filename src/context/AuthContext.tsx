@@ -112,14 +112,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const login = (role: UserRole) => {
-    const mockUserId = crypto.randomUUID();
+    // ใช้ fixed UUID สำหรับ mock users เพื่อความเสถียร
+    const mockUserIds = {
+      'fa_admin': '11111111-1111-1111-1111-111111111111',
+      'requester': '22222222-2222-2222-2222-222222222222',
+      'receiver': '33333333-3333-3333-3333-333333333333'
+    };
+
+    const mockUserId = mockUserIds[role];
     const mockUser: User = {
       id: mockUserId,
       name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
       full_name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
       email: `test-${role}@example.com`,
-      employeeId: `EMP-${Math.floor(Math.random() * 10000)}`,
-      employee_id: `EMP-${Math.floor(Math.random() * 10000)}`,
+      employeeId: `EMP-${role.toUpperCase()}`,
+      employee_id: `EMP-${role.toUpperCase()}`,
       company: 'TOA Group',
       department: 'Information Technology',
       division: 'Digital Solutions',
@@ -141,9 +148,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Creating mock profile for user:', mockUser.id);
       
+      // ตรวจสอบว่า profile มีอยู่แล้วหรือไม่
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', mockUser.id)
+        .single();
+
+      if (existingProfile) {
+        console.log('Mock profile already exists, skipping creation');
+        return;
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .upsert({
+        .insert({
           id: mockUser.id,
           full_name: mockUser.full_name,
           avatar_url: mockUser.avatar_url,
@@ -152,26 +171,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           company: mockUser.company,
           department: mockUser.department,
           division: mockUser.division,
-        }, {
-          onConflict: 'id'
         });
 
       if (error) {
         console.error('Error creating mock profile:', error);
-        toast.error('เกิดข้อผิดพลาดในการสร้างโปรไฟล์');
+        // ไม่แสดง toast error เพื่อไม่ให้รบกวนผู้ใช้
+        // mock user ยังคงใช้งานได้แม้ไม่มี profile ใน database
       } else {
         console.log('Mock profile created successfully');
-        toast.success('สร้างโปรไฟล์สำเร็จ');
       }
     } catch (error) {
       console.error('Error in createMockProfile:', error);
-      toast.error('เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล');
+      // ไม่แสดง toast error เพื่อไม่ให้รบกวนผู้ใช้
     }
   };
 
   const logout = async () => {
     if (user && user.full_name?.startsWith('Test ')) {
-      // ทำความสะอาด mock profile
+      // ทำความสะอาด mock profile (ไม่บังคับ)
       try {
         console.log('Cleaning up mock profile for user:', user.id);
         
@@ -183,6 +200,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Mock profile cleaned up successfully');
       } catch (error) {
         console.error('Error cleaning up mock profile:', error);
+        // ไม่แสดง error เพราะไม่สำคัญ
       }
       
       setUser(null);
