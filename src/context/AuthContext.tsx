@@ -112,10 +112,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const login = (role: UserRole) => {
-    // Create a proper UUID for mock user instead of string
     const mockUserId = crypto.randomUUID();
     const mockUser: User = {
-      id: mockUserId, // Use proper UUID
+      id: mockUserId,
       name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
       full_name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
       email: `test-${role}@example.com`,
@@ -129,7 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       avatar_url: `https://api.dicebear.com/6.x/avataaars/svg?seed=${role}`,
     };
     
-    // Create a corresponding profile entry in the database for the mock user
+    // สร้าง profile ใน database สำหรับ mock user
     createMockProfile(mockUser);
     
     setUser(mockUser);
@@ -162,6 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toast.error('เกิดข้อผิดพลาดในการสร้างโปรไฟล์');
       } else {
         console.log('Mock profile created successfully');
+        toast.success('สร้างโปรไฟล์สำเร็จ');
       }
     } catch (error) {
       console.error('Error in createMockProfile:', error);
@@ -170,8 +170,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    if (user && user.id.length === 36) { // Check if it's a proper UUID (mock user)
-      // Clean up mock profile
+    if (user && user.full_name?.startsWith('Test ')) {
+      // ทำความสะอาด mock profile
       try {
         console.log('Cleaning up mock profile for user:', user.id);
         

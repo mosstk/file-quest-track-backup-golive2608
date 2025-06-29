@@ -148,6 +148,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_mock_user: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       request_status:

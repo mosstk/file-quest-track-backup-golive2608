@@ -68,7 +68,7 @@ const CreateEditRequest = () => {
     setSubmitting(true);
 
     try {
-      // Validate required fields
+      // ตรวจสอบข้อมูลที่จำเป็น
       const document_name = formData.document_name || formData.documentName;
       const receiver_email = formData.receiver_email || formData.receiverEmail;
       
@@ -80,7 +80,7 @@ const CreateEditRequest = () => {
       console.log('Submitting request with user ID:', user.id);
       console.log('Form data:', formData);
 
-      // Prepare data for API
+      // เตรียมข้อมูลสำหรับ API
       const apiData = {
         document_name,
         receiver_email,
@@ -171,9 +171,14 @@ const CreateEditRequest = () => {
             }
           </p>
           {user && (
-            <p className="text-sm text-muted-foreground mt-2">
-              ผู้ใช้งาน: {user.name} ({user.role})
-            </p>
+            <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm text-green-800">
+                ✅ เข้าสู่ระบบแล้ว: {user.name} ({user.role})
+              </p>
+              <p className="text-xs text-green-600 mt-1">
+                ID: {user.id}
+              </p>
+            </div>
           )}
         </div>
         
