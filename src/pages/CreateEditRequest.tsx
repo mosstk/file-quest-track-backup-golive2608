@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -49,6 +50,14 @@ const CreateEditRequest = () => {
       return;
     }
 
+    console.log('Current user:', user);
+    console.log('User ID:', user.id);
+
+    if (!user.id) {
+      toast.error('ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่');
+      return;
+    }
+
     try {
       // Make sure required fields are properly set
       if (!formData.document_name && formData.documentName) {
@@ -66,11 +75,11 @@ const CreateEditRequest = () => {
 
       console.log('Form data before API preparation:', formData);
 
-      // Prepare data for API - this function now returns properly typed data
+      // Prepare data for API - make sure to use the actual user ID
       const apiData = prepareFileRequestForApi({
         ...formData,
         status: formData.status || 'pending',
-        requester_id: user.id
+        requester_id: user.id // Use the actual authenticated user ID
       });
 
       console.log('API data after preparation:', apiData);
@@ -105,6 +114,19 @@ const CreateEditRequest = () => {
         <div className="container py-8">
           <div className="flex justify-center items-center min-h-[50vh]">
             <div className="animate-pulse text-primary">กำลังโหลดข้อมูล...</div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Show error if user is not authenticated
+  if (!user) {
+    return (
+      <Layout requireAuth allowedRoles={['fa_admin', 'requester']}>
+        <div className="container py-8">
+          <div className="flex justify-center items-center min-h-[50vh]">
+            <div className="text-red-500">กรุณาเข้าสู่ระบบเพื่อใช้ฟีเจอร์นี้</div>
           </div>
         </div>
       </Layout>
