@@ -123,81 +123,71 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw error;
   };
 
-  const createTestUserIfNeeded = async (email: string, password: string, role: UserRole) => {
-    try {
-      // Try to sign up first (this will fail if user already exists)
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
-            role: role,
-            employee_id: `EMP${role.toUpperCase()}001`,
-            company: 'TOA Group',
-            department: role === 'fa_admin' ? 'Finance' : role === 'requester' ? 'Operations' : 'Receiving',
-            division: 'Bangkok'
-          }
-        }
-      });
-
-      if (signUpError && !signUpError.message.includes('User already registered')) {
-        throw signUpError;
-      }
-
-      console.log('Test user created or already exists:', email);
-      return true;
-    } catch (error) {
-      console.error('Error creating test user:', error);
-      return false;
-    }
-  };
-
   const login = async (role: UserRole) => {
     try {
       setLoading(true);
       
-      // Define test user credentials based on role
+      // Define test user credentials based on role with fixed UUIDs
       const testUsers = {
-        'fa_admin': { email: 'admin@toagroup.com', password: 'testpassword123' },
-        'requester': { email: 'requester@toagroup.com', password: 'testpassword123' },
-        'receiver': { email: 'receiver@toagroup.com', password: 'testpassword123' }
+        'fa_admin': { 
+          email: 'admin@test.com', 
+          password: 'testpass123',
+          id: '11111111-1111-1111-1111-111111111111'
+        },
+        'requester': { 
+          email: 'requester@test.com', 
+          password: 'testpass123',
+          id: '22222222-2222-2222-2222-222222222222'
+        },
+        'receiver': { 
+          email: 'receiver@test.com', 
+          password: 'testpass123',
+          id: '33333333-3333-3333-3333-333333333333'
+        }
       };
 
       const credentials = testUsers[role];
       
       console.log(`Attempting to sign in as ${role} with email: ${credentials.email}`);
       
-      // First try to login
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: credentials.email,
-        password: credentials.password,
-      });
-
-      // If login fails with invalid credentials, try to create the user
-      if (error && error.message.includes('Invalid login credentials')) {
-        console.log('User not found, creating test user...');
-        await createTestUserIfNeeded(credentials.email, credentials.password, role);
-        
-        // Wait a moment for the user to be created
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Try to login again
-        const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
-          email: credentials.email,
-          password: credentials.password,
-        });
-
-        if (retryError) {
-          throw new Error(`ไม่สามารถเข้าสู่ระบบได้: ${retryError.message}`);
-        }
-
-        console.log('Login successful after creating user:', retryData);
-      } else if (error) {
-        throw new Error(`ไม่สามารถเข้าสู่ระบบได้: ${error.message}`);
-      } else {
-        console.log('Login successful:', data);
+      // First, create the profile in the profiles table directly
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: credentials.id,
+          full_name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+          role: role,
+          employee_id: `EMP${role.toUpperCase()}001`,
+          company: 'TOA Group',
+          department: role === 'fa_admin' ? 'Finance' : role === 'requester' ? 'Operations' : 'Receiving',
+          division: 'Bangkok'
+        })
+        .select()
+        .single();
+      
+      if (profileError) {
+        console.log('Profile creation/update result:', profileError);
       }
+
+      // Create a mock session and user for testing
+      const mockUser: User = {
+        id: credentials.id,
+        name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+        full_name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+        email: credentials.email,
+        employeeId: `EMP${role.toUpperCase()}001`,
+        employee_id: `EMP${role.toUpperCase()}001`,
+        company: 'TOA Group',
+        department: role === 'fa_admin' ? 'Finance' : role === 'requester' ? 'Operations' : 'Receiving',
+        division: 'Bangkok',
+        role: role,
+        avatar: null,
+        avatar_url: null,
+      };
+
+      // Set the user state directly for testing
+      setUser(mockUser);
+      setLoading(false);
 
       toast.success(`เข้าสู่ระบบสำเร็จ: ${role}`, {
         description: `ยินดีต้อนรับเข้าสู่ระบบ FileQuestTrack`
@@ -213,7 +203,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    return signOut();
+    setUser(null);
+    setSession(null);
+    toast.success('ออกจากระบบเรียบร้อยแล้ว');
   };
 
   return (
