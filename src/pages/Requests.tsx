@@ -1,42 +1,77 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import RequestTable from '@/components/RequestTable';
-import { RequestStatus } from '@/types';
+import { RequestStatus, FileRequest } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { mockRequests } from '@/lib/mockData';
+import { supabase } from '@/integrations/supabase/client';
+import { normalizeFileRequest } from '@/lib/utils/formatters';
 
 const Requests = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>('all');
+  const [requests, setRequests] = useState<FileRequest[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  // Filter requests based on user role and active tab
+  useEffect(() => {
+    const fetchRequests = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        let query = supabase.from('requests').select('*');
+        
+        // Filter based on user role
+        if (user.role === 'fa_admin') {
+          // Admin can see all requests
+        } else if (user.role === 'requester') {
+          query = query.eq('requester_id', user.id);
+        }
+        
+        const { data, error } = await query.order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        const normalizedRequests = data?.map(normalizeFileRequest) || [];
+        setRequests(normalizedRequests);
+      } catch (error) {
+        console.error('Error fetching requests:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchRequests();
+  }, [user]);
+  
+  // Filter requests based on active tab
   const filteredRequests = React.useMemo(() => {
-    if (!user) return [];
-    
-    // First filter by user role
-    let requests = [];
-    if (user.role === 'fa_admin') {
-      requests = mockRequests;
-    } else if (user.role === 'requester') {
-      requests = mockRequests.filter(req => req.requesterEmail === user.email);
-    }
-    
-    // Then filter by tab
     if (activeTab === 'all') {
       return requests;
     } else {
       return requests.filter(req => req.status === activeTab);
     }
-  }, [user, activeTab]);
+  }, [requests, activeTab]);
   
   const handleCreateRequest = () => {
     navigate('/requests/new');
   };
+  
+  if (loading) {
+    return (
+      <Layout requireAuth allowedRoles={['fa_admin', 'requester']}>
+        <div className="container py-8">
+          <div className="flex justify-center items-center min-h-[50vh]">
+            <div className="animate-pulse text-primary">กำลังโหลดข้อมูล...</div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
   
   return (
     <Layout requireAuth allowedRoles={['fa_admin', 'requester']}>

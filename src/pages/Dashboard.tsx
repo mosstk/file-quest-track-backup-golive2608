@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -7,29 +7,52 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import RequestTable from '@/components/RequestTable';
 import { useNavigate } from 'react-router-dom';
 import { FileRequest } from '@/types';
-import { mockRequests } from '@/lib/mockData';
+import { supabase } from '@/integrations/supabase/client';
+import { normalizeFileRequest } from '@/lib/utils/formatters';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [requests, setRequests] = useState<FileRequest[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  // Filter requests based on user role
-  const filteredRequests = React.useMemo(() => {
-    if (!user) return [];
+  useEffect(() => {
+    const fetchRequests = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        let query = supabase.from('requests').select('*');
+        
+        // Filter based on user role
+        switch (user.role) {
+          case 'fa_admin':
+            // Admin can see all requests
+            break;
+          case 'requester':
+            query = query.eq('requester_id', user.id);
+            break;
+          case 'receiver':
+            query = query.eq('receiver_email', user.email).eq('status', 'approved');
+            break;
+          default:
+            return;
+        }
+        
+        const { data, error } = await query.order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        const normalizedRequests = data?.map(normalizeFileRequest) || [];
+        setRequests(normalizedRequests);
+      } catch (error) {
+        console.error('Error fetching requests:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    switch (user.role) {
-      case 'fa_admin':
-        return mockRequests;
-      case 'requester':
-        return mockRequests.filter(req => req.requesterEmail === user.email);
-      case 'receiver':
-        return mockRequests.filter(req => 
-          (req.receiver_email === user.email || req.receiverEmail === user.email) && 
-          req.status === 'approved'
-        );
-      default:
-        return [];
-    }
+    fetchRequests();
   }, [user]);
   
   // Count requests by status
@@ -40,19 +63,31 @@ const Dashboard = () => {
       rejected: 0,
       rework: 0,
       completed: 0,
-      total: filteredRequests.length,
+      total: requests.length,
     };
     
-    filteredRequests.forEach(req => {
+    requests.forEach(req => {
       counts[req.status]++;
     });
     
     return counts;
-  }, [filteredRequests]);
+  }, [requests]);
   
   const handleCreateRequest = () => {
     navigate('/requests/new');
   };
+
+  if (loading) {
+    return (
+      <Layout requireAuth>
+        <div className="container py-8">
+          <div className="flex justify-center items-center min-h-[50vh]">
+            <div className="animate-pulse text-primary">กำลังโหลดข้อมูล...</div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout requireAuth>
@@ -122,9 +157,9 @@ const Dashboard = () => {
                   : 'เอกสารที่จัดส่งมาถึงคุณ'
               }
             </h2>
-            <RequestTable requests={filteredRequests.slice(0, 5)} />
+            <RequestTable requests={requests.slice(0, 5)} />
             
-            {filteredRequests.length > 5 && (
+            {requests.length > 5 && (
               <div className="mt-4 text-center">
                 <Button variant="outline" onClick={() => navigate('/requests')}>
                   ดูทั้งหมด
