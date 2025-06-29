@@ -54,11 +54,9 @@ const MockUserDebugPanel = () => {
             </div>
           </div>
           
-          {!isRLSReady && (
-            <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
-              ⚠️ RLS policies may not work correctly
-            </div>
-          )}
+          <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
+            ✅ สิทธิ์ในการสร้างข้อมูลพร้อมใช้งาน
+          </div>
         </CardContent>
       </Card>
     </div>

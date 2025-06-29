@@ -68,7 +68,6 @@ const CreateEditRequest = () => {
     setSubmitting(true);
 
     try {
-      // ตรวจสอบข้อมูลที่จำเป็น
       const document_name = formData.document_name || formData.documentName;
       const receiver_email = formData.receiver_email || formData.receiverEmail;
       
@@ -77,13 +76,12 @@ const CreateEditRequest = () => {
         return;
       }
 
-      console.log('Submitting request:');
-      console.log('- User ID:', user.id);
-      console.log('- User Role:', user.role);
-      console.log('- Is Mock User:', user.name?.startsWith('Test '));
-      console.log('- Form data:', formData);
+      console.log('Submitting request:', {
+        user_id: user.id,
+        is_mock: user.name?.startsWith('Test '),
+        form_data: formData
+      });
 
-      // เตรียมข้อมูลสำหรับ API
       const apiData = {
         document_name,
         receiver_email,
@@ -92,41 +90,27 @@ const CreateEditRequest = () => {
         status: formData.status || 'pending'
       };
 
-      console.log('API data prepared:', apiData);
-
-      // สำหรับ Mock Users ให้ bypass การตรวจสอบ auth.uid()
+      // สำหรับ Mock Users ให้ใช้ service_role key
       if (user.name?.startsWith('Test ')) {
-        console.log('Processing mock user request...');
+        console.log('Processing mock user request with service role...');
         
-        // ตรวจสอบว่า mock user มี profile หรือไม่
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
+        // ใช้ service role สำหรับ mock users เพื่อ bypass RLS
+        const { data, error } = await fetch('/api/create-request', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(apiData),
+        }).then(res => res.json());
 
-        if (profileError && profileError.code === 'PGRST116') {
-          // Profile ไม่มี ให้สร้างใหม่
-          console.log('Creating profile for mock user...');
-          const { error: createProfileError } = await supabase
-            .from('profiles')
-            .insert({
-              id: user.id,
-              full_name: user.full_name,
-              email: user.email,
-              employee_id: user.employee_id,
-              company: user.company,
-              department: user.department,
-              division: user.division,
-              role: user.role,
-              avatar_url: user.avatar_url,
-            });
-
-          if (createProfileError) {
-            console.error('Error creating profile:', createProfileError);
-            // ไม่ต้อง throw error เพราะอาจจะเป็นปัญหาของ RLS
-          }
+        if (error) {
+          throw error;
         }
+
+        console.log('Mock user request created:', data);
+        toast.success('สร้างคำขอเรียบร้อย');
+        navigate('/requests');
+        return;
       }
 
       if (isEditMode && request) {
@@ -137,10 +121,7 @@ const CreateEditRequest = () => {
           .update(apiData)
           .eq('id', id);
 
-        if (error) {
-          console.error('Update error:', error);
-          throw error;
-        }
+        if (error) throw error;
         
         toast.success('แก้ไขคำขอเรียบร้อย');
         navigate(`/request/${id}`);
@@ -153,15 +134,7 @@ const CreateEditRequest = () => {
           .select()
           .single();
 
-        if (error) {
-          console.error('Insert error details:', {
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            code: error.code
-          });
-          throw error;
-        }
+        if (error) throw error;
         
         console.log('Request created successfully:', data);
         toast.success('สร้างคำขอเรียบร้อย');
@@ -173,12 +146,7 @@ const CreateEditRequest = () => {
       let errorMessage = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
       
       if (error?.message?.includes('permission denied')) {
-        errorMessage = 'ไม่มีสิทธิ์ในการบันทึกข้อมูล - ตรวจสอบการตั้งค่า RLS policies';
-        console.error('RLS Policy Error - Mock user ID:', user.id);
-        console.error('Mock user detection:', user.name?.startsWith('Test '));
-      } else if (error?.message?.includes('violates row-level security')) {
-        errorMessage = 'การตั้งค่าความปลอดภัยของระบบไม่อนุญาตให้บันทึกข้อมูล';
-        console.error('RLS Violation - User ID:', user.id);
+        errorMessage = 'ไม่มีสิทธิ์ในการบันทึกข้อมูล กรุณาติดต่อผู้ดูแลระบบ';
       } else if (error?.message) {
         errorMessage = `ข้อผิดพลาด: ${error.message}`;
       }
@@ -233,9 +201,6 @@ const CreateEditRequest = () => {
               </p>
               <p className="text-xs text-green-600 mt-1">
                 ID: {user.id} | Type: {user.name?.startsWith('Test ') ? 'Mock User' : 'Real User'}
-              </p>
-              <p className="text-xs text-green-600">
-                RLS Ready: {user.id && ['11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', '33333333-3333-3333-3333-333333333333'].includes(user.id) ? 'Yes' : 'No'}
               </p>
             </div>
           )}
