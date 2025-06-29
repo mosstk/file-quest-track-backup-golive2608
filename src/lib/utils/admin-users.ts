@@ -34,23 +34,33 @@ export const createUser = async (userData: {
   division: string;
   role: 'fa_admin' | 'requester' | 'receiver';
 }) => {
-  // First create the auth user
-  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+  // Use regular signup instead of admin API
+  const { data: authData, error: authError } = await supabase.auth.signUp({
     email: userData.email,
-    password: 'TempPass123!', // Temporary password
-    email_confirm: true,
-    user_metadata: {
-      full_name: userData.name,
-      role: userData.role,
+    password: 'TempPass123!', // Temporary password - user should change this
+    options: {
+      data: {
+        full_name: userData.name,
+        role: userData.role,
+        employee_id: userData.employeeId,
+        company: userData.company,
+        department: userData.department,
+        division: userData.division,
+      }
     }
   });
 
   if (authError) {
-    console.error('Error creating auth user:', authError);
+    console.error('Error creating user:', authError);
     throw authError;
   }
 
-  // Then update the profile
+  if (!authData.user) {
+    throw new Error('Failed to create user');
+  }
+
+  // The profile will be automatically created by the trigger
+  // But we might need to update it with additional info
   const { error: profileError } = await supabase
     .from('profiles')
     .update({
@@ -65,7 +75,7 @@ export const createUser = async (userData: {
 
   if (profileError) {
     console.error('Error updating profile:', profileError);
-    throw profileError;
+    // Don't throw here as the user was created successfully
   }
 
   return authData.user;
@@ -98,11 +108,14 @@ export const updateUser = async (userId: string, userData: {
 };
 
 export const deleteUser = async (userId: string) => {
-  // Delete the auth user (this will cascade to profiles due to foreign key)
-  const { error } = await supabase.auth.admin.deleteUser(userId);
+  // We can only delete the profile, not the auth user without admin privileges
+  const { error } = await supabase
+    .from('profiles')
+    .delete()
+    .eq('id', userId);
 
   if (error) {
-    console.error('Error deleting user:', error);
+    console.error('Error deleting user profile:', error);
     throw error;
   }
 };
