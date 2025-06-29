@@ -12,7 +12,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, userData: Partial<User>) => Promise<void>;
   signOut: () => Promise<void>;
-  login: (role: UserRole) => void;
+  login: (role: UserRole) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -111,46 +111,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw error;
   };
 
-  const login = (role: UserRole) => {
-    // สร้าง mock user โดยไม่ต้องพึ่งพาฐานข้อมูล
-    const mockUserIds = {
-      'fa_admin': '11111111-1111-1111-1111-111111111111',
-      'requester': '22222222-2222-2222-2222-222222222222',
-      'receiver': '33333333-3333-3333-3333-333333333333'
-    };
+  const login = async (role: UserRole) => {
+    try {
+      setLoading(true);
+      
+      // Define test user credentials based on role
+      const testUsers = {
+        'fa_admin': { email: 'admin@toagroup.com', password: 'testpassword123' },
+        'requester': { email: 'requester@toagroup.com', password: 'testpassword123' },
+        'receiver': { email: 'receiver@toagroup.com', password: 'testpassword123' }
+      };
 
-    const mockUserId = mockUserIds[role];
-    
-    const mockUser: User = {
-      id: mockUserId,
-      name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
-      full_name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
-      email: `test-${role}@example.com`,
-      employeeId: `EMP-${role.toUpperCase()}`,
-      employee_id: `EMP-${role.toUpperCase()}`,
-      company: 'TOA Group',
-      department: 'Information Technology',
-      division: 'Digital Solutions',
-      role: role,
-      avatar: `https://api.dicebear.com/6.x/avataaars/svg?seed=${role}`,
-      avatar_url: `https://api.dicebear.com/6.x/avataaars/svg?seed=${role}`,
-    };
-    
-    setUser(mockUser);
-    toast.success(`เข้าสู่ระบบสำเร็จ: ${mockUser.name} (Mock User)`, {
-      description: `บทบาท: ${role}`
-    });
-    
-    console.log('Mock user logged in:', mockUserId, role);
+      const credentials = testUsers[role];
+      
+      console.log(`Attempting to sign in as ${role} with email: ${credentials.email}`);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      });
+
+      if (error) {
+        console.error('Login error:', error);
+        
+        // If password doesn't work, try to sign in with the mock password from database
+        console.log('Trying alternative login method...');
+        const { error: fallbackError } = await supabase.auth.signInWithPassword({
+          email: credentials.email,
+          password: 'mockpassword', // Alternative password
+        });
+        
+        if (fallbackError) {
+          throw new Error(`ไม่สามารถเข้าสู่ระบบได้: ${fallbackError.message}`);
+        }
+      }
+
+      toast.success(`เข้าสู่ระบบสำเร็จ: ${role}`, {
+        description: `ยินดีต้อนรับเข้าสู่ระบบ FileQuestTrack`
+      });
+      
+    } catch (error: any) {
+      console.error('Login failed:', error);
+      toast.error(`เข้าสู่ระบบไม่สำเร็จ: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = async () => {
-    if (user && user.full_name?.startsWith('Test ')) {
-      setUser(null);
-      toast.success('ออกจากระบบเรียบร้อย');
-      return;
-    }
-    
     return signOut();
   };
 

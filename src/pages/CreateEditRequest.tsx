@@ -78,7 +78,7 @@ const CreateEditRequest = () => {
 
       console.log('Submitting request:', {
         user_id: user.id,
-        is_mock: user.name?.startsWith('Test '),
+        user_role: user.role,
         form_data: formData
       });
 
@@ -182,10 +182,10 @@ const CreateEditRequest = () => {
                 ✅ เข้าสู่ระบบแล้ว: {user.name} ({user.role})
               </p>
               <p className="text-xs text-green-600 mt-1">
-                ID: {user.id} | Type: {user.name?.startsWith('Test ') ? 'Mock User' : 'Real User'}
+                ID: {user.id} | อีเมล: {user.email}
               </p>
               <p className="text-xs text-blue-600 mt-1">
-                🔧 RLS Policies Updated: Mock users can now create requests
+                🎯 ใช้งาน User จริงในฐานข้อมูล Supabase
               </p>
             </div>
           )}
