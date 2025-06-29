@@ -77,14 +77,17 @@ const CreateEditRequest = () => {
         return;
       }
 
-      console.log('Submitting request with user ID:', user.id);
-      console.log('Form data:', formData);
+      console.log('Submitting request:');
+      console.log('- User ID:', user.id);
+      console.log('- User Role:', user.role);
+      console.log('- Is Mock User:', user.name?.startsWith('Test '));
+      console.log('- Form data:', formData);
 
-      // เตรียมข้อมูลสำหรับ API - ใช้ user.id โดยตรงสำหรับ mock users
+      // เตรียมข้อมูลสำหรับ API
       const apiData = {
         document_name,
         receiver_email,
-        requester_id: user.id, // ใช้ user.id ที่มาจาก mock user
+        requester_id: user.id,
         file_path: formData.file_path || null,
         status: formData.status || 'pending'
       };
@@ -116,7 +119,12 @@ const CreateEditRequest = () => {
           .single();
 
         if (error) {
-          console.error('Insert error:', error);
+          console.error('Insert error details:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          });
           throw error;
         }
         
@@ -124,10 +132,20 @@ const CreateEditRequest = () => {
         toast.success('สร้างคำขอเรียบร้อย');
         navigate('/requests');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting request:', error);
-      const errorMessage = (error as any)?.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
-      toast.error(`ไม่สามารถบันทึกข้อมูลได้: ${errorMessage}`);
+      
+      let errorMessage = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+      
+      if (error?.message?.includes('permission denied')) {
+        errorMessage = 'ไม่มีสิทธิ์ในการบันทึกข้อมูล กรุณาติดต่อผู้ดูแลระบบ';
+      } else if (error?.message?.includes('violates row-level security')) {
+        errorMessage = 'การตั้งค่าความปลอดภัยของระบบไม่อนุญาตให้บันทึกข้อมูล';
+      } else if (error?.message) {
+        errorMessage = `ข้อผิดพลาด: ${error.message}`;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -176,7 +194,7 @@ const CreateEditRequest = () => {
                 ✅ เข้าสู่ระบบแล้ว: {user.name} ({user.role})
               </p>
               <p className="text-xs text-green-600 mt-1">
-                ID: {user.id}
+                ID: {user.id} | Type: {user.name?.startsWith('Test ') ? 'Mock User' : 'Real User'}
               </p>
             </div>
           )}

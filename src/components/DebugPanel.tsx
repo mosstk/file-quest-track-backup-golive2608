@@ -13,7 +13,7 @@ const DebugPanel: React.FC = () => {
   }
 
   return (
-    <Card className="fixed bottom-4 right-4 w-80 max-h-96 overflow-auto z-50 bg-white/95 backdrop-blur">
+    <Card className="fixed bottom-4 right-4 w-80 max-h-96 overflow-auto z-50 bg-white/95 backdrop-blur border-2 border-yellow-300">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center gap-2">
           🔧 Debug Panel
@@ -34,12 +34,23 @@ const DebugPanel: React.FC = () => {
                 {user.name?.startsWith('Test ') ? 'Mock User' : 'Real User'}
               </Badge>
             </div>
+            <div><strong>Can Create Requests:</strong> 
+              <Badge variant={user.role === 'fa_admin' || user.role === 'requester' ? 'default' : 'destructive'} className="ml-1">
+                {user.role === 'fa_admin' || user.role === 'requester' ? 'Yes' : 'No'}
+              </Badge>
+            </div>
           </div>
         )}
         {session && (
           <div className="border-t pt-2">
             <div><strong>Session:</strong> Active</div>
             <div><strong>Auth ID:</strong> {session.user?.id}</div>
+          </div>
+        )}
+        {!user && !session && (
+          <div className="text-red-500">
+            <div>❌ No authentication</div>
+            <div>Please login to use the system</div>
           </div>
         )}
         <div className="border-t pt-2 text-gray-500">

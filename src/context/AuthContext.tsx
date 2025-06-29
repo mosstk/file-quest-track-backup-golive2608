@@ -135,54 +135,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       avatar_url: `https://api.dicebear.com/6.x/avataaars/svg?seed=${role}`,
     };
     
-    // สร้าง profile ใน database สำหรับ mock user (ไม่บล็อกการ login)
-    createMockProfile(mockUser).catch(error => {
-      console.error('Error creating mock profile (non-blocking):', error);
-    });
-    
+    // ตั้งค่า user ทันที โดยไม่รอสร้าง profile
     setUser(mockUser);
     toast.success(`เข้าสู่ระบบสำเร็จ: ${mockUser.name}`, {
       description: `บทบาท: ${role}`
     });
-  };
-
-  const createMockProfile = async (mockUser: User) => {
-    try {
-      console.log('Creating mock profile for user:', mockUser.id);
-      
-      // ตรวจสอบว่า profile มีอยู่แล้วหรือไม่
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', mockUser.id)
-        .maybeSingle(); // ใช้ maybeSingle แทน single
-
-      if (existingProfile) {
-        console.log('Mock profile already exists, skipping creation');
-        return;
-      }
-
-      const { error } = await supabase
-        .from('profiles')
-        .insert({
-          id: mockUser.id,
-          full_name: mockUser.full_name,
-          avatar_url: mockUser.avatar_url,
-          role: mockUser.role,
-          employee_id: mockUser.employee_id,
-          company: mockUser.company,
-          department: mockUser.department,
-          division: mockUser.division,
-        });
-
-      if (error) {
-        console.error('Error creating mock profile:', error);
-      } else {
-        console.log('Mock profile created successfully');
-      }
-    } catch (error) {
-      console.error('Error in createMockProfile:', error);
-    }
+    
+    console.log('Mock user logged in:', mockUser);
   };
 
   const logout = async () => {
