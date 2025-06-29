@@ -36,7 +36,7 @@ import {
 } from '@/components/ui/select';
 import { UserRole, User } from '@/types';
 import { toast } from 'sonner';
-import { Search, Plus, Trash, Edit, Loader2 } from 'lucide-react';
+import { Search, Plus, Trash, Edit, Loader2, AlertCircle } from 'lucide-react';
 import { fetchAllUsers, createUser, updateUser, deleteUser } from '@/lib/utils/admin-users';
 
 const AdminPanel = () => {
@@ -48,6 +48,7 @@ const AdminPanel = () => {
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   
   const [newUser, setNewUser] = useState<Partial<User>>({
     name: '',
@@ -67,12 +68,14 @@ const AdminPanel = () => {
   const loadUsers = async () => {
     try {
       setLoading(true);
+      setConnectionError(null);
       console.log('Loading users...');
       const data = await fetchAllUsers();
       console.log('Users loaded:', data);
       setUsers(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load users:', error);
+      setConnectionError('ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้');
       toast.error('ไม่สามารถโหลดข้อมูลผู้ใช้งานได้');
     } finally {
       setLoading(false);
@@ -126,6 +129,13 @@ const AdminPanel = () => {
       toast.error('กรุณากรอกข้อมูลให้ครบถ้วน (ชื่อ, อีเมล, รหัสพนักงาน)');
       return;
     }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newUser.email)) {
+      toast.error('รูปแบบอีเมลไม่ถูกต้อง');
+      return;
+    }
     
     setIsSubmitting(true);
     try {
@@ -157,18 +167,14 @@ const AdminPanel = () => {
       setIsAddUserOpen(false);
       toast.success('เพิ่มผู้ใช้งานเรียบร้อย');
       
-      // Wait a moment then reload users
+      // Reload users after a delay
       setTimeout(() => {
         loadUsers();
-      }, 2000);
+      }, 3000);
       
     } catch (error: any) {
       console.error('Failed to create user:', error);
-      if (error.message?.includes('User already registered')) {
-        toast.error('อีเมลนี้ถูกใช้งานแล้ว');
-      } else {
-        toast.error('ไม่สามารถเพิ่มผู้ใช้งานได้: ' + (error.message || 'Unknown error'));
-      }
+      toast.error(error.message || 'ไม่สามารถเพิ่มผู้ใช้งานได้');
     } finally {
       setIsSubmitting(false);
     }
@@ -234,6 +240,25 @@ const AdminPanel = () => {
   return (
     <Layout requireAuth allowedRoles={['fa_admin']}>
       <div className="container py-8 animate-fade-in">
+        {connectionError && (
+          <Card className="mb-4 border-red-200 bg-red-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 text-red-800">
+                <AlertCircle className="h-5 w-5" />
+                <span>{connectionError}</span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={loadUsers}
+                  className="ml-auto"
+                >
+                  ลองใหม่
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <div>
             <h1 className="text-3xl font-bold">แผงควบคุมผู้ดูแลระบบ</h1>
@@ -244,7 +269,7 @@ const AdminPanel = () => {
           
           <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button disabled={!!connectionError}>
                 <Plus className="mr-2 h-4 w-4" />
                 เพิ่มผู้ใช้งาน
               </Button>

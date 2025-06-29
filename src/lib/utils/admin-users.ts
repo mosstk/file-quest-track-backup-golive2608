@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types';
 
@@ -37,37 +36,71 @@ export const createUser = async (userData: {
   console.log('Creating user with data:', userData);
   
   try {
-    // Step 1: Create auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: userData.email,
-      password: 'TempPass123!', // Temporary password
-      options: {
-        data: {
-          full_name: userData.name,
-          role: userData.role,
-          employee_id: userData.employeeId,
-          company: userData.company,
-          department: userData.department,
-          division: userData.division,
+    // Check if we're connected to Supabase
+    const { data: healthCheck } = await supabase
+      .from('profiles')
+      .select('count')
+      .limit(1);
+    
+    if (!healthCheck) {
+      throw new Error('Cannot connect to Supabase database');
+    }
+
+    // Step 1: Create auth user with retry logic
+    let authData, authError;
+    let retries = 3;
+    
+    while (retries > 0) {
+      console.log(`Attempting to create auth user (${4 - retries}/3)...`);
+      
+      const result = await supabase.auth.signUp({
+        email: userData.email,
+        password: 'TempPass123!', // Temporary password
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            full_name: userData.name,
+            role: userData.role,
+            employee_id: userData.employeeId,
+            company: userData.company,
+            department: userData.department,
+            division: userData.division,
+          }
         }
+      });
+      
+      authData = result.data;
+      authError = result.error;
+      
+      if (!authError) break;
+      
+      console.warn(`Auth signup attempt failed:`, authError);
+      retries--;
+      
+      if (retries > 0) {
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
-    });
+    }
 
     console.log('Auth signup result:', { authData, authError });
 
     if (authError) {
-      console.error('Error creating auth user:', authError);
+      console.error('Error creating auth user after retries:', authError);
       throw authError;
     }
 
     if (!authData.user) {
-      throw new Error('Failed to create auth user');
+      throw new Error('Failed to create auth user - no user returned');
     }
 
-    // Step 2: Wait a moment for the trigger to potentially create the profile
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log('Auth user created successfully:', authData.user.id);
+
+    // Step 2: Wait for trigger to potentially create the profile
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Step 3: Try to insert the profile directly (the new RLS policy allows this)
+    // Step 3: Force create/update the profile directly
+    console.log('Creating/updating profile...');
     const { data: newProfile, error: profileError } = await supabase
       .from('profiles')
       .upsert({
@@ -86,13 +119,31 @@ export const createUser = async (userData: {
     
     if (profileError) {
       console.error('Error creating/updating profile:', profileError);
+      // Try to cleanup auth user if profile creation fails
+      try {
+        await supabase.auth.admin.deleteUser(authData.user.id);
+      } catch (cleanupError) {
+        console.warn('Failed to cleanup auth user:', cleanupError);
+      }
       throw profileError;
     }
 
+    console.log('User created successfully with profile:', newProfile);
     return authData.user;
-  } catch (error) {
+    
+  } catch (error: any) {
     console.error('Full error in createUser:', error);
-    throw error;
+    
+    // Provide more specific error messages
+    if (error.message?.includes('Failed to fetch')) {
+      throw new Error('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต');
+    } else if (error.message?.includes('User already registered')) {
+      throw new Error('อีเมลนี้ถูกใช้งานแล้ว');
+    } else if (error.message?.includes('Invalid email')) {
+      throw new Error('รูปแบบอีเมลไม่ถูกต้อง');
+    } else {
+      throw error;
+    }
   }
 };
 
