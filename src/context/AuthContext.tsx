@@ -12,8 +12,6 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, userData: Partial<User>) => Promise<void>;
   signOut: () => Promise<void>;
-  login: (role: UserRole) => Promise<void>;
-  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -70,20 +68,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (data) {
         console.log('Profile data:', data);
-        // Type assertion to ensure role is treated as UserRole
-        const userRole = data.role as UserRole;
+        // Get email from session
+        const userEmail = session?.user?.email || '';
         
         setUser({
           id: data.id,
           name: data.full_name || '',
           full_name: data.full_name || '',
-          email: session?.user?.email || '',
+          email: userEmail,
           employeeId: data.employee_id || '',
           employee_id: data.employee_id || '',
           company: data.company || '',
           department: data.department || '',
           division: data.division || '',
-          role: userRole,
+          role: data.role as UserRole,
           avatar: data.avatar_url,
           avatar_url: data.avatar_url,
         });
@@ -94,122 +92,80 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) throw error;
-  };
-
-  const signUp = async (email: string, password: string, userData: Partial<User>) => {
-    const { error: signUpError, data } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: userData.name || userData.full_name,
-          avatar_url: userData.avatar || userData.avatar_url,
-          role: userData.role,
-        },
-      },
-    });
-
-    if (signUpError) throw signUpError;
-  };
-
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-  };
-
-  const login = async (role: UserRole) => {
     try {
       setLoading(true);
-      
-      // Define test user credentials based on role with fixed UUIDs
-      const testUsers = {
-        'fa_admin': { 
-          email: 'admin@test.com', 
-          password: 'testpass123',
-          id: '11111111-1111-1111-1111-111111111111'
-        },
-        'requester': { 
-          email: 'requester@test.com', 
-          password: 'testpass123',
-          id: '22222222-2222-2222-2222-222222222222'
-        },
-        'receiver': { 
-          email: 'receiver@test.com', 
-          password: 'testpass123',
-          id: '33333333-3333-3333-3333-333333333333'
-        }
-      };
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      const credentials = testUsers[role];
-      
-      console.log(`Attempting to sign in as ${role} with email: ${credentials.email}`);
-      
-      // First, create the profile in the profiles table directly
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: credentials.id,
-          full_name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
-          role: role,
-          employee_id: `EMP${role.toUpperCase()}001`,
-          company: 'TOA Group',
-          department: role === 'fa_admin' ? 'Finance' : role === 'requester' ? 'Operations' : 'Receiving',
-          division: 'Bangkok'
-        })
-        .select()
-        .single();
-      
-      if (profileError) {
-        console.log('Profile creation/update result:', profileError);
+      if (error) {
+        toast.error(`เข้าสู่ระบบไม่สำเร็จ: ${error.message}`);
+        throw error;
       }
 
-      // Create a mock session and user for testing
-      const mockUser: User = {
-        id: credentials.id,
-        name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
-        full_name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
-        email: credentials.email,
-        employeeId: `EMP${role.toUpperCase()}001`,
-        employee_id: `EMP${role.toUpperCase()}001`,
-        company: 'TOA Group',
-        department: role === 'fa_admin' ? 'Finance' : role === 'requester' ? 'Operations' : 'Receiving',
-        division: 'Bangkok',
-        role: role,
-        avatar: null,
-        avatar_url: null,
-      };
-
-      // Set the user state directly for testing
-      setUser(mockUser);
-      setLoading(false);
-
-      toast.success(`เข้าสู่ระบบสำเร็จ: ${role}`, {
-        description: `ยินดีต้อนรับเข้าสู่ระบบ FileQuestTrack`
-      });
-      
-    } catch (error: any) {
-      console.error('Login failed:', error);
-      toast.error(`เข้าสู่ระบบไม่สำเร็จ: ${error.message}`);
+      toast.success('เข้าสู่ระบบสำเร็จ');
+    } catch (error) {
+      console.error('Sign in error:', error);
       throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = async () => {
-    setUser(null);
-    setSession(null);
-    toast.success('ออกจากระบบเรียบร้อยแล้ว');
+  const signUp = async (email: string, password: string, userData: Partial<User>) => {
+    try {
+      setLoading(true);
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            full_name: userData.name || userData.full_name,
+            avatar_url: userData.avatar || userData.avatar_url,
+            role: userData.role,
+            employee_id: userData.employeeId || userData.employee_id,
+            company: userData.company,
+            department: userData.department,
+            division: userData.division,
+          },
+        },
+      });
+
+      if (signUpError) {
+        toast.error(`สมัครสมาชิกไม่สำเร็จ: ${signUpError.message}`);
+        throw signUpError;
+      }
+
+      toast.success('สมัครสมาชิกสำเร็จ กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี');
+    } catch (error) {
+      console.error('Sign up error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast.error(`ออกจากระบบไม่สำเร็จ: ${error.message}`);
+        throw error;
+      }
+      
+      setUser(null);
+      setSession(null);
+      toast.success('ออกจากระบบเรียบร้อยแล้ว');
+    } catch (error) {
+      console.error('Sign out error:', error);
+      throw error;
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signOut, login, logout }}>
+    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
