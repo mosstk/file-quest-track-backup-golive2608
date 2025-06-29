@@ -48,32 +48,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const fetchUserProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-    if (error) {
-      console.error('Error fetching user profile:', error);
-      return;
-    }
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return;
+      }
 
-    if (data) {
-      setUser({
-        id: data.id,
-        name: data.full_name || '',
-        full_name: data.full_name || '',
-        email: session?.user?.email || '',
-        employeeId: data.employee_id || '',
-        employee_id: data.employee_id || '',
-        company: data.company || '',
-        department: data.department || '',
-        division: data.division || '',
-        role: data.role,
-        avatar: data.avatar_url,
-        avatar_url: data.avatar_url,
-      });
+      if (data) {
+        setUser({
+          id: data.id,
+          name: data.full_name || '',
+          full_name: data.full_name || '',
+          email: session?.user?.email || '',
+          employeeId: data.employee_id || '',
+          employee_id: data.employee_id || '',
+          company: data.company || '',
+          department: data.department || '',
+          division: data.division || '',
+          role: data.role,
+          avatar: data.avatar_url,
+          avatar_url: data.avatar_url,
+        });
+      }
+    } catch (error) {
+      console.error('Error in fetchUserProfile:', error);
     }
   };
 
@@ -129,13 +133,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     createMockProfile(mockUser);
     
     setUser(mockUser);
-    toast.success(`Logged in as ${mockUser.name}`, {
-      description: `Role: ${role}`
+    toast.success(`เข้าสู่ระบบสำเร็จ: ${mockUser.name}`, {
+      description: `บทบาท: ${role}`
     });
   };
 
   const createMockProfile = async (mockUser: User) => {
     try {
+      console.log('Creating mock profile for user:', mockUser.id);
+      
       const { error } = await supabase
         .from('profiles')
         .upsert({
@@ -147,13 +153,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           company: mockUser.company,
           department: mockUser.department,
           division: mockUser.division,
+        }, {
+          onConflict: 'id'
         });
 
       if (error) {
         console.error('Error creating mock profile:', error);
+        toast.error('เกิดข้อผิดพลาดในการสร้างโปรไฟล์');
+      } else {
+        console.log('Mock profile created successfully');
       }
     } catch (error) {
       console.error('Error in createMockProfile:', error);
+      toast.error('เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล');
     }
   };
 
@@ -161,16 +173,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (user && user.id.length === 36) { // Check if it's a proper UUID (mock user)
       // Clean up mock profile
       try {
+        console.log('Cleaning up mock profile for user:', user.id);
+        
         await supabase
           .from('profiles')
           .delete()
           .eq('id', user.id);
+          
+        console.log('Mock profile cleaned up successfully');
       } catch (error) {
         console.error('Error cleaning up mock profile:', error);
       }
       
       setUser(null);
-      toast.success('Logged out successfully');
+      toast.success('ออกจากระบบเรียบร้อย');
       return;
     }
     

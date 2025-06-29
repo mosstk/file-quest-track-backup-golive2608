@@ -1,3 +1,4 @@
+
 import React, { useState, ChangeEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,12 +12,14 @@ interface FileRequestFormProps {
   onSubmit: (data: Partial<FileRequest>) => void;
   initialData?: Partial<FileRequest>;
   isRework?: boolean;
+  disabled?: boolean;
 }
 
 const FileRequestForm: React.FC<FileRequestFormProps> = ({ 
   onSubmit, 
   initialData = {}, 
-  isRework = false 
+  isRework = false,
+  disabled = false
 }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
@@ -82,10 +85,15 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (disabled) return;
+    
     if (!validateForm()) {
       toast.error('กรุณากรอกข้อมูลให้ครบถ้วน');
       return;
     }
+    
+    console.log('Form submission with data:', formData);
+    console.log('Current user in form:', user);
     
     onSubmit({
       document_name: formData.document_name,
@@ -95,6 +103,8 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
   };
 
   const handleCancel = () => {
+    if (disabled) return;
+    
     toast.info('ยกเลิกการทำรายการ');
     window.history.back();
   };
@@ -119,6 +129,7 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
               value={formData.document_name}
               onChange={handleInputChange}
               className={formErrors.document_name ? 'border-red-500' : ''}
+              disabled={disabled}
             />
             {formErrors.document_name && (
               <p className="text-sm text-red-500">{formErrors.document_name}</p>
@@ -136,6 +147,7 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
                 value={formData.receiver_email}
                 onChange={handleInputChange}
                 className={formErrors.receiver_email ? 'border-red-500' : ''}
+                disabled={disabled}
               />
               {formErrors.receiver_email && (
                 <p className="text-sm text-red-500">{formErrors.receiver_email}</p>
@@ -152,6 +164,7 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
                 type="file"
                 onChange={handleFileChange}
                 className={`${formErrors.file_path ? 'border-red-500' : ''} file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-primary file:text-primary-foreground hover:file:bg-primary/90`}
+                disabled={disabled}
               />
             </div>
             {formErrors.file_path && (
@@ -171,14 +184,16 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({
             variant="outline" 
             onClick={handleCancel}
             className="transition-all hover:bg-destructive/10"
+            disabled={disabled}
           >
             ยกเลิก
           </Button>
           <Button 
             type="submit" 
             className="transition-all"
+            disabled={disabled}
           >
-            ตกลง
+            {disabled ? 'กำลังบันทึก...' : 'ตกลง'}
           </Button>
         </CardFooter>
       </form>
