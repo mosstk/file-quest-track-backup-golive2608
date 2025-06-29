@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,69 +37,18 @@ import {
 } from '@/components/ui/select';
 import { UserRole, User } from '@/types';
 import { toast } from 'sonner';
-import { Search, Plus, Trash, Edit } from 'lucide-react';
-
-// Mock data
-const mockUsers: User[] = [
-  {
-    id: 'req-1',
-    name: 'John Doe',
-    email: 'john@example.com',
-    employeeId: 'EMP001',
-    company: 'Example Corp',
-    department: 'Marketing',
-    division: 'Digital Marketing',
-    role: 'requester',
-  },
-  {
-    id: 'req-2',
-    name: 'Jane Smith',
-    email: 'jane@example.com',
-    employeeId: 'EMP002',
-    company: 'Example Corp',
-    department: 'Finance',
-    division: 'Accounting',
-    role: 'requester',
-  },
-  {
-    id: 'req-3',
-    name: 'Mike Johnson',
-    email: 'mike@example.com',
-    employeeId: 'EMP003',
-    company: 'Example Corp',
-    department: 'HR',
-    division: 'Recruitment',
-    role: 'requester',
-  },
-  {
-    id: 'rec-1',
-    name: 'Sarah Lee',
-    email: 'sarah@example.com',
-    employeeId: 'EMP004',
-    company: 'Partner Corp',
-    department: 'Operations',
-    division: 'Supply Chain',
-    role: 'receiver',
-  },
-  {
-    id: 'rec-2',
-    name: 'David Brown',
-    email: 'david@example.com',
-    employeeId: 'EMP005',
-    company: 'Client Corp',
-    department: 'Executive',
-    division: 'Management',
-    role: 'receiver',
-  },
-];
+import { Search, Plus, Trash, Edit, Loader2 } from 'lucide-react';
+import { fetchAllUsers, createUser, updateUser, deleteUser } from '@/lib/utils/admin-users';
 
 const AdminPanel = () => {
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<UserRole | 'all'>('all');
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [newUser, setNewUser] = useState<Partial<User>>({
     name: '',
@@ -111,12 +60,29 @@ const AdminPanel = () => {
     role: 'requester',
   });
 
+  // Load users from database
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchAllUsers();
+      setUsers(data);
+    } catch (error) {
+      console.error('Failed to load users:', error);
+      toast.error('ไม่สามารถโหลดข้อมูลผู้ใช้งานได้');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filter users based on active tab and search term
   const filteredUsers = users.filter(user => {
     const matchesRole = activeTab === 'all' || user.role === activeTab;
     const matchesSearch = 
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.employeeId.toLowerCase().includes(searchTerm.toLowerCase());
     
     return matchesRole && matchesSearch;
@@ -151,65 +117,95 @@ const AdminPanel = () => {
     }
   };
 
-  const handleAddUser = () => {
+  const handleAddUser = async () => {
     // Validate form
     if (!newUser.name || !newUser.email || !newUser.employeeId) {
       toast.error('กรุณากรอกข้อมูลให้ครบถ้วน');
       return;
     }
     
-    // Add new user
-    const user: User = {
-      id: `user-${Date.now()}`,
-      name: newUser.name || '',
-      email: newUser.email || '',
-      employeeId: newUser.employeeId || '',
-      company: newUser.company || '',
-      department: newUser.department || '',
-      division: newUser.division || '',
-      role: newUser.role as UserRole || 'requester',
-    };
-    
-    setUsers([...users, user]);
-    setNewUser({
-      name: '',
-      email: '',
-      employeeId: '',
-      company: '',
-      department: '',
-      division: '',
-      role: 'requester',
-    });
-    
-    setIsAddUserOpen(false);
-    toast.success('เพิ่มผู้ใช้งานเรียบร้อย');
+    setIsSubmitting(true);
+    try {
+      await createUser({
+        name: newUser.name,
+        email: newUser.email,
+        employeeId: newUser.employeeId,
+        company: newUser.company || '',
+        department: newUser.department || '',
+        division: newUser.division || '',
+        role: newUser.role as UserRole || 'requester',
+      });
+      
+      // Reset form
+      setNewUser({
+        name: '',
+        email: '',
+        employeeId: '',
+        company: '',
+        department: '',
+        division: '',
+        role: 'requester',
+      });
+      
+      setIsAddUserOpen(false);
+      toast.success('เพิ่มผู้ใช้งานเรียบร้อย');
+      
+      // Reload users
+      await loadUsers();
+    } catch (error) {
+      console.error('Failed to create user:', error);
+      toast.error('ไม่สามารถเพิ่มผู้ใช้งานได้');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleEditUser = () => {
+  const handleEditUser = async () => {
     if (!selectedUser) return;
     
     // Validate form
-    if (!selectedUser.name || !selectedUser.email || !selectedUser.employeeId) {
+    if (!selectedUser.name || !selectedUser.employeeId) {
       toast.error('กรุณากรอกข้อมูลให้ครบถ้วน');
       return;
     }
     
-    // Update user
-    const updatedUsers = users.map(user => 
-      user.id === selectedUser.id ? selectedUser : user
-    );
-    
-    setUsers(updatedUsers);
-    setSelectedUser(null);
-    setIsEditUserOpen(false);
-    toast.success('แก้ไขข้อมูลผู้ใช้งานเรียบร้อย');
+    setIsSubmitting(true);
+    try {
+      await updateUser(selectedUser.id, {
+        name: selectedUser.name,
+        employeeId: selectedUser.employeeId,
+        company: selectedUser.company,
+        department: selectedUser.department,
+        division: selectedUser.division,
+        role: selectedUser.role,
+      });
+      
+      setSelectedUser(null);
+      setIsEditUserOpen(false);
+      toast.success('แก้ไขข้อมูลผู้ใช้งานเรียบร้อย');
+      
+      // Reload users
+      await loadUsers();
+    } catch (error) {
+      console.error('Failed to update user:', error);
+      toast.error('ไม่สามารถแก้ไขข้อมูลผู้ใช้งานได้');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDeleteUser = (userId: string) => {
+  const handleDeleteUser = async (userId: string) => {
     if (window.confirm('คุณแน่ใจหรือไม่ที่จะลบผู้ใช้งานนี้?')) {
-      const updatedUsers = users.filter(user => user.id !== userId);
-      setUsers(updatedUsers);
-      toast.success('ลบผู้ใช้งานเรียบร้อย');
+      try {
+        await deleteUser(userId);
+        toast.success('ลบผู้ใช้งานเรียบร้อย');
+        
+        // Reload users
+        await loadUsers();
+      } catch (error) {
+        console.error('Failed to delete user:', error);
+        toast.error('ไม่สามารถลบผู้ใช้งานได้');
+      }
     }
   };
 
@@ -316,6 +312,7 @@ const AdminPanel = () => {
                     <SelectContent>
                       <SelectItem value="requester">Requester</SelectItem>
                       <SelectItem value="receiver">Receiver</SelectItem>
+                      <SelectItem value="fa_admin">FA Admin</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -324,7 +321,10 @@ const AdminPanel = () => {
                 <Button variant="outline" onClick={() => setIsAddUserOpen(false)}>
                   ยกเลิก
                 </Button>
-                <Button onClick={handleAddUser}>เพิ่มผู้ใช้งาน</Button>
+                <Button onClick={handleAddUser} disabled={isSubmitting}>
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  เพิ่มผู้ใช้งาน
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -368,7 +368,10 @@ const AdminPanel = () => {
                       type="email" 
                       value={selectedUser.email} 
                       onChange={handleInputChange}
+                      disabled
+                      className="bg-gray-100"
                     />
+                    <p className="text-xs text-muted-foreground">อีเมลไม่สามารถแก้ไขได้</p>
                   </div>
                   
                   <div className="space-y-2">
@@ -411,6 +414,7 @@ const AdminPanel = () => {
                       <SelectContent>
                         <SelectItem value="requester">Requester</SelectItem>
                         <SelectItem value="receiver">Receiver</SelectItem>
+                        <SelectItem value="fa_admin">FA Admin</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -420,7 +424,10 @@ const AdminPanel = () => {
                 <Button variant="outline" onClick={() => setIsEditUserOpen(false)}>
                   ยกเลิก
                 </Button>
-                <Button onClick={handleEditUser}>บันทึกการเปลี่ยนแปลง</Button>
+                <Button onClick={handleEditUser} disabled={isSubmitting}>
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  บันทึกการเปลี่ยนแปลง
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -477,30 +484,40 @@ const AdminPanel = () => {
                   <TableHeader className="bg-secondary">
                     <TableRow>
                       <TableHead>ชื่อ-นามสกุล</TableHead>
-                      <TableHead>อีเมล</TableHead>
                       <TableHead>รหัสพนักงาน</TableHead>
                       <TableHead>บริษัท</TableHead>
                       <TableHead>ฝ่าย</TableHead>
+                      <TableHead>แผนก</TableHead>
                       <TableHead>สิทธิ์</TableHead>
                       <TableHead className="text-right">จัดการ</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredUsers.length > 0 ? (
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center h-24">
+                          <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                          <p className="mt-2 text-muted-foreground">กำลังโหลดข้อมูล...</p>
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredUsers.length > 0 ? (
                       filteredUsers.map((user) => (
                         <TableRow key={user.id} className="hover:bg-muted/50">
                           <TableCell className="font-medium">{user.name}</TableCell>
-                          <TableCell>{user.email}</TableCell>
                           <TableCell>{user.employeeId}</TableCell>
                           <TableCell>{user.company}</TableCell>
                           <TableCell>{user.department}</TableCell>
+                          <TableCell>{user.division}</TableCell>
                           <TableCell>
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                               user.role === 'requester' 
                                 ? 'bg-blue-100 text-blue-800' 
-                                : 'bg-purple-100 text-purple-800'
+                                : user.role === 'receiver'
+                                ? 'bg-purple-100 text-purple-800'
+                                : 'bg-green-100 text-green-800'
                             }`}>
-                              {user.role === 'requester' ? 'Requester' : 'Receiver'}
+                              {user.role === 'requester' ? 'Requester' : 
+                               user.role === 'receiver' ? 'Receiver' : 'FA Admin'}
                             </span>
                           </TableCell>
                           <TableCell className="text-right">
