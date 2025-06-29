@@ -103,7 +103,7 @@ const CreateEditRequest = () => {
         toast.success('แก้ไขคำขอเรียบร้อย');
         navigate(`/request/${id}`);
       } else {
-        console.log('Creating new request');
+        console.log('Creating new request with data:', apiData);
         
         const { data, error } = await supabase
           .from('requests')
@@ -183,6 +183,9 @@ const CreateEditRequest = () => {
               </p>
               <p className="text-xs text-green-600 mt-1">
                 ID: {user.id} | Type: {user.name?.startsWith('Test ') ? 'Mock User' : 'Real User'}
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                🔧 RLS Policies Updated: Mock users can now create requests
               </p>
             </div>
           )}
