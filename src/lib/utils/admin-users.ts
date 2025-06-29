@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types';
 
@@ -36,7 +37,7 @@ export const createUser = async (userData: {
   console.log('Creating user with data:', userData);
   
   try {
-    // Use regular signup with all metadata
+    // Step 1: Create auth user first
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: userData.email,
       password: 'TempPass123!', // Temporary password - user should change this
@@ -55,19 +56,19 @@ export const createUser = async (userData: {
     console.log('Auth signup result:', { authData, authError });
 
     if (authError) {
-      console.error('Error creating user:', authError);
+      console.error('Error creating auth user:', authError);
       throw authError;
     }
 
     if (!authData.user) {
-      throw new Error('Failed to create user');
+      throw new Error('Failed to create auth user');
     }
 
-    // Always create profile manually to ensure data is saved
-    console.log('Creating profile manually with user ID:', authData.user.id);
+    // Step 2: Create profile directly with admin privileges
+    console.log('Creating profile with user ID:', authData.user.id);
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .upsert({
+      .insert({
         id: authData.user.id,
         full_name: userData.name,
         role: userData.role,
@@ -83,6 +84,9 @@ export const createUser = async (userData: {
     
     if (profileError) {
       console.error('Error creating profile:', profileError);
+      // If profile creation fails, we should clean up the auth user
+      // Note: We can't delete auth users with the client, so we log this
+      console.error('Profile creation failed for user:', authData.user.id);
       throw profileError;
     }
 
