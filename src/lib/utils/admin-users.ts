@@ -63,37 +63,27 @@ export const createUser = async (userData: {
       throw new Error('Failed to create user');
     }
 
-    // Wait for trigger to complete and verify profile was created
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Verify the profile was created
+    // Always create profile manually to ensure data is saved
+    console.log('Creating profile manually with user ID:', authData.user.id);
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('*')
-      .eq('id', authData.user.id)
+      .upsert({
+        id: authData.user.id,
+        full_name: userData.name,
+        role: userData.role,
+        employee_id: userData.employeeId,
+        company: userData.company,
+        department: userData.department,
+        division: userData.division,
+      })
+      .select()
       .single();
     
-    console.log('Profile verification:', { profile, profileError });
+    console.log('Profile creation result:', { profile, profileError });
     
-    if (profileError || !profile) {
-      console.log('Profile not created by trigger, creating manually...');
-      // If trigger didn't work, create profile manually
-      const { error: insertError } = await supabase
-        .from('profiles')
-        .insert({
-          id: authData.user.id,
-          full_name: userData.name,
-          role: userData.role,
-          employee_id: userData.employeeId,
-          company: userData.company,
-          department: userData.department,
-          division: userData.division,
-        });
-      
-      if (insertError) {
-        console.error('Error creating profile manually:', insertError);
-        throw insertError;
-      }
+    if (profileError) {
+      console.error('Error creating profile:', profileError);
+      throw profileError;
     }
 
     return authData.user;
