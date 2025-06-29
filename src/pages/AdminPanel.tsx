@@ -165,12 +165,12 @@ const AdminPanel = () => {
       });
       
       setIsAddUserOpen(false);
-      toast.success('เพิ่มผู้ใช้งานเรียบร้อย');
+      toast.success('เพิ่มผู้ใช้งานเรียบร้อย กรุณารอสักครู่เพื่อให้ข้อมูลอัพเดท');
       
       // Reload users after a delay
       setTimeout(() => {
         loadUsers();
-      }, 3000);
+      }, 2000);
       
     } catch (error: any) {
       console.error('Failed to create user:', error);
@@ -267,6 +267,7 @@ const AdminPanel = () => {
             </p>
           </div>
           
+          {/* Add User Dialog */}
           <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
             <DialogTrigger asChild>
               <Button disabled={!!connectionError}>
@@ -374,6 +375,7 @@ const AdminPanel = () => {
             </DialogContent>
           </Dialog>
           
+          {/* Edit User Dialog */}
           <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
             <DialogContent className="sm:max-w-[550px]">
               <DialogHeader>
@@ -478,6 +480,7 @@ const AdminPanel = () => {
           </Dialog>
         </div>
         
+        {/* Users Table Card */}
         <Card className="shadow-sm">
           <CardHeader>
             <CardTitle>จัดการผู้ใช้งาน</CardTitle>

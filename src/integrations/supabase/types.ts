@@ -140,6 +140,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_insert_profile: {
+        Args: { profile_user_id: string }
+        Returns: boolean
+      }
       is_fa_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
