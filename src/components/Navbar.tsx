@@ -65,7 +65,7 @@ const NavbarMenuItems = ({ onClose }: { onClose?: () => void }) => {
 };
 
 const Navbar: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -158,7 +158,7 @@ const Navbar: React.FC = () => {
                   <DropdownMenuItem className="text-sm cursor-pointer">Profile</DropdownMenuItem>
                   <DropdownMenuItem className="text-sm cursor-pointer">Settings</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-sm cursor-pointer" onClick={logout}>
+                  <DropdownMenuItem className="text-sm cursor-pointer" onClick={signOut}>
                     Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
