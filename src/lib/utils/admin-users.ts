@@ -119,20 +119,51 @@ export const updateUser = async (userId: string, userData: {
 export const deleteUser = async (userId: string) => {
   console.log('Attempting to delete user:', userId);
   
+  // Get current session to check authentication
+  const { data: { session } } = await supabase.auth.getSession();
+  console.log('Current session:', session?.user?.id);
+  
+  // Check if user exists first
+  const { data: existingUser, error: checkError } = await supabase
+    .from('profiles')
+    .select('id, full_name')
+    .eq('id', userId)
+    .single();
+    
+  console.log('User exists check:', { existingUser, checkError });
+  
+  if (checkError && checkError.code !== 'PGRST116') {
+    throw new Error('เกิดข้อผิดพลาดในการตรวจสอบผู้ใช้งาน');
+  }
+  
+  if (!existingUser) {
+    throw new Error('ไม่พบผู้ใช้งานที่ต้องการลบ');
+  }
+  
+  // Perform the deletion
   const { data, error } = await supabase
     .from('profiles')
     .delete()
     .eq('id', userId)
     .select();
 
-  console.log('Delete result:', { data, error });
+  console.log('Delete result:', { data, error, deletedCount: data?.length });
 
   if (error) {
     console.error('Error deleting user profile:', error);
-    throw error;
+    
+    // Provide more specific error messages
+    if (error.message.includes('permission denied') || error.message.includes('policy')) {
+      throw new Error('ไม่มีสิทธิ์ในการลบผู้ใช้งาน กรุณาตรวจสอบสิทธิ์ของคุณ');
+    }
+    
+    throw new Error(`เกิดข้อผิดพลาดในการลบ: ${error.message}`);
   }
 
   if (!data || data.length === 0) {
-    throw new Error('ไม่พบผู้ใช้งานที่ต้องการลบ หรือไม่มีสิทธิ์ในการลบ');
+    throw new Error('ไม่สามารถลบผู้ใช้งานได้ อาจเป็นเพราะไม่มีสิทธิ์หรือผู้ใช้งานไม่มีอยู่');
   }
+  
+  console.log('Successfully deleted user:', data[0]);
+  return data[0];
 };
