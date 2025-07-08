@@ -44,7 +44,6 @@ const App = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
             <DebugPanel />
-            <MockUserDebugPanel />
           </TooltipProvider>
         </BrowserRouter>
       </AuthProvider>
