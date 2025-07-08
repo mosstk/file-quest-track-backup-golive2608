@@ -50,14 +50,15 @@ const AdminPanel = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   
-  const [newUser, setNewUser] = useState<Partial<User>>({
+  const [newUser, setNewUser] = useState({
     name: '',
-    email: '',
+    username: '',
+    password: '',
     employeeId: '',
     company: '',
     department: '',
     division: '',
-    role: 'requester',
+    role: 'requester' as 'fa_admin' | 'requester' | 'receiver',
   });
 
   // Load users from database
@@ -125,15 +126,8 @@ const AdminPanel = () => {
     console.log('handleAddUser called with:', newUser);
     
     // Validate form
-    if (!newUser.name || !newUser.email || !newUser.employeeId) {
-      toast.error('กรุณากรอกข้อมูลให้ครบถ้วน (ชื่อ, อีเมล, รหัสพนักงาน)');
-      return;
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(newUser.email)) {
-      toast.error('รูปแบบอีเมลไม่ถูกต้อง');
+    if (!newUser.name || !newUser.username || !newUser.password || !newUser.employeeId) {
+      toast.error('กรุณากรอกข้อมูลให้ครบถ้วน (ชื่อ, ชื่อผู้ใช้, รหัสผ่าน, รหัสพนักงาน)');
       return;
     }
     
@@ -143,12 +137,13 @@ const AdminPanel = () => {
       
       await createUser({
         name: newUser.name,
-        email: newUser.email,
+        username: newUser.username,
+        password: newUser.password,
         employeeId: newUser.employeeId,
         company: newUser.company || '',
         department: newUser.department || '',
         division: newUser.division || '',
-        role: newUser.role as UserRole || 'requester',
+        role: newUser.role,
       });
       
       console.log('User created successfully');
@@ -156,7 +151,8 @@ const AdminPanel = () => {
       // Reset form
       setNewUser({
         name: '',
-        email: '',
+        username: '',
+        password: '',
         employeeId: '',
         company: '',
         department: '',
@@ -193,11 +189,13 @@ const AdminPanel = () => {
     try {
       await updateUser(selectedUser.id, {
         name: selectedUser.name,
+        username: selectedUser.employeeId, // Use employeeId as username for existing users
         employeeId: selectedUser.employeeId,
         company: selectedUser.company,
         department: selectedUser.department,
         division: selectedUser.division,
         role: selectedUser.role,
+        isActive: true, // Default to active
       });
       
       setSelectedUser(null);
@@ -306,16 +304,28 @@ const AdminPanel = () => {
                   </div>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="email">อีเมล *</Label>
-                  <Input 
-                    id="email" 
-                    name="email" 
-                    type="email" 
-                    value={newUser.email || ''} 
-                    onChange={handleInputChange}
-                    required
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="username">ชื่อผู้ใช้ *</Label>
+                    <Input 
+                      id="username" 
+                      name="username" 
+                      value={newUser.username || ''} 
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">รหัสผ่าน *</Label>
+                    <Input 
+                      id="password" 
+                      name="password" 
+                      type="password"
+                      value={newUser.password || ''} 
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
                 </div>
                 
                 <div className="space-y-2">

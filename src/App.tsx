@@ -7,6 +7,9 @@ import { AuthProvider } from "./context/AuthContext";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import RequesterDashboard from "./pages/RequesterDashboard";
+import ReceiverDashboard from "./pages/ReceiverDashboard";
 import Requests from "./pages/Requests";
 import RequestDetail from "./pages/RequestDetail";
 import CreateEditRequest from "./pages/CreateEditRequest";
@@ -29,6 +32,9 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/admin-dashboard" element={<AdminDashboard />} />
+              <Route path="/requester-dashboard" element={<RequesterDashboard />} />
+              <Route path="/receiver-dashboard" element={<ReceiverDashboard />} />
               <Route path="/requests" element={<Requests />} />
               <Route path="/requests/new" element={<CreateEditRequest />} />
               <Route path="/requests/edit/:id" element={<CreateEditRequest />} />

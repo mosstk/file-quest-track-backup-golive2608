@@ -23,6 +23,7 @@ export type Database = {
           employee_id: string | null
           full_name: string | null
           id: string
+          is_active: boolean
           password: string | null
           role: string
           updated_at: string
@@ -36,6 +37,7 @@ export type Database = {
           employee_id?: string | null
           full_name?: string | null
           id: string
+          is_active?: boolean
           password?: string | null
           role: string
           updated_at?: string
@@ -49,6 +51,7 @@ export type Database = {
           employee_id?: string | null
           full_name?: string | null
           id?: string
+          is_active?: boolean
           password?: string | null
           role?: string
           updated_at?: string

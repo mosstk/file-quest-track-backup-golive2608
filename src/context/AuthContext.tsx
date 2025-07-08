@@ -9,11 +9,9 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (username: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, userData: Partial<User>) => Promise<void>;
   signOut: () => Promise<void>;
-  login: (role: UserRole) => Promise<void>;
-  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -93,13 +91,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) throw error;
+  const signIn = async (username: string, password: string) => {
+    try {
+      setLoading(true);
+      
+      // Find user by username
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('username', username)
+        .eq('is_active', true)
+        .single();
+      
+      if (profileError || !profile) {
+        throw new Error('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+      }
+      
+      // Check password (using stored password)
+      if (profile.password !== password) {
+        throw new Error('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+      }
+      
+      // Create user object
+      const userObj: User = {
+        id: profile.id,
+        name: profile.full_name || '',
+        full_name: profile.full_name || '',
+        email: '', // We'll get this from auth if needed
+        employeeId: profile.employee_id || '',
+        employee_id: profile.employee_id || '',
+        company: profile.company || '',
+        department: profile.department || '',
+        division: profile.division || '',
+        role: profile.role as UserRole,
+        avatar: profile.avatar_url,
+        avatar_url: profile.avatar_url,
+      };
+      
+      setUser(userObj);
+      
+      toast.success(`เข้าสู่ระบบสำเร็จ`, {
+        description: `ยินดีต้อนรับ ${profile.full_name}`
+      });
+      
+    } catch (error: any) {
+      console.error('Login failed:', error);
+      toast.error(error.message || 'เข้าสู่ระบบไม่สำเร็จ');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const signUp = async (email: string, password: string, userData: Partial<User>) => {
@@ -119,97 +160,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-  };
-
-  const login = async (role: UserRole) => {
-    try {
-      setLoading(true);
-      
-      // Define test user credentials based on role with fixed UUIDs
-      const testUsers = {
-        'fa_admin': { 
-          email: 'admin@test.com', 
-          password: 'testpass123',
-          id: '11111111-1111-1111-1111-111111111111'
-        },
-        'requester': { 
-          email: 'requester@test.com', 
-          password: 'testpass123',
-          id: '22222222-2222-2222-2222-222222222222'
-        },
-        'receiver': { 
-          email: 'receiver@test.com', 
-          password: 'testpass123',
-          id: '33333333-3333-3333-3333-333333333333'
-        }
-      };
-
-      const credentials = testUsers[role];
-      
-      console.log(`Attempting to sign in as ${role} with email: ${credentials.email}`);
-      
-      // First, create the profile in the profiles table directly
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: credentials.id,
-          full_name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
-          role: role,
-          employee_id: `EMP${role.toUpperCase()}001`,
-          company: 'TOA Group',
-          department: role === 'fa_admin' ? 'Finance' : role === 'requester' ? 'Operations' : 'Receiving',
-          division: 'Bangkok'
-        })
-        .select()
-        .single();
-      
-      if (profileError) {
-        console.log('Profile creation/update result:', profileError);
-      }
-
-      // Create a mock session and user for testing
-      const mockUser: User = {
-        id: credentials.id,
-        name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
-        full_name: `Test ${role.charAt(0).toUpperCase() + role.slice(1)}`,
-        email: credentials.email,
-        employeeId: `EMP${role.toUpperCase()}001`,
-        employee_id: `EMP${role.toUpperCase()}001`,
-        company: 'TOA Group',
-        department: role === 'fa_admin' ? 'Finance' : role === 'requester' ? 'Operations' : 'Receiving',
-        division: 'Bangkok',
-        role: role,
-        avatar: null,
-        avatar_url: null,
-      };
-
-      // Set the user state directly for testing
-      setUser(mockUser);
-      setLoading(false);
-
-      toast.success(`เข้าสู่ระบบสำเร็จ: ${role}`, {
-        description: `ยินดีต้อนรับเข้าสู่ระบบ FileQuestTrack`
-      });
-      
-    } catch (error: any) {
-      console.error('Login failed:', error);
-      toast.error(`เข้าสู่ระบบไม่สำเร็จ: ${error.message}`);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const logout = async () => {
     setUser(null);
     setSession(null);
     toast.success('ออกจากระบบเรียบร้อยแล้ว');
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signOut, login, logout }}>
+    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

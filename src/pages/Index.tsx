@@ -1,29 +1,67 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { UserRole } from '@/types';
 import { toast } from 'sonner';
 
 const Index = () => {
-  const { user, login, loading } = useAuth();
+  const { user, signIn, loading } = useAuth();
   const navigate = useNavigate();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // If user is already logged in, redirect to dashboard
+  // If user is already logged in, redirect to appropriate dashboard
   React.useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      switch (user.role) {
+        case 'fa_admin':
+          navigate('/dashboard'); // Will redirect to AdminDashboard
+          break;
+        case 'requester':
+          navigate('/dashboard'); // Will redirect to RequesterDashboard
+          break;
+        case 'receiver':
+          navigate('/dashboard'); // Will redirect to ReceiverDashboard
+          break;
+        default:
+          navigate('/dashboard');
+      }
     }
   }, [user, navigate]);
 
-  const handleRoleSelection = async (role: UserRole) => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!username.trim() || !password.trim()) {
+      toast.error('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+      return;
+    }
+
     try {
-      await login(role);
-      navigate('/dashboard');
+      setIsSubmitting(true);
+      await signIn(username.trim(), password);
     } catch (error) {
-      console.error('Login failed:', error);
-      // Error handling is already done in the login function
+      // Error handling is already done in the signIn function
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleQuickLogin = async (testUsername: string, testPassword: string) => {
+    try {
+      setIsSubmitting(true);
+      setUsername(testUsername);
+      setPassword(testPassword);
+      await signIn(testUsername, testPassword);
+    } catch (error) {
+      // Error handling is already done in the signIn function
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -46,60 +84,87 @@ const Index = () => {
             ระบบบริหารจัดการเอกสารที่ปลอดภัย ใช้งานง่าย และมีประสิทธิภาพ สำหรับ TOA
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-            <div 
-              className="relative group overflow-hidden bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
-              onClick={() => handleRoleSelection('fa_admin')}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <h3 className="text-xl font-semibold mb-2">FA Admin</h3>
-              <p className="text-muted-foreground text-sm">จัดการคำขอ อนุมัติเอกสาร และติดตามสถานะการจัดส่ง</p>
-              <div className="mt-4">
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  disabled={loading}
-                >
-                  {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
-                </Button>
-              </div>
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
+            {/* Login Form */}
+            <Card className="bg-white/50 backdrop-blur-sm shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-center">เข้าสู่ระบบ</CardTitle>
+                <CardDescription className="text-center">
+                  กรุณาใส่ชื่อผู้ใช้และรหัสผ่านเพื่อเข้าสู่ระบบ
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="username">ชื่อผู้ใช้</Label>
+                    <Input
+                      id="username"
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="กรอกชื่อผู้ใช้"
+                      disabled={isSubmitting}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">รหัสผ่าน</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="กรอกรหัสผ่าน"
+                      disabled={isSubmitting}
+                      required
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
             
-            <div 
-              className="relative group overflow-hidden bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
-              onClick={() => handleRoleSelection('requester')}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <h3 className="text-xl font-semibold mb-2">Requester</h3>
-              <p className="text-muted-foreground text-sm">สร้างคำขอส่งไฟล์ ติดตามสถานะ และแก้ไขเอกสารตามคำขอ</p>
-              <div className="mt-4">
+            {/* Quick Login for Testing */}
+            <Card className="bg-white/50 backdrop-blur-sm shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-center">เข้าสู่ระบบทดสอบ</CardTitle>
+                <CardDescription className="text-center">
+                  สำหรับทดสอบระบบ (ใช้งานเฉพาะในโหมดพัฒนา)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  disabled={loading}
+                  onClick={() => handleQuickLogin('admin', 'admin123')}
+                  disabled={isSubmitting}
                 >
-                  {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+                  เข้าสู่ระบบ Admin
                 </Button>
-              </div>
-            </div>
-            
-            <div 
-              className="relative group overflow-hidden bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
-              onClick={() => handleRoleSelection('receiver')}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <h3 className="text-xl font-semibold mb-2">Receiver</h3>
-              <p className="text-muted-foreground text-sm">รับแจ้งเตือน ตรวจสอบเลขพัสดุ และยืนยันการได้รับเอกสาร</p>
-              <div className="mt-4">
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  disabled={loading}
+                  onClick={() => handleQuickLogin('requester', 'req123')}
+                  disabled={isSubmitting}
                 >
-                  {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+                  เข้าสู่ระบบ Requester
                 </Button>
-              </div>
-            </div>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => handleQuickLogin('receiver', 'rec123')}
+                  disabled={isSubmitting}
+                >
+                  เข้าสู่ระบบ Receiver
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
