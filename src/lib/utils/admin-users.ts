@@ -117,14 +117,22 @@ export const updateUser = async (userId: string, userData: {
 };
 
 export const deleteUser = async (userId: string) => {
-  // We can only delete the profile, not the auth user without admin privileges
-  const { error } = await supabase
+  console.log('Attempting to delete user:', userId);
+  
+  const { data, error } = await supabase
     .from('profiles')
     .delete()
-    .eq('id', userId);
+    .eq('id', userId)
+    .select();
+
+  console.log('Delete result:', { data, error });
 
   if (error) {
     console.error('Error deleting user profile:', error);
     throw error;
+  }
+
+  if (!data || data.length === 0) {
+    throw new Error('ไม่พบผู้ใช้งานที่ต้องการลบ หรือไม่มีสิทธิ์ในการลบ');
   }
 };
