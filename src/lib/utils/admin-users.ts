@@ -119,51 +119,55 @@ export const updateUser = async (userId: string, userData: {
 export const deleteUser = async (userId: string) => {
   console.log('Attempting to delete user:', userId);
   
-  // Get current session to check authentication
-  const { data: { session } } = await supabase.auth.getSession();
-  console.log('Current session:', session?.user?.id);
+  // For mock admin testing, bypass Supabase auth temporarily
+  const mockAdminId = '11111111-1111-1111-1111-111111111111';
   
-  // Check if user exists first
-  const { data: existingUser, error: checkError } = await supabase
-    .from('profiles')
-    .select('id, full_name')
-    .eq('id', userId)
-    .single();
+  try {
+    // Check if user exists first
+    const { data: existingUser, error: checkError } = await supabase
+      .from('profiles')
+      .select('id, full_name, role')
+      .eq('id', userId)
+      .single();
+      
+    console.log('User exists check:', { existingUser, checkError });
     
-  console.log('User exists check:', { existingUser, checkError });
-  
-  if (checkError && checkError.code !== 'PGRST116') {
-    throw new Error('เกิดข้อผิดพลาดในการตรวจสอบผู้ใช้งาน');
-  }
-  
-  if (!existingUser) {
-    throw new Error('ไม่พบผู้ใช้งานที่ต้องการลบ');
-  }
-  
-  // Perform the deletion
-  const { data, error } = await supabase
-    .from('profiles')
-    .delete()
-    .eq('id', userId)
-    .select();
-
-  console.log('Delete result:', { data, error, deletedCount: data?.length });
-
-  if (error) {
-    console.error('Error deleting user profile:', error);
-    
-    // Provide more specific error messages
-    if (error.message.includes('permission denied') || error.message.includes('policy')) {
-      throw new Error('ไม่มีสิทธิ์ในการลบผู้ใช้งาน กรุณาตรวจสอบสิทธิ์ของคุณ');
+    if (checkError && checkError.code !== 'PGRST116') {
+      throw new Error('เกิดข้อผิดพลาดในการตรวจสอบผู้ใช้งาน');
     }
     
-    throw new Error(`เกิดข้อผิดพลาดในการลบ: ${error.message}`);
-  }
+    if (!existingUser) {
+      throw new Error('ไม่พบผู้ใช้งานที่ต้องการลบ');
+    }
 
-  if (!data || data.length === 0) {
-    throw new Error('ไม่สามารถลบผู้ใช้งานได้ อาจเป็นเพราะไม่มีสิทธิ์หรือผู้ใช้งานไม่มีอยู่');
+    // Prevent deleting admin users
+    if (existingUser.role === 'fa_admin') {
+      throw new Error('ไม่สามารถลบผู้ดูแลระบบได้');
+    }
+    
+    // Perform direct deletion since RPC function doesn't exist
+    const { data: directData, error: directError } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', userId)
+      .select();
+
+    console.log('Direct delete result:', { directData, directError });
+
+    if (directError) {
+      console.error('Error deleting user profile:', directError);
+      throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${directError.message}`);
+    }
+    
+    if (!directData || directData.length === 0) {
+      throw new Error('ไม่สามารถลบผู้ใช้งานได้ อาจเป็นเพราะไม่มีสิทธิ์หรือผู้ใช้งานไม่มีอยู่');
+    }
+    
+    console.log('Successfully deleted user:', directData[0]);
+    return directData[0];
+    
+  } catch (error: any) {
+    console.error('Delete operation failed:', error);
+    throw error;
   }
-  
-  console.log('Successfully deleted user:', data[0]);
-  return data[0];
 };
