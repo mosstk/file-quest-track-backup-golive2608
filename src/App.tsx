@@ -16,8 +16,7 @@ import CreateEditRequest from "./pages/CreateEditRequest";
 import AdminPanel from "./pages/AdminPanel";
 import UserSystemPathsPage from "./pages/UserSystemPathsPage";
 import NotFound from "./pages/NotFound";
-import DebugPanel from "./components/DebugPanel";
-import MockUserDebugPanel from "./components/MockUserDebugPanel";
+// Debug panels removed
 
 const queryClient = new QueryClient();
 
@@ -43,7 +42,7 @@ const App = () => {
               <Route path="/system-paths" element={<UserSystemPathsPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-            <DebugPanel />
+            
           </TooltipProvider>
         </BrowserRouter>
       </AuthProvider>

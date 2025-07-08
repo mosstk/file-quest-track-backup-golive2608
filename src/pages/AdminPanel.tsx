@@ -216,13 +216,16 @@ const AdminPanel = () => {
     if (window.confirm('คุณแน่ใจหรือไม่ที่จะลบผู้ใช้งานนี้?')) {
       try {
         await deleteUser(userId);
-        toast.success('ลบผู้ใช้งานเรียบร้อย');
         
-        // Reload users
-        await loadUsers();
+        // Update local state immediately
+        setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+        
+        toast.success('ลบผู้ใช้งานเรียบร้อย');
       } catch (error) {
         console.error('Failed to delete user:', error);
         toast.error('ไม่สามารถลบผู้ใช้งานได้');
+        // Reload users to ensure UI is in sync with database
+        await loadUsers();
       }
     }
   };
