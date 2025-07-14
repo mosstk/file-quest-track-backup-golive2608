@@ -231,18 +231,28 @@ const AdminPanel = () => {
     }
   };
 
-  const handleDeleteUser = async (userId: string) => {
-    if (window.confirm('คุณแน่ใจหรือไม่ที่จะลบผู้ใช้งานนี้?')) {
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (window.confirm(`คุณแน่ใจหรือไม่ที่จะลบผู้ใช้งาน "${userName}"?`)) {
       try {
+        console.log('Starting delete process for user:', userId);
         await deleteUser(userId);
         
         // Update local state immediately
         setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
         
-        toast.success('ลบผู้ใช้งานเรียบร้อย');
-      } catch (error) {
+        toast.success(`ลบผู้ใช้งาน "${userName}" เรียบร้อย`);
+      } catch (error: any) {
         console.error('Failed to delete user:', error);
-        toast.error('ไม่สามารถลบผู้ใช้งานได้');
+        
+        // Show specific error message
+        if (error.message.includes('ไม่สามารถลบผู้ดูแลระบบได้')) {
+          toast.error('ไม่สามารถลบผู้ดูแลระบบได้');
+        } else if (error.message.includes('permission denied') || error.message.includes('RLS')) {
+          toast.error('ไม่มีสิทธิ์ในการลบผู้ใช้งาน กรุณาติดต่อผู้ดูแลระบบ');
+        } else {
+          toast.error(`ไม่สามารถลบผู้ใช้งานได้: ${error.message}`);
+        }
+        
         // Reload users to ensure UI is in sync with database
         await loadUsers();
       }
@@ -617,7 +627,7 @@ const AdminPanel = () => {
                             <Button 
                               variant="ghost" 
                               size="icon"
-                              onClick={() => handleDeleteUser(user.id)}
+                              onClick={() => handleDeleteUser(user.id, user.name)}
                               className="h-8 w-8 text-destructive"
                               title="ลบ"
                             >
