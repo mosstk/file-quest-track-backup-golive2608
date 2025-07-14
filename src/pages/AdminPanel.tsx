@@ -437,10 +437,10 @@ const AdminPanel = () => {
                       id="edit-email" 
                       name="email" 
                       type="email" 
-                      value={selectedUser.email} 
+                      value={selectedUser.email || 'ไม่ได้ระบุอีเมล'} 
                       onChange={handleInputChange}
                       disabled
-                      className="bg-gray-100"
+                      className="bg-muted text-foreground"
                     />
                     <p className="text-xs text-muted-foreground">อีเมลไม่สามารถแก้ไขได้</p>
                   </div>
