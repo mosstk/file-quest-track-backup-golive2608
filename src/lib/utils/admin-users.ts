@@ -156,7 +156,20 @@ export const deleteUser = async (userId: string) => {
   console.log('Attempting to delete user:', userId);
   
   try {
+    // Log current user info for debugging
+    const { data: currentUser } = await supabase.auth.getUser();
+    console.log('Current authenticated user:', currentUser?.user?.id);
+    
+    // Check current user's profile
+    const { data: currentProfile } = await supabase
+      .from('profiles')
+      .select('role, full_name')
+      .eq('id', currentUser?.user?.id)
+      .single();
+    console.log('Current user profile:', currentProfile);
+    
     // Delete the user directly - RLS policy will handle permissions
+    console.log('Attempting delete operation...');
     const { data, error } = await supabase
       .from('profiles')
       .delete()
@@ -166,11 +179,12 @@ export const deleteUser = async (userId: string) => {
     console.log('Delete result:', { data, error });
     
     if (error) {
-      console.error('Delete failed:', error);
+      console.error('Delete failed with error:', error);
       throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${error.message}`);
     }
 
     if (!data || data.length === 0) {
+      console.warn('No data returned from delete operation');
       throw new Error('ไม่สามารถลบผู้ใช้งานได้ กรุณาตรวจสอบสิทธิ์การเข้าถึง');
     }
 
