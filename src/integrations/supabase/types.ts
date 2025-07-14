@@ -162,6 +162,15 @@ export type Database = {
         Args: { profile_user_id: string }
         Returns: boolean
       }
+      create_request: {
+        Args: {
+          p_document_name: string
+          p_receiver_email: string
+          p_file_path?: string
+          p_requester_id?: string
+        }
+        Returns: Json
+      }
       force_delete_user_admin: {
         Args: { target_user_id: string; admin_user_id: string }
         Returns: Json

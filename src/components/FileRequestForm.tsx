@@ -97,20 +97,36 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
       let result;
       
       if (request) {
-        // Update existing request
+        // Update existing request - ยังคงใช้วิธีเดิม
         result = await supabase
           .from('requests')
-          .update(requestData)
+          .update({
+            document_name: formData.documentName,
+            receiver_email: formData.receiverEmail,
+            file_path: formData.documentDescription
+          })
           .eq('id', request.id)
           .select()
           .single();
       } else {
-        // Create new request
-        result = await supabase
-          .from('requests')
-          .insert(requestData)
-          .select()
-          .single();
+        // Create new request - ใช้ function
+        const { data, error } = await supabase.rpc('create_request', {
+          p_document_name: formData.documentName,
+          p_receiver_email: formData.receiverEmail,
+          p_file_path: formData.documentDescription,
+          p_requester_id: user.id
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        // ตรวจสอบว่า data มี error หรือไม่
+        if (data && typeof data === 'object' && 'error' in data) {
+          throw new Error(String(data.error));
+        }
+
+        result = { data, error: null };
       }
 
       if (result.error) {
