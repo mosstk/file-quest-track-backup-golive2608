@@ -38,6 +38,28 @@ export const createUser = async (userData: {
   console.log('Creating user with data:', userData);
   
   try {
+    // Check if username or employee_id already exists
+    const { data: existingUser, error: checkError } = await supabase
+      .from('profiles')
+      .select('username, employee_id')
+      .or(`username.eq.${userData.username},employee_id.eq.${userData.employeeId}`)
+      .limit(1);
+    
+    if (checkError) {
+      console.error('Error checking existing user:', checkError);
+      throw checkError;
+    }
+    
+    if (existingUser && existingUser.length > 0) {
+      const existing = existingUser[0];
+      if (existing.username === userData.username) {
+        throw new Error('อีเมลผู้ใช้งานนี้มีอยู่แล้วในระบบ');
+      }
+      if (existing.employee_id === userData.employeeId) {
+        throw new Error('รหัสพนักงานนี้มีอยู่แล้วในระบบ');
+      }
+    }
+    
     // Generate unique ID for the new user
     const userId = crypto.randomUUID();
     
@@ -73,6 +95,17 @@ export const createUser = async (userData: {
     
   } catch (error: any) {
     console.error('Full error in createUser:', error);
+    
+    // Handle specific database constraint errors
+    if (error.message?.includes('duplicate key value violates unique constraint')) {
+      if (error.message.includes('profiles_username_key')) {
+        throw new Error('อีเมลผู้ใช้งานนี้มีอยู่แล้วในระบบ');
+      } else if (error.message.includes('profiles_employee_id_key')) {
+        throw new Error('รหัสพนักงานนี้มีอยู่แล้วในระบบ');
+      } else {
+        throw new Error('ข้อมูลที่กรอกซ้ำกับที่มีอยู่ในระบบแล้ว');
+      }
+    }
     
     // Provide more specific error messages
     if (error.message?.includes('Failed to fetch')) {

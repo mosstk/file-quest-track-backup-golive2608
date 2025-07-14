@@ -132,13 +132,21 @@ const AdminPanel = () => {
     }
     
     // Check if username or employeeId already exists
-    const existingUser = users.find(u => 
-      u.employeeId === newUser.employeeId || 
-      (u as any).username === newUser.username
+    const existingUserByUsername = users.find(u => 
+      (u as any).username === newUser.username || 
+      u.email === newUser.username
+    );
+    const existingUserByEmployeeId = users.find(u => 
+      u.employeeId === newUser.employeeId
     );
     
-    if (existingUser) {
-      toast.error('รหัสพนักงานหรือชื่อผู้ใช้นี้มีอยู่แล้วในระบบ');
+    if (existingUserByUsername) {
+      toast.error('อีเมลผู้ใช้งานนี้มีอยู่แล้วในระบบ');
+      return;
+    }
+    
+    if (existingUserByEmployeeId) {
+      toast.error('รหัสพนักงานนี้มีอยู่แล้วในระบบ');
       return;
     }
     
