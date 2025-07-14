@@ -55,9 +55,21 @@ Deno.serve(async (req) => {
       .eq('id', adminId)
       .single()
 
-    console.log('Admin verification:', { adminProfile, adminError });
+    console.log('Admin verification:', { adminProfile, adminError, adminId });
 
-    if (adminError || !adminProfile || adminProfile.role !== 'fa_admin') {
+    if (adminError) {
+      console.error('Admin verification error:', adminError);
+      return new Response(
+        JSON.stringify({ error: `Admin verification failed: ${adminError.message}` }),
+        { 
+          status: 403, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    if (!adminProfile || adminProfile.role !== 'fa_admin') {
+      console.error('Admin profile check failed:', { adminProfile, role: adminProfile?.role });
       return new Response(
         JSON.stringify({ error: 'Unauthorized: Admin privileges required' }),
         { 
@@ -66,6 +78,8 @@ Deno.serve(async (req) => {
         }
       )
     }
+
+    console.log('Admin verification successful:', { adminId, role: adminProfile.role });
 
     // Check if user exists and get their info
     const { data: userToDelete, error: userCheckError } = await supabaseAdmin
