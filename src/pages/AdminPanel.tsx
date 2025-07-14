@@ -320,10 +320,12 @@ const AdminPanel = () => {
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="username">ชื่อผู้ใช้ *</Label>
+                    <Label htmlFor="username">อีเมลผู้ใช้งาน *</Label>
                     <Input 
                       id="username" 
                       name="username" 
+                      type="email"
+                      placeholder="example@company.com"
                       value={newUser.username || ''} 
                       onChange={handleInputChange}
                       required
