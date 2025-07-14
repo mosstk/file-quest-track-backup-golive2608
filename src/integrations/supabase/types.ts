@@ -20,6 +20,7 @@ export type Database = {
           company: string | null
           department: string | null
           division: string | null
+          email: string | null
           employee_id: string | null
           full_name: string | null
           id: string
@@ -34,6 +35,7 @@ export type Database = {
           company?: string | null
           department?: string | null
           division?: string | null
+          email?: string | null
           employee_id?: string | null
           full_name?: string | null
           id: string
@@ -48,6 +50,7 @@ export type Database = {
           company?: string | null
           department?: string | null
           division?: string | null
+          email?: string | null
           employee_id?: string | null
           full_name?: string | null
           id?: string

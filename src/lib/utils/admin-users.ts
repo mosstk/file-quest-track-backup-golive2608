@@ -16,7 +16,7 @@ export const fetchAllUsers = async () => {
   return data.map(profile => ({
     id: profile.id,
     name: profile.full_name || '',
-    email: profile.username || '',
+    email: profile.email || '',
     employeeId: profile.employee_id || '',
     company: profile.company || '',
     department: profile.department || '',
@@ -49,6 +49,7 @@ export const createUser = async (userData: {
         id: userId,
         full_name: userData.name,
         username: userData.username,
+        email: userData.username, // เก็บอีเมลในฟิลด์ email ด้วย
         password: userData.password, // In real app, this should be hashed
         role: userData.role,
         employee_id: userData.employeeId,
