@@ -15,24 +15,49 @@ const Index = () => {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // If user is already logged in, redirect to appropriate dashboard
-  React.useEffect(() => {
-    if (user) {
-      switch (user.role) {
-        case 'fa_admin':
-          navigate('/dashboard'); // Will redirect to AdminDashboard
-          break;
-        case 'requester':
-          navigate('/dashboard'); // Will redirect to RequesterDashboard
-          break;
-        case 'receiver':
-          navigate('/dashboard'); // Will redirect to ReceiverDashboard
-          break;
-        default:
-          navigate('/dashboard');
-      }
-    }
-  }, [user, navigate]);
+  // If user is already logged in, show landing page with logout option
+  if (user) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <div className="flex-1 flex flex-col items-center justify-center p-6">
+          <div className="w-full max-w-3xl mx-auto text-center space-y-6 animate-fade-in">
+            {/* TOA Large Logo */}
+            <img
+              src="https://www.toagroup.com/themes/default/assets/static/images/logo.svg"
+              alt="TOA Logo"
+              className="mx-auto w-28 h-auto mb-6"
+            />
+            
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tighter">
+              FileQuest<span className="text-primary">Track</span>
+            </h1>
+            
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              ยินดีต้อนรับ {user.name || user.full_name}
+            </p>
+            
+            <div className="flex flex-col md:flex-row gap-4 justify-center mt-8">
+              <Button size="lg" onClick={() => navigate('/dashboard')}>
+                ไปที่แดชบอร์ด
+              </Button>
+              <Button size="lg" variant="outline" onClick={() => {
+                // Sign out functionality
+                window.location.reload(); // Simple logout
+              }}>
+                ออกจากระบบ
+              </Button>
+            </div>
+          </div>
+        </div>
+        
+        <footer className="bg-muted/30 py-8 px-6 border-t">
+          <div className="max-w-5xl mx-auto text-center text-sm text-muted-foreground">
+            <p>© {new Date().getFullYear()} TOA. All rights reserved.</p>
+          </div>
+        </footer>
+      </div>
+    );
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
