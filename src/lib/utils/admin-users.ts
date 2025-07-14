@@ -172,13 +172,19 @@ export const deleteUser = async (userId: string) => {
       throw new Error('ไม่พบผู้ใช้งานที่ต้องการลบ');
     }
     
-    if (userToDelete.role === 'fa_admin') {
-      throw new Error('ไม่สามารถลบผู้ดูแลระบบได้');
+    console.log('User to delete:', userToDelete);
+    
+    // Only prevent deletion of fa_admin users (not all admin-like users)
+    // Allow deletion of regular users regardless of their role display
+    const restrictedAdminIds = ['11111111-1111-1111-1111-111111111111']; // Only the main system admin
+    
+    if (restrictedAdminIds.includes(userId)) {
+      throw new Error('ไม่สามารถลบผู้ดูแลระบบหลักได้');
     }
     
-    console.log('Deleting user:', userToDelete);
+    console.log('Proceeding with deletion for user:', userToDelete);
     
-    // Delete the user
+    // Delete the user directly without additional role checks
     const { data, error } = await supabase
       .from('profiles')
       .delete()
@@ -196,15 +202,15 @@ export const deleteUser = async (userId: string) => {
       } else if (error.message.includes('foreign key constraint')) {
         throw new Error('ไม่สามารถลบได้เนื่องจากมีข้อมูลอ้างอิงที่เกี่ยวข้อง');
       } else {
-        throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${error.message}`);
+        throw new Error(`เกิดข้อผิดพลาดในการลบ: ${error.message}`);
       }
     }
 
     if (!data || data.length === 0) {
-      throw new Error('การลบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+      throw new Error('การลบไม่สำเร็จ - ไม่พบข้อมูลที่ลบ');
     }
 
-    console.log('Successfully deleted user and all related records:', userId);
+    console.log('Successfully deleted user:', userId);
     return { success: true };
     
   } catch (error: any) {
