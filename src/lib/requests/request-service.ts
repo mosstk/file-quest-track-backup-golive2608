@@ -16,7 +16,7 @@ export class RequestService {
       document_name: formData.documentName,
       receiver_email: formData.receiverEmail,
       file_path: formData.documentDescription,
-      requester_id: session?.user?.id || user.id, // Use auth.uid() first, fallback to user.id
+      requester_id: user.id, // Always use user.id for consistency
       status: 'pending' as const
     };
 
