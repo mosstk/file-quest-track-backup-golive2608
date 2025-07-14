@@ -265,7 +265,7 @@ const RequestDetail = () => {
   const isRequester = user?.email === request.requesterEmail;
   const isReceiver = user?.email === (request.receiver_email || request.receiverEmail);
   const canApprove = isAdmin && request.status === 'pending';
-  const canEdit = (isRequester && request.status === 'rework') || isAdmin;
+  const canEdit = (isRequester && request.status === 'rework') || (isAdmin && request.status !== 'approved');
 
   return (
     <Layout requireAuth>
