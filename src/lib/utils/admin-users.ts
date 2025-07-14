@@ -120,9 +120,19 @@ export const deleteUser = async (userId: string) => {
   console.log('Attempting to delete user:', userId);
   
   try {
+    // Get current user info for admin verification
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    
+    if (!currentUser) {
+      throw new Error('ไม่พบข้อมูลผู้ใช้ที่เข้าสู่ระบบ');
+    }
+
     // Try using the admin-delete-user edge function for proper deletion
     const { data, error } = await supabase.functions.invoke('admin-delete-user', {
-      body: { userId }
+      body: { 
+        userId,
+        adminId: currentUser.id
+      }
     });
 
     if (error) {
