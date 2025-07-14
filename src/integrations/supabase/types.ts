@@ -162,6 +162,10 @@ export type Database = {
         Args: { profile_user_id: string }
         Returns: boolean
       }
+      force_delete_user_admin: {
+        Args: { target_user_id: string; admin_user_id: string }
+        Returns: Json
+      }
       is_fa_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean

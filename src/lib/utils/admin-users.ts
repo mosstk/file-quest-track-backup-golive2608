@@ -153,7 +153,7 @@ export const updateUser = async (userId: string, userData: {
 };
 
 export const deleteUser = async (userId: string) => {
-  console.log('=== DELETE USER START (Method 5: Direct Admin API) ===');
+  console.log('=== DELETE USER START (Method 6: Raw SQL RPC) ===');
   console.log('Target userId:', userId);
   
   try {
@@ -163,59 +163,41 @@ export const deleteUser = async (userId: string) => {
       throw new Error('ไม่สามารถตรวจสอบตัวตนได้');
     }
 
-    // Check current user profile first
-    const { data: currentProfile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role, full_name')
-      .eq('id', currentUser.user.id)
-      .single();
+    console.log('Admin user ID:', currentUser.user.id);
 
-    console.log('Current user profile:', currentProfile);
+    // เรียกใช้ RPC function ที่ใช้ raw SQL และ bypass RLS
+    const { data, error } = await supabase.rpc('force_delete_user_admin', {
+      target_user_id: userId,
+      admin_user_id: currentUser.user.id
+    });
 
-    if (profileError || !currentProfile || currentProfile.role !== 'fa_admin') {
-      throw new Error('ไม่มีสิทธิ์ในการลบผู้ใช้งาน - ต้องเป็น FA Admin เท่านั้น');
+    console.log('RPC force_delete_user_admin result:', { data, error });
+
+    if (error) {
+      console.error('RPC function error:', error);
+      throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${error.message}`);
     }
 
-    // สร้าง Admin Client โดยตรง
-    const { createClient } = await import('@supabase/supabase-js');
-    const supabaseAdmin = createClient(
-      'https://gqvfoyfaaihjkysydapc.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxdmZveWZhYWloamt5c3lkYXBjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTMwNDc0MywiZXhwIjoyMDYwODgwNzQzfQ.dOvMWQOpADOGVUz7LZ1FQH7N8eVRZ7VYgdnAoE2jZsU',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
+    if (!data) {
+      throw new Error('ไม่ได้รับข้อมูลตอบกลับจาก function');
+    }
+
+    // ตรวจสอบผลลัพธ์จาก function
+    if (typeof data === 'object' && 'success' in data) {
+      if (!data.success) {
+        const errorMsg = data.error || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ';
+        throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${errorMsg}`);
       }
-    );
-
-    console.log('=== USING ADMIN CLIENT DIRECTLY ===');
-    
-    // ลบโดยใช้ Admin Client (ข้าม RLS ทั้งหมด)
-    const { data: deletedData, error: deleteError } = await supabaseAdmin
-      .from('profiles')
-      .delete()
-      .eq('id', userId)
-      .select();
-
-    console.log('Direct admin delete result:', { deletedData, deleteError });
-
-    if (deleteError) {
-      console.error('Admin delete failed:', deleteError);
-      throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${deleteError.message}`);
+      
+      console.log('=== DELETE SUCCESS (Method 6) ===');
+      console.log('Function response:', data);
+      return { success: true };
     }
 
-    if (!deletedData || deletedData.length === 0) {
-      throw new Error('ไม่พบผู้ใช้งานที่ต้องการลบ หรือถูกลบไปแล้ว');
-    }
-
-    console.log('=== DELETE SUCCESS (Method 5) ===');
-    console.log('Deleted user:', deletedData[0]);
-    
-    return { success: true };
+    throw new Error('รูปแบบข้อมูลตอบกลับไม่ถูกต้อง');
     
   } catch (error: any) {
-    console.error('=== DELETE FAILED (Method 5) ===');
+    console.error('=== DELETE FAILED (Method 6) ===');
     console.error('Error details:', error);
     throw error;
   }
