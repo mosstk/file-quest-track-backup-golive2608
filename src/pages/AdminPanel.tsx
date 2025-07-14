@@ -36,8 +36,8 @@ import {
 } from '@/components/ui/select';
 import { UserRole, User } from '@/types';
 import { toast } from 'sonner';
-import { Search, Plus, Trash, Edit, Loader2, AlertCircle } from 'lucide-react';
-import { fetchAllUsers, createUser, updateUser, deleteUser } from '@/lib/utils/admin-users';
+import { Search, Plus, Edit, Loader2, AlertCircle } from 'lucide-react';
+import { fetchAllUsers, createUser, updateUser } from '@/lib/utils/admin-users';
 
 const AdminPanel = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -231,33 +231,6 @@ const AdminPanel = () => {
     }
   };
 
-  const handleDeleteUser = async (userId: string, userName: string) => {
-    if (window.confirm(`คุณแน่ใจหรือไม่ที่จะลบผู้ใช้งาน "${userName}"?`)) {
-      try {
-        console.log('Starting delete process for user:', userId);
-        await deleteUser(userId);
-        
-        // Update local state immediately
-        setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
-        
-        toast.success(`ลบผู้ใช้งาน "${userName}" เรียบร้อย`);
-      } catch (error: any) {
-        console.error('Failed to delete user:', error);
-        
-        // Show specific error message
-        if (error.message.includes('ไม่สามารถลบผู้ดูแลระบบได้')) {
-          toast.error('ไม่สามารถลบผู้ดูแลระบบได้');
-        } else if (error.message.includes('permission denied') || error.message.includes('RLS')) {
-          toast.error('ไม่มีสิทธิ์ในการลบผู้ใช้งาน กรุณาติดต่อผู้ดูแลระบบ');
-        } else {
-          toast.error(`ไม่สามารถลบผู้ใช้งานได้: ${error.message}`);
-        }
-        
-        // Reload users to ensure UI is in sync with database
-        await loadUsers();
-      }
-    }
-  };
 
   const openEditDialog = (user: User) => {
     setSelectedUser(user);
@@ -529,7 +502,7 @@ const AdminPanel = () => {
           <CardHeader>
             <CardTitle>จัดการผู้ใช้งาน</CardTitle>
             <CardDescription>
-              เพิ่ม แก้ไข และลบผู้ใช้งานในระบบ ({users.length} คน)
+              เพิ่ม และแก้ไขข้อมูลผู้ใช้งานในระบบ ({users.length} คน)
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -623,15 +596,6 @@ const AdminPanel = () => {
                               title="แก้ไข"
                             >
                               <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => handleDeleteUser(user.id, user.name)}
-                              className="h-8 w-8 text-destructive"
-                              title="ลบ"
-                            >
-                              <Trash className="h-4 w-4" />
                             </Button>
                           </TableCell>
                         </TableRow>
