@@ -120,15 +120,19 @@ export const deleteUser = async (userId: string) => {
   console.log('Attempting to delete user:', userId);
   
   try {
-    // Direct deletion from profiles table using service role
-    const { error } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId);
+    // Try using the admin-delete-user edge function for proper deletion
+    const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+      body: { userId }
+    });
 
     if (error) {
-      console.error('Delete error:', error);
+      console.error('Edge function error:', error);
       throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${error.message}`);
+    }
+
+    if (data?.error) {
+      console.error('Delete error from function:', data.error);
+      throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${data.error}`);
     }
 
     console.log('Successfully deleted user:', userId);
