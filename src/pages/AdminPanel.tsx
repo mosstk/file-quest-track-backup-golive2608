@@ -200,7 +200,7 @@ const AdminPanel = () => {
     try {
       await updateUser(selectedUser.id, {
         name: selectedUser.name,
-        username: selectedUser.employeeId, // Use employeeId as username for existing users
+        username: selectedUser.email || selectedUser.employeeId, // Use existing email or employeeId, not overwrite
         employeeId: selectedUser.employeeId,
         company: selectedUser.company,
         department: selectedUser.department,

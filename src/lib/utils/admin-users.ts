@@ -97,11 +97,13 @@ export const updateUser = async (userId: string, userData: {
   role: 'fa_admin' | 'requester' | 'receiver';
   isActive: boolean;
 }) => {
+  // Don't update username to prevent duplicate key constraints
+  // Username should be immutable once set
   const { error } = await supabase
     .from('profiles')
     .update({
       full_name: userData.name,
-      username: userData.username,
+      // username: userData.username, // Remove this to prevent duplicate key errors
       employee_id: userData.employeeId,
       company: userData.company,
       department: userData.department,
