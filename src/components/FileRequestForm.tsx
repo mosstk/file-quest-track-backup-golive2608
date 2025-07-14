@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { FileRequest } from '@/types';
-import { Loader2, Upload, X } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface FileRequestFormProps {
   request?: FileRequest;
@@ -19,12 +20,11 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [file, setFile] = useState<File | null>(null);
   
   const [formData, setFormData] = useState({
     documentName: '',
     receiverEmail: '',
-    fileAttachment: ''
+    documentDescription: ''
   });
 
   useEffect(() => {
@@ -32,37 +32,18 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
       setFormData({
         documentName: request.document_name || request.documentName || '',
         receiverEmail: request.receiver_email || request.receiverEmail || '',
-        fileAttachment: request.file_path || request.fileAttachment || ''
+        documentDescription: ''
       });
     }
   }, [request]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
     setError(null);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      setFormData(prev => ({
-        ...prev,
-        fileAttachment: selectedFile.name
-      }));
-    }
-  };
-
-  const removeFile = () => {
-    setFile(null);
-    setFormData(prev => ({
-      ...prev,
-      fileAttachment: ''
-    }));
   };
 
   const validateForm = () => {
@@ -72,10 +53,6 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
     }
     if (!formData.receiverEmail.trim()) {
       setError('กรุณากรอกอีเมลผู้รับ');
-      return false;
-    }
-    if (!request && !file) {
-      setError('กรุณาเลือกไฟล์แนบ');
       return false;
     }
     
@@ -102,22 +79,10 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
     setError(null);
 
     try {
-      let filePath = formData.fileAttachment;
-      
-      // Upload file if new file is selected
-      if (file) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-        
-        // Note: In production, you would upload to Supabase storage here
-        // For now, we'll use the filename
-        filePath = fileName;
-      }
-
       const requestData = {
         document_name: formData.documentName,
         receiver_email: formData.receiverEmail,
-        file_path: filePath,
+        file_path: formData.documentDescription, // Store description in file_path for now
         requester_id: user.id,
         status: 'pending' as const
       };
@@ -191,6 +156,19 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="documentDescription">รายละเอียดไฟล์</Label>
+            <Textarea
+              id="documentDescription"
+              name="documentDescription"
+              value={formData.documentDescription}
+              onChange={handleInputChange}
+              placeholder="ระบุรายละเอียดเพิ่มเติมเกี่ยวกับไฟล์ (ไม่บังคับ)"
+              disabled={isSubmitting}
+              rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="receiverEmail">อีเมลผู้รับ *</Label>
             <Input
               id="receiverEmail"
@@ -202,51 +180,6 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
               required
               disabled={isSubmitting}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="fileAttachment">ไฟล์แนบ {!request && '*'}</Label>
-            
-            {formData.fileAttachment && (
-              <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                <span className="flex-1 truncate">{formData.fileAttachment}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={removeFile}
-                  disabled={isSubmitting}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-            
-            {!formData.fileAttachment && (
-              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
-                <div className="text-center">
-                  <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-                  <div className="mt-4">
-                    <Label htmlFor="fileInput" className="cursor-pointer">
-                      <span className="mt-2 block text-sm font-medium text-muted-foreground">
-                        คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวาง
-                      </span>
-                    </Label>
-                    <Input
-                      id="fileInput"
-                      type="file"
-                      onChange={handleFileChange}
-                      className="hidden"
-                      disabled={isSubmitting}
-                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    รองรับไฟล์: PDF, Word, Excel, PowerPoint, รูปภาพ (ขนาดไม่เกิน 10MB)
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="flex gap-2 pt-4">
