@@ -84,9 +84,9 @@ const Index = () => {
             ระบบบริหารจัดการเอกสารที่ปลอดภัย ใช้งานง่าย และมีประสิทธิภาพ สำหรับ TOA
           </p>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
+          <div className="flex justify-center mt-12">
             {/* Login Form */}
-            <Card className="bg-white/50 backdrop-blur-sm shadow-lg">
+            <Card className="bg-white/50 backdrop-blur-sm shadow-lg max-w-md w-full">
               <CardHeader>
                 <CardTitle className="text-center">เข้าสู่ระบบ</CardTitle>
                 <CardDescription className="text-center">
@@ -127,42 +127,6 @@ const Index = () => {
                     {isSubmitting ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
                   </Button>
                 </form>
-              </CardContent>
-            </Card>
-            
-            {/* Quick Login for Testing */}
-            <Card className="bg-white/50 backdrop-blur-sm shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-center">เข้าสู่ระบบทดสอบ</CardTitle>
-                <CardDescription className="text-center">
-                  สำหรับทดสอบระบบ (ใช้งานเฉพาะในโหมดพัฒนา)
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => handleQuickLogin('admin', 'admin')}
-                  disabled={isSubmitting}
-                >
-                  เข้าสู่ระบบ Admin
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => handleQuickLogin('requester', 'requester')}
-                  disabled={isSubmitting}
-                >
-                  เข้าสู่ระบบ Requester
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => handleQuickLogin('receiver', 'receiver')}
-                  disabled={isSubmitting}
-                >
-                  เข้าสู่ระบบ Receiver
-                </Button>
               </CardContent>
             </Card>
           </div>
