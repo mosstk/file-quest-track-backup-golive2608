@@ -159,7 +159,7 @@ export const deleteUser = async (userId: string) => {
     // Check if trying to delete an admin user (safety check)
     const { data: userToDelete, error: checkError } = await supabase
       .from('profiles')
-      .select('role, full_name')
+      .select('role, full_name, employee_id')
       .eq('id', userId)
       .single();
       
@@ -168,13 +168,17 @@ export const deleteUser = async (userId: string) => {
       throw new Error('ไม่สามารถตรวจสอบข้อมูลผู้ใช้งานได้');
     }
     
-    if (userToDelete?.role === 'fa_admin') {
+    if (!userToDelete) {
+      throw new Error('ไม่พบผู้ใช้งานที่ต้องการลบ');
+    }
+    
+    if (userToDelete.role === 'fa_admin') {
       throw new Error('ไม่สามารถลบผู้ดูแลระบบได้');
     }
     
     console.log('Deleting user:', userToDelete);
     
-    // Delete the user - CASCADE will automatically handle related records
+    // Delete the user
     const { data, error } = await supabase
       .from('profiles')
       .delete()
@@ -185,11 +189,19 @@ export const deleteUser = async (userId: string) => {
     
     if (error) {
       console.error('Delete failed:', error);
-      throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${error.message}`);
+      
+      // Provide more specific error messages
+      if (error.message.includes('permission denied') || error.message.includes('RLS')) {
+        throw new Error('ไม่มีสิทธิ์ในการลบผู้ใช้งาน');
+      } else if (error.message.includes('foreign key constraint')) {
+        throw new Error('ไม่สามารถลบได้เนื่องจากมีข้อมูลอ้างอิงที่เกี่ยวข้อง');
+      } else {
+        throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${error.message}`);
+      }
     }
 
     if (!data || data.length === 0) {
-      throw new Error('ไม่พบผู้ใช้งานที่ต้องการลบ');
+      throw new Error('การลบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
     }
 
     console.log('Successfully deleted user and all related records:', userId);
