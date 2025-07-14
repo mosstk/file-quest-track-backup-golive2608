@@ -153,39 +153,23 @@ export const updateUser = async (userId: string, userData: {
 };
 
 export const deleteUser = async (userId: string) => {
-  console.log('Attempting to delete user:', userId);
+  console.log('Attempting to delete user using new function:', userId);
   
   try {
-    // Log current user info for debugging
-    const { data: currentUser } = await supabase.auth.getUser();
-    console.log('Current authenticated user:', currentUser?.user?.id);
+    // ใช้ function ใหม่ที่สร้าง security definer 
+    const { data, error } = await supabase.rpc('admin_delete_user', {
+      target_user_id: userId
+    });
     
-    // Check current user's profile
-    const { data: currentProfile } = await supabase
-      .from('profiles')
-      .select('role, full_name')
-      .eq('id', currentUser?.user?.id)
-      .single();
-    console.log('Current user profile:', currentProfile);
-    
-    // Delete the user directly - RLS policy will handle permissions
-    console.log('Attempting delete operation...');
-    const { data, error } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId)
-      .select();
-      
-    console.log('Delete result:', { data, error });
+    console.log('Delete function result:', { data, error });
     
     if (error) {
-      console.error('Delete failed with error:', error);
+      console.error('Delete function failed:', error);
       throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${error.message}`);
     }
 
-    if (!data || data.length === 0) {
-      console.warn('No data returned from delete operation');
-      throw new Error('ไม่สามารถลบผู้ใช้งานได้ กรุณาตรวจสอบสิทธิ์การเข้าถึง');
+    if (!data || (typeof data === 'object' && data !== null && 'success' in data && !data.success)) {
+      throw new Error('ไม่สามารถลบผู้ใช้งานได้');
     }
 
     console.log('Successfully deleted user:', userId);
