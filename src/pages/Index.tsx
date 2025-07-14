@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 
 const Index = () => {
-  const { user, signIn, loading } = useAuth();
+  const { user, signIn, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -40,9 +40,8 @@ const Index = () => {
               <Button size="lg" onClick={() => navigate('/dashboard')}>
                 ไปที่แดชบอร์ด
               </Button>
-              <Button size="lg" variant="outline" onClick={() => {
-                // Sign out functionality
-                window.location.reload(); // Simple logout
+              <Button size="lg" variant="outline" onClick={async () => {
+                await signOut();
               }}>
                 ออกจากระบบ
               </Button>

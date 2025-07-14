@@ -212,9 +212,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    setUser(null);
-    setSession(null);
-    toast.success('ออกจากระบบเรียบร้อยแล้ว');
+    try {
+      // Clear local state first
+      setUser(null);
+      setSession(null);
+      
+      // Sign out from Supabase Auth if there's an active session
+      await supabase.auth.signOut();
+      
+      toast.success('ออกจากระบบเรียบร้อยแล้ว');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast.error('เกิดข้อผิดพลาดในการออกจากระบบ');
+    }
   };
 
   return (
