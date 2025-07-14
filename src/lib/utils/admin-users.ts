@@ -138,7 +138,21 @@ export const deleteUser = async (userId: string) => {
     
     console.log('Deleting user:', userToDelete);
     
-    // Delete the user directly
+    // First, delete all requests associated with this user to avoid foreign key constraint violation
+    console.log('Deleting associated requests...');
+    const { error: requestsError } = await supabase
+      .from('requests')
+      .delete()
+      .eq('requester_id', userId);
+      
+    if (requestsError) {
+      console.error('Error deleting associated requests:', requestsError);
+      throw new Error(`ไม่สามารถลบคำขอที่เกี่ยวข้องได้: ${requestsError.message}`);
+    }
+    
+    console.log('Associated requests deleted successfully');
+    
+    // Now delete the user profile
     const { data, error } = await supabase
       .from('profiles')
       .delete()
