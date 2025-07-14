@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Delete the user using admin privileges
+    // Delete the user using admin privileges (bypass RLS)
     const { data: deletedUser, error: deleteError } = await supabaseAdmin
       .from('profiles')
       .delete()
