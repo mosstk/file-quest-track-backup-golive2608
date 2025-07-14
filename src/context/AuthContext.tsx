@@ -4,6 +4,7 @@ import { User, UserRole } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   session: Session | null;
@@ -20,6 +21,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Set up auth state listener first
@@ -88,6 +90,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           avatar: data.avatar_url,
           avatar_url: data.avatar_url,
         });
+        
+        // Redirect to dashboard after successful profile fetch
+        if (window.location.pathname === '/') {
+          navigate('/dashboard');
+        }
       } else {
         console.log('No profile found, clearing session');
         // ถ้าไม่เจอ profile ให้ clear session
@@ -128,6 +135,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           description: `ยินดีต้อนรับ ${userObj.full_name}`
         });
         
+        // Redirect to dashboard
+        navigate('/dashboard');
         return;
       }
       
@@ -180,6 +189,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           description: `ยินดีต้อนรับ ${profile.full_name}`
         });
         
+        // Redirect to dashboard
+        navigate('/dashboard');
         return;
       }
       
