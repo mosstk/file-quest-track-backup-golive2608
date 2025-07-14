@@ -73,21 +73,29 @@ const RequestDetail = () => {
   const handleApprove = async (trackingNumber: string) => {
     if (!request) return;
     
+    console.log('Approving request:', request.id);
+    console.log('User:', user);
+    console.log('Tracking number:', trackingNumber);
+    
     try {
       // Update request in database
+      const updateData = {
+        status: 'approved' as const,
+        tracking_number: trackingNumber,
+        updated_at: new Date().toISOString(),
+        approved_by: user?.id
+      };
+      
+      console.log('Update data:', updateData);
+      
       const { error } = await supabase
         .from('requests')
-        .update({
-          status: 'approved',
-          tracking_number: trackingNumber,
-          updated_at: new Date().toISOString(),
-          approved_by: user?.id
-        })
+        .update(updateData)
         .eq('id', request.id);
       
       if (error) {
-        console.error('Error approving request:', error);
-        toast.error('ไม่สามารถอนุมัติคำขอได้');
+        console.error('Supabase error:', error);
+        toast.error('ไม่สามารถอนุมัติคำขอได้: ' + error.message);
         return;
       }
       
