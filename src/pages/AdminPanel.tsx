@@ -559,6 +559,7 @@ const AdminPanel = () => {
                     <TableRow>
                       <TableHead>ชื่อ-นามสกุล</TableHead>
                       <TableHead>รหัสพนักงาน</TableHead>
+                      <TableHead>อีเมล</TableHead>
                       <TableHead>บริษัท</TableHead>
                       <TableHead>ฝ่าย</TableHead>
                       <TableHead>แผนก</TableHead>
@@ -569,7 +570,7 @@ const AdminPanel = () => {
                   <TableBody>
                     {loading ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center h-24">
+                        <TableCell colSpan={8} className="text-center h-24">
                           <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                           <p className="mt-2 text-muted-foreground">กำลังโหลดข้อมูล...</p>
                         </TableCell>
@@ -579,6 +580,7 @@ const AdminPanel = () => {
                         <TableRow key={user.id} className="hover:bg-muted/50">
                           <TableCell className="font-medium">{user.name}</TableCell>
                           <TableCell>{user.employeeId}</TableCell>
+                          <TableCell>{user.email || 'ไม่ได้ระบุอีเมล'}</TableCell>
                           <TableCell>{user.company}</TableCell>
                           <TableCell>{user.department}</TableCell>
                           <TableCell>{user.division}</TableCell>
@@ -618,7 +620,7 @@ const AdminPanel = () => {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
+                        <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
                           {users.length === 0 ? 'ไม่มีผู้ใช้งานในระบบ' : 'ไม่พบข้อมูลที่ค้นหา'}
                         </TableCell>
                       </TableRow>
