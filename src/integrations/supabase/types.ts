@@ -166,6 +166,10 @@ export type Database = {
         Args: { target_user_id: string; admin_user_id: string }
         Returns: Json
       }
+      get_current_user_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       is_fa_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
