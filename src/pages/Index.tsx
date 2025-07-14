@@ -142,7 +142,7 @@ const Index = () => {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => handleQuickLogin('admin', 'admin123')}
+                  onClick={() => handleQuickLogin('admin', 'admin')}
                   disabled={isSubmitting}
                 >
                   เข้าสู่ระบบ Admin
@@ -150,7 +150,7 @@ const Index = () => {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => handleQuickLogin('requester', 'req123')}
+                  onClick={() => handleQuickLogin('requester', 'requester')}
                   disabled={isSubmitting}
                 >
                   เข้าสู่ระบบ Requester
@@ -158,7 +158,7 @@ const Index = () => {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => handleQuickLogin('receiver', 'rec123')}
+                  onClick={() => handleQuickLogin('receiver', 'receiver')}
                   disabled={isSubmitting}
                 >
                   เข้าสู่ระบบ Receiver
