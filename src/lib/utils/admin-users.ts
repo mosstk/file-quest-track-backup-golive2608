@@ -138,21 +138,7 @@ export const deleteUser = async (userId: string) => {
     
     console.log('Deleting user:', userToDelete);
     
-    // First, delete all requests associated with this user to avoid foreign key constraint violation
-    console.log('Deleting associated requests...');
-    const { error: requestsError } = await supabase
-      .from('requests')
-      .delete()
-      .eq('requester_id', userId);
-      
-    if (requestsError) {
-      console.error('Error deleting associated requests:', requestsError);
-      throw new Error(`ไม่สามารถลบคำขอที่เกี่ยวข้องได้: ${requestsError.message}`);
-    }
-    
-    console.log('Associated requests deleted successfully');
-    
-    // Now delete the user profile
+    // Delete the user - CASCADE will automatically handle related records
     const { data, error } = await supabase
       .from('profiles')
       .delete()
@@ -170,7 +156,7 @@ export const deleteUser = async (userId: string) => {
       throw new Error('ไม่พบผู้ใช้งานที่ต้องการลบ');
     }
 
-    console.log('Successfully deleted user:', userId);
+    console.log('Successfully deleted user and all related records:', userId);
     return { success: true };
     
   } catch (error: any) {
