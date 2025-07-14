@@ -89,11 +89,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           avatar: data.avatar_url,
           avatar_url: data.avatar_url,
         });
-        
-        // Redirect to dashboard after successful profile fetch
-        if (window.location.pathname === '/') {
-          window.location.href = '/dashboard';
-        }
       } else {
         console.log('No profile found, clearing session');
         // ถ้าไม่เจอ profile ให้ clear session
@@ -134,8 +129,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           description: `ยินดีต้อนรับ ${userObj.full_name}`
         });
         
-        // Redirect to dashboard
-        window.location.href = '/dashboard';
         return;
       }
       
@@ -188,8 +181,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           description: `ยินดีต้อนรับ ${profile.full_name}`
         });
         
-        // Redirect to dashboard
-        window.location.href = '/dashboard';
         return;
       }
       
