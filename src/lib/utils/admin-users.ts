@@ -120,41 +120,40 @@ export const deleteUser = async (userId: string) => {
   console.log('Attempting to delete user:', userId);
   
   try {
-    // First, let's try direct deletion using service role approach
-    // This should work since we have admin privileges in RLS
-    console.log('Attempting direct deletion...');
+    // Check if trying to delete an admin user (safety check)
+    const { data: userToDelete, error: checkError } = await supabase
+      .from('profiles')
+      .select('role, full_name')
+      .eq('id', userId)
+      .single();
+      
+    if (checkError) {
+      console.error('Error checking user before deletion:', checkError);
+      throw new Error('ไม่สามารถตรวจสอบข้อมูลผู้ใช้งานได้');
+    }
     
+    if (userToDelete?.role === 'fa_admin') {
+      throw new Error('ไม่สามารถลบผู้ดูแลระบบได้');
+    }
+    
+    console.log('Deleting user:', userToDelete);
+    
+    // Delete the user directly
     const { data, error } = await supabase
       .from('profiles')
       .delete()
       .eq('id', userId)
       .select();
       
-    console.log('Direct deletion result:', { data, error });
+    console.log('Delete result:', { data, error });
     
     if (error) {
-      console.error('Direct deletion failed:', error);
-      
-      // Fallback: Try using edge function
-      console.log('Trying edge function fallback...');
-      const adminId = '11111111-1111-1111-1111-111111111111'; // Mock admin ID
-      
-      const { data: funcData, error: funcError } = await supabase.functions.invoke('admin-delete-user', {
-        body: { 
-          userId,
-          adminId
-        }
-      });
+      console.error('Delete failed:', error);
+      throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${error.message}`);
+    }
 
-      console.log('Edge function response:', { funcData, funcError });
-
-      if (funcError || funcData?.error) {
-        throw new Error(funcData?.error || funcError?.message || 'ไม่สามารถลบผู้ใช้งานได้');
-      }
-      
-      if (!funcData?.success) {
-        throw new Error('การลบผู้ใช้งานไม่สำเร็จ');
-      }
+    if (!data || data.length === 0) {
+      throw new Error('ไม่พบผู้ใช้งานที่ต้องการลบ');
     }
 
     console.log('Successfully deleted user:', userId);
@@ -162,6 +161,6 @@ export const deleteUser = async (userId: string) => {
     
   } catch (error: any) {
     console.error('Delete operation failed:', error);
-    throw error; // Re-throw the original error to preserve the message
+    throw error;
   }
 };
