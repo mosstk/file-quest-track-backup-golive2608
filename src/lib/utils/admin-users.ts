@@ -156,35 +156,7 @@ export const deleteUser = async (userId: string) => {
   console.log('Attempting to delete user:', userId);
   
   try {
-    // Check if trying to delete an admin user (safety check)
-    const { data: userToDelete, error: checkError } = await supabase
-      .from('profiles')
-      .select('role, full_name, employee_id')
-      .eq('id', userId)
-      .single();
-      
-    if (checkError) {
-      console.error('Error checking user before deletion:', checkError);
-      throw new Error('ไม่สามารถตรวจสอบข้อมูลผู้ใช้งานได้');
-    }
-    
-    if (!userToDelete) {
-      throw new Error('ไม่พบผู้ใช้งานที่ต้องการลบ');
-    }
-    
-    console.log('User to delete:', userToDelete);
-    
-    // Only prevent deletion of fa_admin users (not all admin-like users)
-    // Allow deletion of regular users regardless of their role display
-    const restrictedAdminIds = ['11111111-1111-1111-1111-111111111111']; // Only the main system admin
-    
-    if (restrictedAdminIds.includes(userId)) {
-      throw new Error('ไม่สามารถลบผู้ดูแลระบบหลักได้');
-    }
-    
-    console.log('Proceeding with deletion for user:', userToDelete);
-    
-    // Delete the user directly without additional role checks
+    // Delete the user directly - RLS policy will handle permissions
     const { data, error } = await supabase
       .from('profiles')
       .delete()
@@ -195,19 +167,11 @@ export const deleteUser = async (userId: string) => {
     
     if (error) {
       console.error('Delete failed:', error);
-      
-      // Provide more specific error messages
-      if (error.message.includes('permission denied') || error.message.includes('RLS')) {
-        throw new Error('ไม่มีสิทธิ์ในการลบผู้ใช้งาน');
-      } else if (error.message.includes('foreign key constraint')) {
-        throw new Error('ไม่สามารถลบได้เนื่องจากมีข้อมูลอ้างอิงที่เกี่ยวข้อง');
-      } else {
-        throw new Error(`เกิดข้อผิดพลาดในการลบ: ${error.message}`);
-      }
+      throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${error.message}`);
     }
 
     if (!data || data.length === 0) {
-      throw new Error('การลบไม่สำเร็จ - ไม่พบข้อมูลที่ลบ');
+      throw new Error('ไม่สามารถลบผู้ใช้งานได้ กรุณาตรวจสอบสิทธิ์การเข้าถึง');
     }
 
     console.log('Successfully deleted user:', userId);
