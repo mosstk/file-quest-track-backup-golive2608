@@ -52,18 +52,6 @@ const Index = () => {
     }
   };
 
-  const handleQuickLogin = async (testUsername: string, testPassword: string) => {
-    try {
-      setIsSubmitting(true);
-      setUsername(testUsername);
-      setPassword(testPassword);
-      await signIn(testUsername, testPassword);
-    } catch (error) {
-      // Error handling is already done in the signIn function
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex flex-col">

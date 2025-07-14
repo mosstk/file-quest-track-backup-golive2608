@@ -26,10 +26,6 @@ export const validateUserSession = async (userId: string): Promise<boolean> => {
   }
 };
 
-export const isMockUser = (user: User | null): boolean => {
-  if (!user) return false;
-  return user.full_name?.startsWith('Test ') || user.name?.startsWith('Test ') || false;
-};
 
 export const sanitizeUserData = (user: User): Partial<User> => {
   return {
