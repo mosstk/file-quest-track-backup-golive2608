@@ -155,9 +155,6 @@ const Navbar: React.FC = () => {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-sm cursor-pointer">Profile</DropdownMenuItem>
-                  <DropdownMenuItem className="text-sm cursor-pointer">Settings</DropdownMenuItem>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem className="text-sm cursor-pointer" onClick={signOut}>
                     Logout
                   </DropdownMenuItem>
