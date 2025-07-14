@@ -131,6 +131,17 @@ const AdminPanel = () => {
       return;
     }
     
+    // Check if username or employeeId already exists
+    const existingUser = users.find(u => 
+      u.employeeId === newUser.employeeId || 
+      (u as any).username === newUser.username
+    );
+    
+    if (existingUser) {
+      toast.error('รหัสพนักงานหรือชื่อผู้ใช้นี้มีอยู่แล้วในระบบ');
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       console.log('Starting user creation process...');
