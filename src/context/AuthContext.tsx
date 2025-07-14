@@ -59,10 +59,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching user profile:', error);
+        // หาก error ให้ clear session เพื่อไม่ให้ loop
+        setSession(null);
+        setUser(null);
         return;
       }
 
@@ -85,9 +88,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           avatar: data.avatar_url,
           avatar_url: data.avatar_url,
         });
+      } else {
+        console.log('No profile found, clearing session');
+        // ถ้าไม่เจอ profile ให้ clear session
+        setSession(null);
+        setUser(null);
       }
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
+      setSession(null);
+      setUser(null);
     }
   };
 
