@@ -16,7 +16,7 @@ export const fetchAllUsers = async () => {
   return data.map(profile => ({
     id: profile.id,
     name: profile.full_name || '',
-    email: '', // We'll need to get this separately or store in profiles
+    email: profile.username || '',
     employeeId: profile.employee_id || '',
     company: profile.company || '',
     department: profile.department || '',
