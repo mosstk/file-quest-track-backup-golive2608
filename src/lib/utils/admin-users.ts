@@ -153,45 +153,71 @@ export const updateUser = async (userId: string, userData: {
 };
 
 export const deleteUser = async (userId: string) => {
-  console.log('Attempting to delete user using Edge Function:', userId);
+  console.log('=== DELETE USER START ===');
+  console.log('Target userId:', userId);
   
   try {
     // Get current user info
     const { data: currentUser } = await supabase.auth.getUser();
+    console.log('Current user:', currentUser?.user?.id);
+    
     if (!currentUser?.user?.id) {
+      console.error('No current user found');
       throw new Error('ไม่สามารถตรวจสอบตัวตนได้');
     }
 
-    console.log('Current user ID:', currentUser.user.id);
+    // Check current user profile first
+    const { data: currentProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role, full_name')
+      .eq('id', currentUser.user.id)
+      .single();
+
+    console.log('Current user profile:', currentProfile, 'Error:', profileError);
+
+    if (profileError || !currentProfile || currentProfile.role !== 'fa_admin') {
+      throw new Error('ไม่มีสิทธิ์ในการลบผู้ใช้งาน - ต้องเป็น FA Admin เท่านั้น');
+    }
+
+    // Get the current session token
+    const { data: session } = await supabase.auth.getSession();
+    console.log('Session exists:', !!session?.session?.access_token);
 
     // Use Edge Function for deletion with service role privileges
+    console.log('=== CALLING EDGE FUNCTION ===');
     const { data, error } = await supabase.functions.invoke('admin-delete-user', {
       body: {
         userId: userId,
         adminId: currentUser.user.id
+      },
+      headers: {
+        Authorization: `Bearer ${session?.session?.access_token}`
       }
     });
     
-    console.log('Edge Function result:', { data, error });
+    console.log('Edge Function response:', { data, error });
     
     if (error) {
-      console.error('Edge Function failed:', error);
+      console.error('Edge Function error:', error);
       throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${error.message}`);
     }
 
     if (data?.error) {
+      console.error('Edge Function returned error:', data.error);
       throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${data.error}`);
     }
 
     if (!data?.success) {
-      throw new Error('ไม่สามารถลบผู้ใช้งานได้');
+      console.error('Edge Function did not return success');
+      throw new Error('การลบผู้ใช้งานไม่สำเร็จ');
     }
 
-    console.log('Successfully deleted user via Edge Function:', userId);
+    console.log('=== DELETE SUCCESS ===');
     return { success: true };
     
   } catch (error: any) {
-    console.error('Delete operation failed:', error);
+    console.error('=== DELETE FAILED ===');
+    console.error('Error details:', error);
     throw error;
   }
 };
