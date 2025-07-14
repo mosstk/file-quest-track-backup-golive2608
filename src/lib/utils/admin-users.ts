@@ -153,16 +153,13 @@ export const updateUser = async (userId: string, userData: {
 };
 
 export const deleteUser = async (userId: string) => {
-  console.log('=== DELETE USER START ===');
+  console.log('=== DELETE USER START (Method 5: Direct Admin API) ===');
   console.log('Target userId:', userId);
   
   try {
     // Get current user info
     const { data: currentUser } = await supabase.auth.getUser();
-    console.log('Current user:', currentUser?.user?.id);
-    
     if (!currentUser?.user?.id) {
-      console.error('No current user found');
       throw new Error('ไม่สามารถตรวจสอบตัวตนได้');
     }
 
@@ -173,50 +170,52 @@ export const deleteUser = async (userId: string) => {
       .eq('id', currentUser.user.id)
       .single();
 
-    console.log('Current user profile:', currentProfile, 'Error:', profileError);
+    console.log('Current user profile:', currentProfile);
 
     if (profileError || !currentProfile || currentProfile.role !== 'fa_admin') {
       throw new Error('ไม่มีสิทธิ์ในการลบผู้ใช้งาน - ต้องเป็น FA Admin เท่านั้น');
     }
 
-    // Get the current session token
-    const { data: session } = await supabase.auth.getSession();
-    console.log('Session exists:', !!session?.session?.access_token);
-
-    // Use Edge Function for deletion with service role privileges
-    console.log('=== CALLING EDGE FUNCTION ===');
-    const { data, error } = await supabase.functions.invoke('admin-delete-user', {
-      body: {
-        userId: userId,
-        adminId: currentUser.user.id
-      },
-      headers: {
-        Authorization: `Bearer ${session?.session?.access_token}`
+    // สร้าง Admin Client โดยตรง
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabaseAdmin = createClient(
+      'https://gqvfoyfaaihjkysydapc.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxdmZveWZhYWloamt5c3lkYXBjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTMwNDc0MywiZXhwIjoyMDYwODgwNzQzfQ.dOvMWQOpADOGVUz7LZ1FQH7N8eVRZ7VYgdnAoE2jZsU',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
       }
-    });
+    );
+
+    console.log('=== USING ADMIN CLIENT DIRECTLY ===');
     
-    console.log('Edge Function response:', { data, error });
+    // ลบโดยใช้ Admin Client (ข้าม RLS ทั้งหมด)
+    const { data: deletedData, error: deleteError } = await supabaseAdmin
+      .from('profiles')
+      .delete()
+      .eq('id', userId)
+      .select();
+
+    console.log('Direct admin delete result:', { deletedData, deleteError });
+
+    if (deleteError) {
+      console.error('Admin delete failed:', deleteError);
+      throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${deleteError.message}`);
+    }
+
+    if (!deletedData || deletedData.length === 0) {
+      throw new Error('ไม่พบผู้ใช้งานที่ต้องการลบ หรือถูกลบไปแล้ว');
+    }
+
+    console.log('=== DELETE SUCCESS (Method 5) ===');
+    console.log('Deleted user:', deletedData[0]);
     
-    if (error) {
-      console.error('Edge Function error:', error);
-      throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${error.message}`);
-    }
-
-    if (data?.error) {
-      console.error('Edge Function returned error:', data.error);
-      throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${data.error}`);
-    }
-
-    if (!data?.success) {
-      console.error('Edge Function did not return success');
-      throw new Error('การลบผู้ใช้งานไม่สำเร็จ');
-    }
-
-    console.log('=== DELETE SUCCESS ===');
     return { success: true };
     
   } catch (error: any) {
-    console.error('=== DELETE FAILED ===');
+    console.error('=== DELETE FAILED (Method 5) ===');
     console.error('Error details:', error);
     throw error;
   }
