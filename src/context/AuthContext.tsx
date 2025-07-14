@@ -121,44 +121,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      // Find user by username
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('username', username)
-        .eq('is_active', true)
-        .single();
-      
-      if (profileError || !profile) {
-        throw new Error('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
-      }
-      
-      // Check password (using stored password)
-      if (profile.password !== password) {
-        throw new Error('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
-      }
-      
-      // Create user object
-      const userObj: User = {
-        id: profile.id,
-        name: profile.full_name || '',
-        full_name: profile.full_name || '',
-        email: '', // We'll get this from auth if needed
-        employeeId: profile.employee_id || '',
-        employee_id: profile.employee_id || '',
-        company: profile.company || '',
-        department: profile.department || '',
-        division: profile.division || '',
-        role: profile.role as UserRole,
-        avatar: profile.avatar_url,
-        avatar_url: profile.avatar_url,
-      };
-      
-      setUser(userObj);
-      
-      toast.success(`เข้าสู่ระบบสำเร็จ`, {
-        description: `ยินดีต้อนรับ ${profile.full_name}`
+      // ใช้ Supabase Auth แทน custom authentication
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: username, // ใช้ username เป็น email
+        password: password,
       });
+      
+      if (error) {
+        // หากไม่สามารถ login ด้วย Supabase Auth ได้ ให้ fallback ไป custom auth
+        console.log('Supabase auth failed, trying custom auth:', error.message);
+        
+        // Find user by username
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('username', username)
+          .eq('is_active', true)
+          .single();
+        
+        if (profileError || !profile) {
+          throw new Error('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+        }
+        
+        // Check password (using stored password)
+        if (profile.password !== password) {
+          throw new Error('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+        }
+        
+        // Create user object
+        const userObj: User = {
+          id: profile.id,
+          name: profile.full_name || '',
+          full_name: profile.full_name || '',
+          email: profile.email || profile.username || '',
+          employeeId: profile.employee_id || '',
+          employee_id: profile.employee_id || '',
+          company: profile.company || '',
+          department: profile.department || '',
+          division: profile.division || '',
+          role: profile.role as UserRole,
+          avatar: profile.avatar_url,
+          avatar_url: profile.avatar_url,
+        };
+        
+        setUser(userObj);
+        
+        toast.success(`เข้าสู่ระบบสำเร็จ`, {
+          description: `ยินดีต้อนรับ ${profile.full_name}`
+        });
+        
+        return;
+      }
+      
+      // หาก Supabase Auth สำเร็จ จะมี session และ user profile จะถูกโหลดอัตโนมัติใน useEffect
+      console.log('Supabase auth successful:', data.user?.email);
       
     } catch (error: any) {
       console.error('Login failed:', error);
