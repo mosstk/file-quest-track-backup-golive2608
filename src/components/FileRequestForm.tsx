@@ -6,10 +6,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { FileRequest } from '@/types';
 import { Loader2 } from 'lucide-react';
+import { RequestService } from '@/lib/requests/request-service';
+import { RequestValidation } from '@/lib/requests/validation';
+import type { FileRequest, RequestFormData } from '@/lib/requests/types';
 
 interface FileRequestFormProps {
   request?: FileRequest;
@@ -47,22 +48,11 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
   };
 
   const validateForm = () => {
-    if (!formData.documentName.trim()) {
-      setError('กรุณากรอกชื่อเอกสาร');
+    const validation = RequestValidation.validateRequestForm(formData);
+    if (!validation.isValid) {
+      setError(validation.error!);
       return false;
     }
-    if (!formData.receiverEmail.trim()) {
-      setError('กรุณากรอกอีเมลผู้รับ');
-      return false;
-    }
-    
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.receiverEmail)) {
-      setError('รูปแบบอีเมลไม่ถูกต้อง');
-      return false;
-    }
-    
     return true;
   };
 
@@ -84,38 +74,14 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
     setError(null);
 
     try {
-      const requestData = {
-        document_name: formData.documentName,
-        receiver_email: formData.receiverEmail,
-        file_path: formData.documentDescription, // Store description in file_path for now
-        requester_id: session?.user?.id || user.id, // Use auth.uid() first, fallback to user.id
-        status: 'pending' as const
-      };
-      
-      console.log('Request data to insert:', requestData);
-
       let result;
       
       if (request) {
         // Update existing request
-        result = await supabase
-          .from('requests')
-          .update(requestData)
-          .eq('id', request.id)
-          .select()
-          .single();
+        result = await RequestService.updateRequest(request.id, formData, user, session);
       } else {
         // Create new request
-        result = await supabase
-          .from('requests')
-          .insert(requestData)
-          .select()
-          .single();
-      }
-
-      if (result.error) {
-        console.error('Error saving request:', result.error);
-        throw new Error('ไม่สามารถบันทึกคำขอได้');
+        result = await RequestService.createRequest(formData, user, session);
       }
 
       toast.success(request ? 'แก้ไขคำขอเรียบร้อย' : 'สร้างคำขอเรียบร้อย');

@@ -1,16 +1,18 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, UserRole } from '@/types';
-import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
+import { AuthService } from '@/lib/auth/auth-service';
+import { UserService } from '@/lib/auth/user-service';
+import type { AuthUser, UserRole } from '@/lib/auth/types';
 import { toast } from 'sonner';
 
 interface AuthContextType {
   session: Session | null;
-  user: User | null;
+  user: AuthUser | null;
   loading: boolean;
   signIn: (username: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, userData: Partial<User>) => Promise<void>;
+  signUp: (email: string, password: string, userData: Partial<AuthUser>) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -18,7 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -107,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // For testing purposes, automatically login as admin for admin panel access
       if (username === 'admin' && password === 'admin') {
-        const userObj: User = {
+        const userObj: AuthUser = {
           id: '11111111-1111-1111-1111-111111111111',
           name: 'TOA Admin',
           full_name: 'TOA Admin',
@@ -159,7 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         // Create user object
-        const userObj: User = {
+        const userObj: AuthUser = {
           id: profile.id,
           name: profile.full_name || '',
           full_name: profile.full_name || '',
@@ -195,7 +197,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, password: string, userData: Partial<User>) => {
+  const signUp = async (email: string, password: string, userData: Partial<AuthUser>) => {
     const { error: signUpError, data } = await supabase.auth.signUp({
       email,
       password,
