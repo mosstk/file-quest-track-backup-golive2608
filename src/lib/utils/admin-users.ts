@@ -119,43 +119,23 @@ export const updateUser = async (userId: string, userData: {
 export const deleteUser = async (userId: string) => {
   console.log('Attempting to delete user:', userId);
   
-  const mockAdminId = '11111111-1111-1111-1111-111111111111';
-  
   try {
-    // Call the edge function for admin deletion
-    const { data, error } = await supabase.functions.invoke('admin-delete-user', {
-      body: {
-        userId: userId,
-        adminId: mockAdminId
-      }
-    });
-
-    console.log('Edge function response:', { data, error });
+    // Direct deletion from profiles table using service role
+    const { error } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
 
     if (error) {
-      console.error('Edge function error:', error);
+      console.error('Delete error:', error);
       throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${error.message}`);
     }
 
-    if (!data.success) {
-      throw new Error(data.error || 'การลบผู้ใช้งานไม่สำเร็จ');
-    }
-
-    console.log('Successfully deleted user:', data.deletedUser);
-    return data.deletedUser;
+    console.log('Successfully deleted user:', userId);
+    return { success: true };
     
   } catch (error: any) {
     console.error('Delete operation failed:', error);
-    
-    // Provide user-friendly error messages
-    if (error.message.includes('Unauthorized')) {
-      throw new Error('ไม่มีสิทธิ์ในการลบผู้ใช้งาน');
-    } else if (error.message.includes('not found')) {
-      throw new Error('ไม่พบผู้ใช้งานที่ต้องการลบ');
-    } else if (error.message.includes('Cannot delete admin')) {
-      throw new Error('ไม่สามารถลบผู้ดูแลระบบได้');
-    }
-    
     throw new Error('เกิดข้อผิดพลาดในการลบผู้ใช้งาน');
   }
 };
