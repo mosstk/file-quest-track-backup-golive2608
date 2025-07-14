@@ -17,7 +17,7 @@ interface FileRequestFormProps {
 }
 
 const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess }) => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -88,7 +88,7 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
         document_name: formData.documentName,
         receiver_email: formData.receiverEmail,
         file_path: formData.documentDescription, // Store description in file_path for now
-        requester_id: user.id,
+        requester_id: session?.user?.id || user.id, // Use auth.uid() first, fallback to user.id
         status: 'pending' as const
       };
       
