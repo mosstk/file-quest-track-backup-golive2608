@@ -10,10 +10,13 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // If not logged in, redirect to login
+    // Only redirect if we're sure there's no user (not loading and no user)
     if (!loading && !user) {
-      navigate('/');
-      return;
+      // Add a small delay to ensure auth state is fully processed
+      const timer = setTimeout(() => {
+        navigate('/');
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [user, loading, navigate]);
 
