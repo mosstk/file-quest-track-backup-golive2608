@@ -12,7 +12,8 @@ import ApprovalForm from '@/components/ApprovalForm';
 import TrackingDetails from '@/components/TrackingDetails';
 import { FileRequest } from '@/types';
 import { toast } from 'sonner';
-import { mockRequests } from '@/lib/mockData';
+import { supabase } from '@/integrations/supabase/client';
+import { normalizeFileRequest } from '@/lib/utils/formatters';
 
 const RequestDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,16 +24,36 @@ const RequestDetail = () => {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    // Simulate API call to fetch request details
-    const fetchRequest = () => {
-      setLoading(true);
-      const foundRequest = mockRequests.find(req => req.id === id);
+    const fetchRequest = async () => {
+      if (!id) return;
       
-      if (foundRequest) {
-        setRequest(foundRequest);
+      try {
+        setLoading(true);
+        
+        // Fetch request from Supabase
+        const { data, error } = await supabase
+          .from('requests')
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (error) {
+          console.error('Error fetching request:', error);
+          toast.error('ไม่สามารถโหลดข้อมูลคำขอได้');
+          return;
+        }
+        
+        if (data) {
+          const normalizedRequest = normalizeFileRequest(data);
+          setRequest(normalizedRequest);
+        }
+        
+      } catch (error) {
+        console.error('Error:', error);
+        toast.error('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
     
     fetchRequest();
@@ -49,68 +70,155 @@ const RequestDetail = () => {
     }).format(date);
   };
   
-  const handleApprove = (trackingNumber: string) => {
+  const handleApprove = async (trackingNumber: string) => {
     if (!request) return;
     
-    // Update request with new status and tracking number
-    setRequest({
-      ...request,
-      status: 'approved',
-      tracking_number: trackingNumber,
-      trackingNumber,
-      updated_at: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-    
-    toast.success('อนุมัติคำขอเรียบร้อย');
+    try {
+      // Update request in database
+      const { error } = await supabase
+        .from('requests')
+        .update({
+          status: 'approved',
+          tracking_number: trackingNumber,
+          updated_at: new Date().toISOString(),
+          approved_by: user?.id
+        })
+        .eq('id', request.id);
+      
+      if (error) {
+        console.error('Error approving request:', error);
+        toast.error('ไม่สามารถอนุมัติคำขอได้');
+        return;
+      }
+      
+      // Update local state
+      setRequest({
+        ...request,
+        status: 'approved',
+        tracking_number: trackingNumber,
+        trackingNumber,
+        updated_at: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      
+      toast.success('อนุมัติคำขอเรียบร้อย');
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('เกิดข้อผิดพลาดในการอนุมัติคำขอ');
+    }
   };
   
-  const handleRework = (feedback: string) => {
+  const handleRework = async (feedback: string) => {
     if (!request) return;
     
-    // Update request with new status and feedback
-    setRequest({
-      ...request,
-      status: 'rework',
-      admin_feedback: feedback,
-      adminFeedback: feedback,
-      updated_at: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-    
-    toast.success('ส่งคำขอแก้ไขเรียบร้อย');
+    try {
+      // Update request in database
+      const { error } = await supabase
+        .from('requests')
+        .update({
+          status: 'rework',
+          admin_feedback: feedback,
+          updated_at: new Date().toISOString(),
+          approved_by: user?.id
+        })
+        .eq('id', request.id);
+      
+      if (error) {
+        console.error('Error requesting rework:', error);
+        toast.error('ไม่สามารถส่งคำขอแก้ไขได้');
+        return;
+      }
+      
+      // Update local state
+      setRequest({
+        ...request,
+        status: 'rework',
+        admin_feedback: feedback,
+        adminFeedback: feedback,
+        updated_at: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      
+      toast.success('ส่งคำขอแก้ไขเรียบร้อย');
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('เกิดข้อผิดพลาดในการส่งคำขอแก้ไข');
+    }
   };
   
-  const handleReject = (feedback: string) => {
+  const handleReject = async (feedback: string) => {
     if (!request) return;
     
-    // Update request with new status and feedback
-    setRequest({
-      ...request,
-      status: 'rejected',
-      admin_feedback: feedback,
-      adminFeedback: feedback,
-      updated_at: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-    
-    toast.success('ปฏิเสธคำขอเรียบร้อย');
+    try {
+      // Update request in database
+      const { error } = await supabase
+        .from('requests')
+        .update({
+          status: 'rejected',
+          admin_feedback: feedback,
+          updated_at: new Date().toISOString(),
+          approved_by: user?.id
+        })
+        .eq('id', request.id);
+      
+      if (error) {
+        console.error('Error rejecting request:', error);
+        toast.error('ไม่สามารถปฏิเสธคำขอได้');
+        return;
+      }
+      
+      // Update local state
+      setRequest({
+        ...request,
+        status: 'rejected',
+        admin_feedback: feedback,
+        adminFeedback: feedback,
+        updated_at: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      
+      toast.success('ปฏิเสธคำขอเรียบร้อย');
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('เกิดข้อผิดพลาดในการปฏิเสธคำขอ');
+    }
   };
   
-  const handleConfirmDelivery = () => {
+  const handleConfirmDelivery = async () => {
     if (!request) return;
     
-    // Update request with delivered status
-    setRequest({
-      ...request,
-      is_delivered: true,
-      isDelivered: true,
-      status: 'completed',
-      updated_at: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-    
-    toast.success('ยืนยันการได้รับเอกสารเรียบร้อย');
+    try {
+      // Update request in database
+      const { error } = await supabase
+        .from('requests')
+        .update({
+          is_delivered: true,
+          status: 'completed',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', request.id);
+      
+      if (error) {
+        console.error('Error confirming delivery:', error);
+        toast.error('ไม่สามารถยืนยันการได้รับเอกสารได้');
+        return;
+      }
+      
+      // Update local state
+      setRequest({
+        ...request,
+        is_delivered: true,
+        isDelivered: true,
+        status: 'completed',
+        updated_at: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      
+      toast.success('ยืนยันการได้รับเอกสารเรียบร้อย');
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('เกิดข้อผิดพลาดในการยืนยันการได้รับเอกสาร');
+    }
   };
   
   const handleEditRequest = () => {

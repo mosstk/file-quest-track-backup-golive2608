@@ -1,202 +1,275 @@
-
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { FileRequest } from '@/types';
+import { Loader2, Upload, X } from 'lucide-react';
 
 interface FileRequestFormProps {
-  onSubmit: (data: Partial<FileRequest>) => void;
-  initialData?: Partial<FileRequest>;
-  isRework?: boolean;
-  disabled?: boolean;
+  request?: FileRequest;
+  onSuccess: () => void;
 }
 
-const FileRequestForm: React.FC<FileRequestFormProps> = ({ 
-  onSubmit, 
-  initialData = {}, 
-  isRework = false,
-  disabled = false
-}) => {
+const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess }) => {
   const { user } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  
   const [formData, setFormData] = useState({
-    document_name: initialData.document_name || initialData.documentName || '',
-    receiver_email: initialData.receiver_email || initialData.receiverEmail || '',
-    file_path: initialData.file_path || initialData.fileAttachment || null,
+    documentName: '',
+    receiverEmail: '',
+    fileAttachment: ''
   });
 
-  const [fileSelected, setFileSelected] = useState<File | null>(null);
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-    
-    // Clear error for this field when changed
-    if (formErrors[name]) {
-      setFormErrors({
-        ...formErrors,
-        [name]: '',
+  useEffect(() => {
+    if (request) {
+      setFormData({
+        documentName: request.document_name || request.documentName || '',
+        receiverEmail: request.receiver_email || request.receiverEmail || '',
+        fileAttachment: request.file_path || request.fileAttachment || ''
       });
+    }
+  }, [request]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    setError(null);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setFormData(prev => ({
+        ...prev,
+        fileAttachment: selectedFile.name
+      }));
     }
   };
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFileSelected(e.target.files[0]);
-      
-      // Clear file error if previously set
-      if (formErrors.file_path) {
-        setFormErrors({
-          ...formErrors,
-          file_path: '',
-        });
-      }
-    }
+  const removeFile = () => {
+    setFile(null);
+    setFormData(prev => ({
+      ...prev,
+      fileAttachment: ''
+    }));
   };
 
   const validateForm = () => {
-    const errors: Record<string, string> = {};
+    if (!formData.documentName.trim()) {
+      setError('กรุณากรอกชื่อเอกสาร');
+      return false;
+    }
+    if (!formData.receiverEmail.trim()) {
+      setError('กรุณากรอกอีเมลผู้รับ');
+      return false;
+    }
+    if (!request && !file) {
+      setError('กรุณาเลือกไฟล์แนบ');
+      return false;
+    }
     
-    if (!formData.document_name?.trim()) errors.document_name = 'กรุณาระบุชื่อเอกสาร';
-    
+    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
-    if (!formData.receiver_email?.trim()) {
-      errors.receiver_email = 'กรุณาระบุอีเมลผู้รับ';
-    } else if (!emailRegex.test(formData.receiver_email)) {
-      errors.receiver_email = 'กรุณาระบุอีเมลให้ถูกต้อง';
+    if (!emailRegex.test(formData.receiverEmail)) {
+      setError('รูปแบบอีเมลไม่ถูกต้อง');
+      return false;
     }
     
-    if (!initialData.file_path && !fileSelected && !isRework) {
-      errors.file_path = 'กรุณาแนบไฟล์';
-    }
-    
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+    return true;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (disabled) return;
-    
-    if (!validateForm()) {
-      toast.error('กรุณากรอกข้อมูลให้ครบถ้วน');
+    if (!validateForm()) return;
+    if (!user) {
+      setError('กรุณาเข้าสู่ระบบก่อน');
       return;
     }
-    
-    console.log('Form submission with data:', formData);
-    console.log('Current user in form:', user);
-    
-    onSubmit({
-      document_name: formData.document_name,
-      receiver_email: formData.receiver_email,
-      file_path: fileSelected ? fileSelected.name : formData.file_path,
-    });
-  };
 
-  const handleCancel = () => {
-    if (disabled) return;
-    
-    toast.info('ยกเลิกการทำรายการ');
-    window.history.back();
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      let filePath = formData.fileAttachment;
+      
+      // Upload file if new file is selected
+      if (file) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        // Note: In production, you would upload to Supabase storage here
+        // For now, we'll use the filename
+        filePath = fileName;
+      }
+
+      const requestData = {
+        document_name: formData.documentName,
+        receiver_email: formData.receiverEmail,
+        file_path: filePath,
+        requester_id: user.id,
+        status: 'pending' as const
+      };
+
+      let result;
+      
+      if (request) {
+        // Update existing request
+        result = await supabase
+          .from('requests')
+          .update(requestData)
+          .eq('id', request.id)
+          .select()
+          .single();
+      } else {
+        // Create new request
+        result = await supabase
+          .from('requests')
+          .insert(requestData)
+          .select()
+          .single();
+      }
+
+      if (result.error) {
+        console.error('Error saving request:', result.error);
+        throw new Error('ไม่สามารถบันทึกคำขอได้');
+      }
+
+      toast.success(request ? 'แก้ไขคำขอเรียบร้อย' : 'สร้างคำขอเรียบร้อย');
+      onSuccess();
+      
+    } catch (error: any) {
+      console.error('Error:', error);
+      setError(error.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+      toast.error(error.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto shadow-md animate-scale">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl">{isRework ? 'แก้ไขคำขอส่งไฟล์' : 'ใบคำขอส่งไฟล์'}</CardTitle>
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle>{request ? 'แก้ไขคำขอส่งไฟล์' : 'สร้างคำขอส่งไฟล์ใหม่'}</CardTitle>
         <CardDescription>
-          กรุณากรอกข้อมูลให้ครบถ้วนเพื่อดำเนินการต่อ
+          กรอกข้อมูลและแนบไฟล์ที่ต้องการส่ง
         </CardDescription>
       </CardHeader>
       
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          
-          <div className="space-y-2">
-            <Label htmlFor="document_name">ชื่อไฟล์เอกสาร</Label>
-            <Input
-              id="document_name"
-              name="document_name"
-              value={formData.document_name}
-              onChange={handleInputChange}
-              className={formErrors.document_name ? 'border-red-500' : ''}
-              disabled={disabled}
-            />
-            {formErrors.document_name && (
-              <p className="text-sm text-red-500">{formErrors.document_name}</p>
-            )}
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
-            <div className="space-y-2">
-              <Label htmlFor="receiver_email">อีเมล์ของผู้รับ</Label>
-              <Input
-                id="receiver_email"
-                name="receiver_email"
-                type="email"
-                value={formData.receiver_email}
-                onChange={handleInputChange}
-                className={formErrors.receiver_email ? 'border-red-500' : ''}
-                disabled={disabled}
-              />
-              {formErrors.receiver_email && (
-                <p className="text-sm text-red-500">{formErrors.receiver_email}</p>
-              )}
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="file_path">ไฟล์แนบ</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="file_path"
-                name="file_path"
-                type="file"
-                onChange={handleFileChange}
-                className={`${formErrors.file_path ? 'border-red-500' : ''} file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-primary file:text-primary-foreground hover:file:bg-primary/90`}
-                disabled={disabled}
-              />
-            </div>
-            {formErrors.file_path && (
-              <p className="text-sm text-red-500">{formErrors.file_path}</p>
-            )}
-            {(initialData.file_path || fileSelected) && (
-              <p className="text-sm text-muted-foreground">
-                ไฟล์ที่เลือก: {fileSelected ? fileSelected.name : initialData.file_path}
-              </p>
-            )}
-          </div>
-        </CardContent>
+      <CardContent>
+        {error && (
+          <Alert className="mb-4 border-red-200 bg-red-50">
+            <AlertDescription className="text-red-800">
+              {error}
+            </AlertDescription>
+          </Alert>
+        )}
         
-        <CardFooter className="flex justify-between">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={handleCancel}
-            className="transition-all hover:bg-destructive/10"
-            disabled={disabled}
-          >
-            ยกเลิก
-          </Button>
-          <Button 
-            type="submit" 
-            className="transition-all"
-            disabled={disabled}
-          >
-            {disabled ? 'กำลังบันทึก...' : 'ตกลง'}
-          </Button>
-        </CardFooter>
-      </form>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="documentName">ชื่อเอกสาร *</Label>
+            <Input
+              id="documentName"
+              name="documentName"
+              value={formData.documentName}
+              onChange={handleInputChange}
+              placeholder="ระบุชื่อเอกสารที่ต้องการส่ง"
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="receiverEmail">อีเมลผู้รับ *</Label>
+            <Input
+              id="receiverEmail"
+              name="receiverEmail"
+              type="email"
+              value={formData.receiverEmail}
+              onChange={handleInputChange}
+              placeholder="user@example.com"
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="fileAttachment">ไฟล์แนบ {!request && '*'}</Label>
+            
+            {formData.fileAttachment && (
+              <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                <span className="flex-1 truncate">{formData.fileAttachment}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={removeFile}
+                  disabled={isSubmitting}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+            
+            {!formData.fileAttachment && (
+              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
+                <div className="text-center">
+                  <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
+                  <div className="mt-4">
+                    <Label htmlFor="fileInput" className="cursor-pointer">
+                      <span className="mt-2 block text-sm font-medium text-muted-foreground">
+                        คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวาง
+                      </span>
+                    </Label>
+                    <Input
+                      id="fileInput"
+                      type="file"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      disabled={isSubmitting}
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    รองรับไฟล์: PDF, Word, Excel, PowerPoint, รูปภาพ (ขนาดไม่เกิน 10MB)
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => window.history.back()}
+              disabled={isSubmitting}
+              className="flex-1"
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1"
+            >
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {request ? 'บันทึกการแก้ไข' : 'สร้างคำขอ'}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
     </Card>
   );
 };
