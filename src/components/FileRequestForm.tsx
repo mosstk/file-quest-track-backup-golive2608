@@ -69,8 +69,13 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submission started');
+    console.log('User:', user);
+    console.log('Form data:', formData);
+    
     if (!validateForm()) return;
     if (!user) {
+      console.log('No user found');
       setError('กรุณาเข้าสู่ระบบก่อน');
       return;
     }
@@ -86,6 +91,8 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
         requester_id: user.id,
         status: 'pending' as const
       };
+      
+      console.log('Request data to insert:', requestData);
 
       let result;
       
