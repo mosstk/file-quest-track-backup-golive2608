@@ -108,6 +108,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // For testing purposes, automatically login as admin for admin panel access
       if (username === 'admin' && password === 'admin') {
+        // สร้าง mock session สำหรับ admin ให้ Supabase RLS ทำงานได้
+        const mockSession = {
+          access_token: 'mock-admin-token',
+          token_type: 'bearer',
+          user: {
+            id: '11111111-1111-1111-1111-111111111111',
+            email: 'admin@toa.com',
+            aud: 'authenticated',
+            role: 'authenticated',
+            email_confirmed_at: new Date().toISOString(),
+            phone: '',
+            confirmed_at: new Date().toISOString(),
+            last_sign_in_at: new Date().toISOString(),
+            app_metadata: { provider: 'mock' },
+            user_metadata: { role: 'fa_admin' },
+            identities: [],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          },
+          expires_in: 3600,
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
+          refresh_token: 'mock-refresh-token'
+        } as Session;
+
         const userObj: User = {
           id: '11111111-1111-1111-1111-111111111111',
           name: 'TOA Admin',
@@ -123,6 +147,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           avatar_url: '',
         };
         
+        // Set both session and user for proper auth state
+        setSession(mockSession);
         setUser(userObj);
         
         toast.success(`เข้าสู่ระบบสำเร็จ`, {
