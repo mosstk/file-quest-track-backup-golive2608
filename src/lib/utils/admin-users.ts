@@ -153,26 +153,41 @@ export const updateUser = async (userId: string, userData: {
 };
 
 export const deleteUser = async (userId: string) => {
-  console.log('Attempting to delete user using new function:', userId);
+  console.log('Attempting to delete user using Edge Function:', userId);
   
   try {
-    // ใช้ function ใหม่ที่สร้าง security definer 
-    const { data, error } = await supabase.rpc('admin_delete_user', {
-      target_user_id: userId
+    // Get current user info
+    const { data: currentUser } = await supabase.auth.getUser();
+    if (!currentUser?.user?.id) {
+      throw new Error('ไม่สามารถตรวจสอบตัวตนได้');
+    }
+
+    console.log('Current user ID:', currentUser.user.id);
+
+    // Use Edge Function for deletion with service role privileges
+    const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+      body: {
+        userId: userId,
+        adminId: currentUser.user.id
+      }
     });
     
-    console.log('Delete function result:', { data, error });
+    console.log('Edge Function result:', { data, error });
     
     if (error) {
-      console.error('Delete function failed:', error);
+      console.error('Edge Function failed:', error);
       throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${error.message}`);
     }
 
-    if (!data || (typeof data === 'object' && data !== null && 'success' in data && !data.success)) {
+    if (data?.error) {
+      throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${data.error}`);
+    }
+
+    if (!data?.success) {
       throw new Error('ไม่สามารถลบผู้ใช้งานได้');
     }
 
-    console.log('Successfully deleted user:', userId);
+    console.log('Successfully deleted user via Edge Function:', userId);
     return { success: true };
     
   } catch (error: any) {
