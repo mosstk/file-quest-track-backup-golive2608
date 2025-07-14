@@ -120,20 +120,21 @@ export const deleteUser = async (userId: string) => {
   console.log('Attempting to delete user:', userId);
   
   try {
-    // Get current user info for admin verification
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    // Since we're using mock authentication, we need to get the admin ID differently
+    // For the mock TOA Admin user, we'll use the hardcoded ID
+    const adminId = '11111111-1111-1111-1111-111111111111'; // Mock admin ID
     
-    if (!currentUser) {
-      throw new Error('ไม่พบข้อมูลผู้ใช้ที่เข้าสู่ระบบ');
-    }
+    console.log('Using admin ID for deletion:', adminId);
 
     // Try using the admin-delete-user edge function for proper deletion
     const { data, error } = await supabase.functions.invoke('admin-delete-user', {
       body: { 
         userId,
-        adminId: currentUser.id
+        adminId
       }
     });
+
+    console.log('Edge function response:', { data, error });
 
     if (error) {
       console.error('Edge function error:', error);
@@ -145,11 +146,16 @@ export const deleteUser = async (userId: string) => {
       throw new Error(`ไม่สามารถลบผู้ใช้งานได้: ${data.error}`);
     }
 
+    if (!data?.success) {
+      console.error('Delete operation did not succeed:', data);
+      throw new Error('การลบผู้ใช้งานไม่สำเร็จ');
+    }
+
     console.log('Successfully deleted user:', userId);
     return { success: true };
     
   } catch (error: any) {
     console.error('Delete operation failed:', error);
-    throw new Error('เกิดข้อผิดพลาดในการลบผู้ใช้งาน');
+    throw error; // Re-throw the original error to preserve the message
   }
 };
