@@ -175,6 +175,29 @@ export type Database = {
         Args: { target_user_id: string; admin_user_id: string }
         Returns: Json
       }
+      get_all_requests: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          created_at: string
+          updated_at: string
+          requester_id: string
+          document_name: string
+          receiver_email: string
+          file_path: string
+          status: Database["public"]["Enums"]["request_status"]
+          tracking_number: string
+          admin_feedback: string
+          is_delivered: boolean
+          approved_by: string
+          requester_name: string
+          requester_email: string
+          requester_employee_id: string
+          requester_company: string
+          requester_department: string
+          requester_division: string
+        }[]
+      }
       get_current_user_id: {
         Args: Record<PropertyKey, never>
         Returns: string

@@ -30,39 +30,42 @@ const AdminDashboard = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch all requests for admin with requester information
+        // Fetch all requests for admin using RPC function
         const { data: requestsData, error: requestsError } = await supabase
-          .from('requests')
-          .select(`
-            *,
-            requester:profiles!requests_requester_id_fkey(
-              full_name,
-              email,
-              employee_id,
-              company,
-              department,
-              division
-            )
-          `)
-          .order('created_at', { ascending: false });
+          .rpc('get_all_requests');
         
         if (requestsError) {
           console.error('Error fetching requests:', requestsError);
           setError('เกิดข้อผิดพลาดในการโหลดข้อมูลคำขอ');
         } else {
-          const normalizedRequests = requestsData?.map(item => {
-            const normalized = normalizeFileRequest(item);
-            // Add requester information
-            if (item.requester) {
-              normalized.requesterName = item.requester.full_name || '';
-              normalized.requesterEmail = item.requester.email || '';
-              normalized.requesterEmployeeId = item.requester.employee_id || '';
-              normalized.requesterCompany = item.requester.company || '';
-              normalized.requesterDepartment = item.requester.department || '';
-              normalized.requesterDivision = item.requester.division || '';
-            }
-            return normalized;
-          }) || [];
+          const normalizedRequests = requestsData?.map(item => ({
+            id: item.id,
+            requester_id: item.requester_id,
+            document_name: item.document_name,
+            documentName: item.document_name,
+            receiver_email: item.receiver_email,
+            receiverEmail: item.receiver_email,
+            file_path: item.file_path,
+            fileAttachment: item.file_path,
+            status: item.status,
+            created_at: item.created_at,
+            createdAt: item.created_at,
+            updated_at: item.updated_at,
+            updatedAt: item.updated_at,
+            tracking_number: item.tracking_number,
+            trackingNumber: item.tracking_number,
+            admin_feedback: item.admin_feedback,
+            adminFeedback: item.admin_feedback,
+            is_delivered: item.is_delivered,
+            isDelivered: item.is_delivered,
+            approved_by: item.approved_by,
+            requesterName: item.requester_name,
+            requesterEmail: item.requester_email,
+            requesterEmployeeId: item.requester_employee_id,
+            requesterCompany: item.requester_company,
+            requesterDepartment: item.requester_department,
+            requesterDivision: item.requester_division,
+          })) || [];
           setRequests(normalizedRequests);
         }
         

@@ -31,50 +31,91 @@ const Requests = () => {
       setLoading(true);
       setError(null);
       
-      let query = supabase
-        .from('requests')
-        .select(`
-          *,
-          requester:profiles!requests_requester_id_fkey(
-            full_name,
-            email,
-            employee_id,
-            company,
-            department,
-            division
-          )
-        `)
-        .order('created_at', { ascending: false });
-      
-      // Filter requests based on user role
-      if (user.role === 'requester') {
-        query = query.eq('requester_id', user.id);
-      } else if (user.role === 'receiver') {
-        query = query.eq('receiver_email', user.email);
-      }
-      // fa_admin can see all requests (no filter needed)
-      
-      const { data, error: fetchError } = await query;
-      
-      if (fetchError) {
-        console.error('Error fetching requests:', fetchError);
-        throw fetchError;
-      }
-      
-      const normalizedRequests = data?.map(item => {
-        const normalized = normalizeFileRequest(item);
-        // Add requester information
-        if (item.requester) {
-          normalized.requesterName = item.requester.full_name || '';
-          normalized.requesterEmail = item.requester.email || '';
-          normalized.requesterEmployeeId = item.requester.employee_id || '';
-          normalized.requesterCompany = item.requester.company || '';
-          normalized.requesterDepartment = item.requester.department || '';
-          normalized.requesterDivision = item.requester.division || '';
+      // For fa_admin, use RPC function to get all requests
+      if (user.role === 'fa_admin') {
+        const { data, error: fetchError } = await supabase
+          .rpc('get_all_requests');
+        
+        if (fetchError) {
+          console.error('Error fetching requests:', fetchError);
+          throw fetchError;
         }
-        return normalized;
-      }) || [];
-      setRequests(normalizedRequests);
+        
+        const normalizedRequests = data?.map(item => ({
+          id: item.id,
+          requester_id: item.requester_id,
+          document_name: item.document_name,
+          documentName: item.document_name,
+          receiver_email: item.receiver_email,
+          receiverEmail: item.receiver_email,
+          file_path: item.file_path,
+          fileAttachment: item.file_path,
+          status: item.status,
+          created_at: item.created_at,
+          createdAt: item.created_at,
+          updated_at: item.updated_at,
+          updatedAt: item.updated_at,
+          tracking_number: item.tracking_number,
+          trackingNumber: item.tracking_number,
+          admin_feedback: item.admin_feedback,
+          adminFeedback: item.admin_feedback,
+          is_delivered: item.is_delivered,
+          isDelivered: item.is_delivered,
+          approved_by: item.approved_by,
+          requesterName: item.requester_name,
+          requesterEmail: item.requester_email,
+          requesterEmployeeId: item.requester_employee_id,
+          requesterCompany: item.requester_company,
+          requesterDepartment: item.requester_department,
+          requesterDivision: item.requester_division,
+        })) || [];
+        setRequests(normalizedRequests);
+      } else {
+        // For other roles, use regular query with filters
+        let query = supabase
+          .from('requests')
+          .select(`
+            *,
+            requester:profiles!requests_requester_id_fkey(
+              full_name,
+              email,
+              employee_id,
+              company,
+              department,
+              division
+            )
+          `)
+          .order('created_at', { ascending: false });
+        
+        // Filter requests based on user role
+        if (user.role === 'requester') {
+          query = query.eq('requester_id', user.id);
+        } else if (user.role === 'receiver') {
+          query = query.eq('receiver_email', user.email);
+        }
+        
+        const { data, error: fetchError } = await query;
+        
+        if (fetchError) {
+          console.error('Error fetching requests:', fetchError);
+          throw fetchError;
+        }
+        
+        const normalizedRequests = data?.map(item => {
+          const normalized = normalizeFileRequest(item);
+          // Add requester information
+          if (item.requester) {
+            normalized.requesterName = item.requester.full_name || '';
+            normalized.requesterEmail = item.requester.email || '';
+            normalized.requesterEmployeeId = item.requester.employee_id || '';
+            normalized.requesterCompany = item.requester.company || '';
+            normalized.requesterDepartment = item.requester.department || '';
+            normalized.requesterDivision = item.requester.division || '';
+          }
+          return normalized;
+        }) || [];
+        setRequests(normalizedRequests);
+      }
       
     } catch (error: any) {
       console.error('Error loading requests:', error);
