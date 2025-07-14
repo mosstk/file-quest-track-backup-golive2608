@@ -30,17 +30,39 @@ const AdminDashboard = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch all requests for admin
+        // Fetch all requests for admin with requester information
         const { data: requestsData, error: requestsError } = await supabase
           .from('requests')
-          .select('*')
+          .select(`
+            *,
+            requester:profiles!requests_requester_id_fkey(
+              full_name,
+              email,
+              employee_id,
+              company,
+              department,
+              division
+            )
+          `)
           .order('created_at', { ascending: false });
         
         if (requestsError) {
           console.error('Error fetching requests:', requestsError);
           setError('เกิดข้อผิดพลาดในการโหลดข้อมูลคำขอ');
         } else {
-          const normalizedRequests = requestsData?.map(normalizeFileRequest) || [];
+          const normalizedRequests = requestsData?.map(item => {
+            const normalized = normalizeFileRequest(item);
+            // Add requester information
+            if (item.requester) {
+              normalized.requesterName = item.requester.full_name || '';
+              normalized.requesterEmail = item.requester.email || '';
+              normalized.requesterEmployeeId = item.requester.employee_id || '';
+              normalized.requesterCompany = item.requester.company || '';
+              normalized.requesterDepartment = item.requester.department || '';
+              normalized.requesterDivision = item.requester.division || '';
+            }
+            return normalized;
+          }) || [];
           setRequests(normalizedRequests);
         }
         

@@ -33,7 +33,17 @@ const Requests = () => {
       
       let query = supabase
         .from('requests')
-        .select('*')
+        .select(`
+          *,
+          requester:profiles!requests_requester_id_fkey(
+            full_name,
+            email,
+            employee_id,
+            company,
+            department,
+            division
+          )
+        `)
         .order('created_at', { ascending: false });
       
       // Filter requests based on user role
@@ -51,7 +61,19 @@ const Requests = () => {
         throw fetchError;
       }
       
-      const normalizedRequests = data?.map(normalizeFileRequest) || [];
+      const normalizedRequests = data?.map(item => {
+        const normalized = normalizeFileRequest(item);
+        // Add requester information
+        if (item.requester) {
+          normalized.requesterName = item.requester.full_name || '';
+          normalized.requesterEmail = item.requester.email || '';
+          normalized.requesterEmployeeId = item.requester.employee_id || '';
+          normalized.requesterCompany = item.requester.company || '';
+          normalized.requesterDepartment = item.requester.department || '';
+          normalized.requesterDivision = item.requester.division || '';
+        }
+        return normalized;
+      }) || [];
       setRequests(normalizedRequests);
       
     } catch (error: any) {
