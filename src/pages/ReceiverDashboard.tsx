@@ -24,12 +24,11 @@ const ReceiverDashboard = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch approved requests sent to this receiver
+        // Fetch all approved requests (receivers can see all approved requests)
         const { data, error } = await supabase
           .from('requests')
           .select('*')
           .eq('status', 'approved')
-          .eq('receiver_email', user.email)
           .order('created_at', { ascending: false });
         
         if (error) {
