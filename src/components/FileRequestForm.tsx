@@ -29,7 +29,8 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
     receiverName: '',
     receiverDepartment: '',
     countryName: '',
-    receiverCompany: ''
+    receiverCompany: '',
+    receiverPhone: ''
   });
 
   useEffect(() => {
@@ -42,7 +43,8 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
         receiverName: '',
         receiverDepartment: '',
         countryName: '',
-        receiverCompany: ''
+        receiverCompany: '',
+        receiverPhone: ''
       });
     }
   }, [request]);
@@ -267,7 +269,7 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="receiverName" className="text-gray-700 font-medium">ชื่อของผู้รับเอกสาร *</Label>
+                    <Label htmlFor="receiverName" className="text-gray-700 font-medium">ชื่อผู้รับเอกสาร *</Label>
                     <Input
                       id="receiverName"
                       name="receiverName"
@@ -281,13 +283,13 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="receiverDepartment" className="text-gray-700 font-medium">ฝ่ายของผู้รับเอกสาร *</Label>
+                    <Label htmlFor="countryName" className="text-gray-700 font-medium">ประเทศ *</Label>
                     <Input
-                      id="receiverDepartment"
-                      name="receiverDepartment"
-                      value={formData.receiverDepartment}
+                      id="countryName"
+                      name="countryName"
+                      value={formData.countryName}
                       onChange={handleInputChange}
-                      placeholder="ฝ่าย/แผนก"
+                      placeholder="ประเทศ"
                       required
                       disabled={isSubmitting}
                       className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
@@ -295,7 +297,7 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="receiverCompany" className="text-gray-700 font-medium">ชื่อบริษัทผู้รับ *</Label>
+                    <Label htmlFor="receiverCompany" className="text-gray-700 font-medium">ชื่อบริษัท *</Label>
                     <Input
                       id="receiverCompany"
                       name="receiverCompany"
@@ -309,13 +311,28 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="countryName" className="text-gray-700 font-medium">ชื่อประเทศ *</Label>
+                    <Label htmlFor="receiverDepartment" className="text-gray-700 font-medium">ฝ่าย/แผนก *</Label>
                     <Input
-                      id="countryName"
-                      name="countryName"
-                      value={formData.countryName}
+                      id="receiverDepartment"
+                      name="receiverDepartment"
+                      value={formData.receiverDepartment}
                       onChange={handleInputChange}
-                      placeholder="ประเทศ"
+                      placeholder="ฝ่าย/แผนก"
+                      required
+                      disabled={isSubmitting}
+                      className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="receiverEmail" className="text-gray-700 font-medium">อีเมล *</Label>
+                    <Input
+                      id="receiverEmail"
+                      name="receiverEmail"
+                      type="email"
+                      value={formData.receiverEmail}
+                      onChange={handleInputChange}
+                      placeholder="user@example.com"
                       required
                       disabled={isSubmitting}
                       className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
@@ -324,15 +341,14 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
                 </div>
 
                 <div className="mt-6 space-y-2">
-                  <Label htmlFor="receiverEmail" className="text-gray-700 font-medium">อีเมลผู้รับ *</Label>
+                  <Label htmlFor="receiverPhone" className="text-gray-700 font-medium">เบอร์โทร</Label>
                   <Input
-                    id="receiverEmail"
-                    name="receiverEmail"
-                    type="email"
-                    value={formData.receiverEmail}
+                    id="receiverPhone"
+                    name="receiverPhone"
+                    type="tel"
+                    value={formData.receiverPhone || ''}
                     onChange={handleInputChange}
-                    placeholder="user@example.com"
-                    required
+                    placeholder="หมายเลขโทรศัพท์"
                     disabled={isSubmitting}
                     className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
                   />
