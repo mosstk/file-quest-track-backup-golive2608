@@ -47,11 +47,6 @@ const NavbarMenuItems = ({ onClose }: { onClose?: () => void }) => {
         <span>คำขอส่งไฟล์</span>
       </Link>
 
-      <Link to="/documentation" className={linkClass('/documentation')} onClick={handleClick}>
-        <Book size={18} />
-        <span>เอกสารประกอบ</span>
-      </Link>
-
       {(user.role === 'fa_admin' || user.role === 'requester') && (
         <Link to="/system-paths" className={linkClass('/system-paths')} onClick={handleClick}>
           <FolderTree size={18} />
@@ -77,7 +72,6 @@ const Navbar: React.FC = () => {
   const routes = [
     { path: '/dashboard', label: 'Dashboard', roles: ['fa_admin', 'requester', 'receiver'] },
     { path: '/requests', label: 'File Requests', roles: ['fa_admin', 'requester'] },
-    { path: '/documentation', label: 'เอกสาร', roles: ['fa_admin', 'requester', 'receiver'] },
     { path: '/admin', label: 'Admin Panel', roles: ['fa_admin'] },
   ];
 
