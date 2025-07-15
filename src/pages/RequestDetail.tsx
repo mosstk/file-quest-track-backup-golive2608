@@ -30,23 +30,26 @@ const RequestDetail = () => {
       try {
         setLoading(true);
         
-        // Fetch request from Supabase
-        const { data, error } = await supabase
-          .from('requests')
-          .select('*')
-          .eq('id', id)
-          .maybeSingle();
+        // Fetch request using get_all_requests function for admin access
+        const { data: allRequests, error } = await supabase
+          .rpc('get_all_requests');
         
         if (error) {
-          console.error('Error fetching request:', error);
+          console.error('Error fetching requests:', error);
           toast.error('ไม่สามารถโหลดข้อมูลคำขอได้');
           return;
         }
         
-        if (data) {
-          const normalizedRequest = normalizeFileRequest(data);
+        // Find the specific request by ID
+        const requestData = allRequests?.find((req: any) => req.id === id);
+        
+        if (requestData) {
+          const normalizedRequest = normalizeFileRequest(requestData);
           setRequest(normalizedRequest);
+        } else {
+          toast.error('ไม่พบคำขอที่ต้องการ');
         }
+        
         
       } catch (error) {
         console.error('Error:', error);
