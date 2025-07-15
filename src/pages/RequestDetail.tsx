@@ -262,9 +262,13 @@ const RequestDetail = () => {
   
   const isAdmin = user?.role === 'fa_admin';
   const isRequester = user?.email === request.requesterEmail;
-  const isReceiver = user?.email === (request.receiver_email || request.receiverEmail);
+  // Check multiple email sources for receiver - use any available email
+  const userEmail = user?.email || (user as any)?.username;
+  const isReceiver = userEmail === (request.receiver_email || request.receiverEmail);
   const canApprove = isAdmin && request.status === 'pending';
   const canEdit = (isRequester && request.status === 'rework') || isAdmin;
+  
+  console.log('RequestDetail - User email:', userEmail, 'Receiver email:', request.receiver_email, 'isReceiver:', isReceiver);
 
   return (
     <Layout requireAuth>
