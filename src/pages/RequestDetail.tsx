@@ -114,6 +114,9 @@ const RequestDetail = () => {
         updatedAt: new Date().toISOString(),
       });
       
+      // Force re-fetch to ensure UI updates
+      await fetchRequest();
+      
       toast.success('อนุมัติคำขอเรียบร้อย');
     } catch (error) {
       console.error('Error:', error);
