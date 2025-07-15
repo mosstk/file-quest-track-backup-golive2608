@@ -34,15 +34,22 @@ const Dashboard = () => {
     return null;
   }
 
+  // Debug: Log user role to console
+  console.log('Dashboard - User role:', user.role, 'User data:', user);
+
   // Render appropriate dashboard based on user role
   switch (user.role) {
     case 'fa_admin':
+      console.log('Rendering AdminDashboard for fa_admin');
       return <AdminDashboard />;
     case 'requester':
+      console.log('Rendering RequesterDashboard for requester');
       return <RequesterDashboard />;
     case 'receiver':
+      console.log('Rendering ReceiverDashboard for receiver');
       return <ReceiverDashboard />;
     default:
+      console.log('Rendering default RequesterDashboard for role:', user.role);
       return <RequesterDashboard />; // Default to requester dashboard
   }
 };
