@@ -24,30 +24,13 @@ const ReceiverDashboard = () => {
         setLoading(true);
         setError(null);
         
-        // Get user's actual email - use profile email or session email  
-        let userEmail = user.email;
-        
-        // If user.email is empty, fetch from profile table
-        if (!userEmail) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('email')
-            .eq('id', user.id)
-            .single();
-          userEmail = profile?.email || '';
-        }
-        
-        console.log('ReceiverDashboard - User email for filtering:', userEmail);
-        
-        // Fetch approved requests sent to this receiver's email
+        // Fetch all requests sent to this receiver (not just approved ones)
         const { data, error } = await supabase
           .from('requests')
           .select('*')
-          .eq('status', 'approved')
-          .eq('receiver_email', userEmail)
           .order('created_at', { ascending: false });
         
-        console.log('ReceiverDashboard - Query result:', { data, error, userEmail });
+        console.log('ReceiverDashboard - Query result:', { data, error });
         
         if (error) {
           console.error('Error fetching requests:', error);
@@ -68,19 +51,30 @@ const ReceiverDashboard = () => {
     fetchRequests();
   }, [user]);
   
-  // Count requests by delivery status
-  const deliveryCounts = React.useMemo(() => {
+  // Count requests by status
+  const requestCounts = React.useMemo(() => {
     const counts = {
+      total: requests.length,
+      approved: 0,
+      pending: 0,
+      rejected: 0,
       delivered: 0,
       notDelivered: 0,
-      total: requests.length,
     };
     
     requests.forEach(req => {
-      if (req.isDelivered) {
-        counts.delivered++;
-      } else {
-        counts.notDelivered++;
+      // Count by status
+      if (req.status === 'approved') counts.approved++;
+      else if (req.status === 'pending') counts.pending++;
+      else if (req.status === 'rejected') counts.rejected++;
+      
+      // Count delivery status (only for approved requests)
+      if (req.status === 'approved') {
+        if (req.isDelivered) {
+          counts.delivered++;
+        } else {
+          counts.notDelivered++;
+        }
       }
     });
     
@@ -122,7 +116,7 @@ const ReceiverDashboard = () => {
               <CardDescription>เอกสารที่ส่งมาถึงคุณ</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{deliveryCounts.total}</p>
+              <p className="text-3xl font-bold">{requestCounts.total}</p>
             </CardContent>
           </Card>
           
@@ -132,7 +126,7 @@ const ReceiverDashboard = () => {
               <CardDescription>เอกสารที่ยืนยันการรับแล้ว</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-green-600">{deliveryCounts.delivered}</p>
+              <p className="text-3xl font-bold text-green-600">{requestCounts.delivered}</p>
             </CardContent>
           </Card>
           
@@ -142,7 +136,7 @@ const ReceiverDashboard = () => {
               <CardDescription>เอกสารที่รอการยืนยัน</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-orange-600">{deliveryCounts.notDelivered}</p>
+              <p className="text-3xl font-bold text-orange-600">{requestCounts.notDelivered}</p>
             </CardContent>
           </Card>
         </div>
