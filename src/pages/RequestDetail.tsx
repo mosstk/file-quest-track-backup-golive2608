@@ -44,7 +44,9 @@ const RequestDetail = () => {
         const requestData = allRequests?.find((req: any) => req.id === id);
         
         if (requestData) {
+          console.log('Raw request data from database:', requestData);
           const normalizedRequest = normalizeFileRequest(requestData);
+          console.log('Normalized request data:', normalizedRequest);
           setRequest(normalizedRequest);
         } else {
           toast.error('ไม่พบคำขอที่ต้องการ');

@@ -26,12 +26,12 @@ export function normalizeFileRequest(request: Partial<FileRequest>): FileRequest
     is_delivered: request.is_delivered || request.isDelivered || false,
     isDelivered: request.is_delivered || request.isDelivered || false,
     approved_by: request.approved_by || undefined,
-    requesterName: request.requesterName || '',
-    requesterEmail: request.requesterEmail || '',
-    requesterEmployeeId: request.requesterEmployeeId || '',
-    requesterCompany: request.requesterCompany || '',
-    requesterDepartment: request.requesterDepartment || '',
-    requesterDivision: request.requesterDivision || '',
+    requesterName: request.requesterName || (request as any).requester_name || '',
+    requesterEmail: request.requesterEmail || (request as any).requester_email || '',
+    requesterEmployeeId: request.requesterEmployeeId || (request as any).requester_employee_id || '',
+    requesterCompany: request.requesterCompany || (request as any).requester_company || '',
+    requesterDepartment: request.requesterDepartment || (request as any).requester_department || '',
+    requesterDivision: request.requesterDivision || (request as any).requester_division || '',
   } as FileRequest;
 }
 
