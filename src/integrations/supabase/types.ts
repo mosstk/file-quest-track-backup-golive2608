@@ -158,6 +158,14 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
+      approve_request: {
+        Args: {
+          p_request_id: string
+          p_tracking_number: string
+          p_admin_id: string
+        }
+        Returns: Json
+      }
       can_insert_profile: {
         Args: { profile_user_id: string }
         Returns: boolean

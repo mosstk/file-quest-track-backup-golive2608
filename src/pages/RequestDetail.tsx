@@ -76,28 +76,20 @@ const RequestDetail = () => {
   };
   
   const handleApprove = async (trackingNumber: string) => {
-    if (!request) return;
+    if (!request || !user?.id) return;
     
     console.log('Approving request:', request.id);
     console.log('User:', user);
     console.log('Tracking number:', trackingNumber);
     
     try {
-      // Update request in database
-      const updateData = {
-        status: 'approved' as const,
-        tracking_number: trackingNumber,
-        updated_at: new Date().toISOString(),
-        approved_by: user?.id
-      };
-      
-      console.log('Update data:', updateData);
-      
-      const { data: updateResult, error } = await supabase
-        .from('requests')
-        .update(updateData)
-        .eq('id', request.id)
-        .select();
+      // ใช้ database function ใหม่สำหรับการอนุมัติ
+      const { data: result, error } = await supabase
+        .rpc('approve_request', {
+          p_request_id: request.id,
+          p_tracking_number: trackingNumber,
+          p_admin_id: user.id
+        });
       
       if (error) {
         console.error('Supabase error:', error);
@@ -105,17 +97,15 @@ const RequestDetail = () => {
         return;
       }
       
-      console.log('Update result:', updateResult);
+      console.log('Approval result:', result);
       
-      // Update local state
-      setRequest({
-        ...request,
-        status: 'approved',
-        tracking_number: trackingNumber,
-        trackingNumber,
-        updated_at: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
+      // Type cast for result
+      const typedResult = result as { success: boolean; error?: string; message?: string };
+      
+      if (!typedResult.success) {
+        toast.error('ไม่สามารถอนุมัติคำขอได้: ' + typedResult.error);
+        return;
+      }
       
       // Force re-fetch to ensure UI updates
       await fetchRequest();
