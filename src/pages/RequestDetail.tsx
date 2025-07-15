@@ -23,44 +23,44 @@ const RequestDetail = () => {
   const [request, setRequest] = useState<FileRequest | null>(null);
   const [loading, setLoading] = useState(true);
   
-  useEffect(() => {
-    const fetchRequest = async () => {
-      if (!id) return;
-      
-      try {
-        setLoading(true);
-        
-        // Fetch request using get_all_requests function for admin access
-        const { data: allRequests, error } = await supabase
-          .rpc('get_all_requests');
-        
-        if (error) {
-          console.error('Error fetching requests:', error);
-          toast.error('ไม่สามารถโหลดข้อมูลคำขอได้');
-          return;
-        }
-        
-        // Find the specific request by ID
-        const requestData = allRequests?.find((req: any) => req.id === id);
-        
-        if (requestData) {
-          console.log('Raw request data from database:', requestData);
-          const normalizedRequest = normalizeFileRequest(requestData);
-          console.log('Normalized request data:', normalizedRequest);
-          setRequest(normalizedRequest);
-        } else {
-          toast.error('ไม่พบคำขอที่ต้องการ');
-        }
-        
-        
-      } catch (error) {
-        console.error('Error:', error);
-        toast.error('เกิดข้อผิดพลาดในการโหลดข้อมูล');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchRequest = async () => {
+    if (!id) return;
     
+    try {
+      setLoading(true);
+      
+      // Fetch request using get_all_requests function for admin access
+      const { data: allRequests, error } = await supabase
+        .rpc('get_all_requests');
+      
+      if (error) {
+        console.error('Error fetching requests:', error);
+        toast.error('ไม่สามารถโหลดข้อมูลคำขอได้');
+        return;
+      }
+      
+      // Find the specific request by ID
+      const requestData = allRequests?.find((req: any) => req.id === id);
+      
+      if (requestData) {
+        console.log('Raw request data from database:', requestData);
+        const normalizedRequest = normalizeFileRequest(requestData);
+        console.log('Normalized request data:', normalizedRequest);
+        setRequest(normalizedRequest);
+      } else {
+        toast.error('ไม่พบคำขอที่ต้องการ');
+      }
+      
+      
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchRequest();
   }, [id]);
   
