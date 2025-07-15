@@ -24,7 +24,7 @@ const ReceiverDashboard = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch all requests sent to this receiver (not just approved ones)
+        // Fetch all requests sent to this receiver (RLS will filter automatically)
         const { data, error } = await supabase
           .from('requests')
           .select('*')
@@ -50,10 +50,10 @@ const ReceiverDashboard = () => {
     
     fetchRequests();
   }, [user]);
-  
-  // Count requests by status
-  const requestCounts = React.useMemo(() => {
-    const counts = {
+   
+  // Count requests by status and delivery
+  const requestStats = React.useMemo(() => {
+    const stats = {
       total: requests.length,
       approved: 0,
       pending: 0,
@@ -64,21 +64,21 @@ const ReceiverDashboard = () => {
     
     requests.forEach(req => {
       // Count by status
-      if (req.status === 'approved') counts.approved++;
-      else if (req.status === 'pending') counts.pending++;
-      else if (req.status === 'rejected') counts.rejected++;
+      if (req.status === 'approved') stats.approved++;
+      else if (req.status === 'pending') stats.pending++;
+      else if (req.status === 'rejected') stats.rejected++;
       
       // Count delivery status (only for approved requests)
       if (req.status === 'approved') {
         if (req.isDelivered) {
-          counts.delivered++;
+          stats.delivered++;
         } else {
-          counts.notDelivered++;
+          stats.notDelivered++;
         }
       }
     });
     
-    return counts;
+    return stats;
   }, [requests]);
 
   if (loading) {
@@ -116,7 +116,7 @@ const ReceiverDashboard = () => {
               <CardDescription>เอกสารที่ส่งมาถึงคุณ</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{requestCounts.total}</p>
+              <p className="text-3xl font-bold">{requestStats.total}</p>
             </CardContent>
           </Card>
           
@@ -126,7 +126,7 @@ const ReceiverDashboard = () => {
               <CardDescription>เอกสารที่ยืนยันการรับแล้ว</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-green-600">{requestCounts.delivered}</p>
+              <p className="text-3xl font-bold text-green-600">{requestStats.delivered}</p>
             </CardContent>
           </Card>
           
@@ -136,7 +136,7 @@ const ReceiverDashboard = () => {
               <CardDescription>เอกสารที่รอการยืนยัน</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-orange-600">{requestCounts.notDelivered}</p>
+              <p className="text-3xl font-bold text-orange-600">{requestStats.notDelivered}</p>
             </CardContent>
           </Card>
         </div>
