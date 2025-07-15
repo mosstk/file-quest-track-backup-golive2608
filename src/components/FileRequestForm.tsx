@@ -24,7 +24,12 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
   const [formData, setFormData] = useState({
     documentName: '',
     receiverEmail: '',
-    documentDescription: ''
+    documentDescription: '',
+    documentCount: '',
+    receiverName: '',
+    receiverDepartment: '',
+    countryName: '',
+    receiverCompany: ''
   });
 
   useEffect(() => {
@@ -32,7 +37,12 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
       setFormData({
         documentName: request.document_name || request.documentName || '',
         receiverEmail: request.receiver_email || request.receiverEmail || '',
-        documentDescription: ''
+        documentDescription: '',
+        documentCount: '',
+        receiverName: '',
+        receiverDepartment: '',
+        countryName: '',
+        receiverCompany: ''
       });
     }
   }, [request]);
@@ -55,11 +65,38 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
       setError('กรุณากรอกอีเมลผู้รับ');
       return false;
     }
+    if (!formData.documentCount.trim()) {
+      setError('กรุณากรอกจำนวนเอกสารที่ฝากส่ง');
+      return false;
+    }
+    if (!formData.receiverName.trim()) {
+      setError('กรุณากรอกชื่อของผู้รับเอกสาร');
+      return false;
+    }
+    if (!formData.receiverDepartment.trim()) {
+      setError('กรุณากรอกฝ่ายของผู้รับเอกสาร');
+      return false;
+    }
+    if (!formData.countryName.trim()) {
+      setError('กรุณากรอกชื่อประเทศ');
+      return false;
+    }
+    if (!formData.receiverCompany.trim()) {
+      setError('กรุณากรอกชื่อบริษัทผู้รับ');
+      return false;
+    }
     
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.receiverEmail)) {
       setError('รูปแบบอีเมลไม่ถูกต้อง');
+      return false;
+    }
+
+    // Document count validation (must be number and greater than 0)
+    const docCount = parseInt(formData.documentCount);
+    if (isNaN(docCount) || docCount <= 0) {
+      setError('จำนวนเอกสารต้องเป็นตัวเลขและมากกว่า 0');
       return false;
     }
     
@@ -179,15 +216,69 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="documentDescription">รายละเอียดไฟล์</Label>
-            <Textarea
-              id="documentDescription"
-              name="documentDescription"
-              value={formData.documentDescription}
+            <Label htmlFor="documentCount">จำนวนเอกสารที่ฝากส่ง *</Label>
+            <Input
+              id="documentCount"
+              name="documentCount"
+              type="number"
+              min="1"
+              value={formData.documentCount}
               onChange={handleInputChange}
-              placeholder="ระบุรายละเอียดเพิ่มเติมเกี่ยวกับไฟล์ (ไม่บังคับ)"
+              placeholder="จำนวนเอกสาร"
+              required
               disabled={isSubmitting}
-              rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="receiverName">ชื่อของผู้รับเอกสาร *</Label>
+            <Input
+              id="receiverName"
+              name="receiverName"
+              value={formData.receiverName}
+              onChange={handleInputChange}
+              placeholder="ชื่อผู้รับ"
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="receiverDepartment">ฝ่ายของผู้รับเอกสาร *</Label>
+            <Input
+              id="receiverDepartment"
+              name="receiverDepartment"
+              value={formData.receiverDepartment}
+              onChange={handleInputChange}
+              placeholder="ฝ่าย/แผนก"
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="countryName">ชื่อประเทศ *</Label>
+            <Input
+              id="countryName"
+              name="countryName"
+              value={formData.countryName}
+              onChange={handleInputChange}
+              placeholder="ประเทศ"
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="receiverCompany">ชื่อบริษัทผู้รับ *</Label>
+            <Input
+              id="receiverCompany"
+              name="receiverCompany"
+              value={formData.receiverCompany}
+              onChange={handleInputChange}
+              placeholder="บริษัท/องค์กร"
+              required
+              disabled={isSubmitting}
             />
           </div>
 
@@ -202,6 +293,19 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
               placeholder="user@example.com"
               required
               disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="documentDescription">รายละเอียดไฟล์</Label>
+            <Textarea
+              id="documentDescription"
+              name="documentDescription"
+              value={formData.documentDescription}
+              onChange={handleInputChange}
+              placeholder="ระบุรายละเอียดเพิ่มเติมเกี่ยวกับไฟล์ (ไม่บังคับ)"
+              disabled={isSubmitting}
+              rows={3}
             />
           </div>
 
