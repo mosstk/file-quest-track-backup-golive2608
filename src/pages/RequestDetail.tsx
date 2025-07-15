@@ -194,34 +194,32 @@ const RequestDetail = () => {
   };
   
   const handleConfirmDelivery = async () => {
-    if (!request) return;
+    if (!request || !user?.id) return;
     
     try {
-      // Update request in database
-      const { error } = await supabase
-        .from('requests')
-        .update({
-          is_delivered: true,
-          status: 'completed',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', request.id);
+      // ใช้ database function สำหรับยืนยันการได้รับเอกสาร
+      const { data: result, error } = await supabase
+        .rpc('confirm_delivery', {
+          p_request_id: request.id,
+          p_receiver_id: user.id
+        });
       
       if (error) {
         console.error('Error confirming delivery:', error);
-        toast.error('ไม่สามารถยืนยันการได้รับเอกสารได้');
+        toast.error('ไม่สามารถยืนยันการได้รับเอกสารได้: ' + error.message);
         return;
       }
       
-      // Update local state
-      setRequest({
-        ...request,
-        is_delivered: true,
-        isDelivered: true,
-        status: 'completed',
-        updated_at: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
+      // Type cast for result
+      const typedResult = result as { success: boolean; error?: string; message?: string };
+      
+      if (!typedResult.success) {
+        toast.error('ไม่สามารถยืนยันการได้รับเอกสารได้: ' + typedResult.error);
+        return;
+      }
+      
+      // Force re-fetch to ensure UI updates
+      await fetchRequest();
       
       toast.success('ยืนยันการได้รับเอกสารเรียบร้อย');
     } catch (error) {

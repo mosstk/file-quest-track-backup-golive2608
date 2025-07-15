@@ -170,6 +170,10 @@ export type Database = {
         Args: { profile_user_id: string }
         Returns: boolean
       }
+      confirm_delivery: {
+        Args: { p_request_id: string; p_receiver_id: string }
+        Returns: Json
+      }
       create_request: {
         Args: {
           p_document_name: string
