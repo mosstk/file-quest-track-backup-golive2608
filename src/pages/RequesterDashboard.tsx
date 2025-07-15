@@ -24,10 +24,20 @@ const RequesterDashboard = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch only user's requests
+        // Fetch only user's requests with complete data including requester details
         const { data, error } = await supabase
           .from('requests')
-          .select('*')
+          .select(`
+            *,
+            requester:profiles!requester_id(
+              full_name,
+              email,
+              employee_id,
+              company,
+              department,
+              division
+            )
+          `)
           .eq('requester_id', user.id)
           .order('created_at', { ascending: false });
         
