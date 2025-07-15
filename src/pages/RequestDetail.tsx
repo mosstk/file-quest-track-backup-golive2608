@@ -35,7 +35,7 @@ const RequestDetail = () => {
           .from('requests')
           .select('*')
           .eq('id', id)
-          .single();
+          .maybeSingle();
         
         if (error) {
           console.error('Error fetching request:', error);
