@@ -270,10 +270,15 @@ const DocumentationSystem = () => {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-primary">Documentation System</h1>
+          <h1 className="text-4xl font-bold text-primary">สรุปการพัฒนาโครงการ</h1>
           <p className="text-xl text-muted-foreground">
-            ระบบเอกสารและคู่มือการใช้งาน File Request Tracking System
+            File Request Tracking System สำหรับ TOA Group
           </p>
+          <div className="max-w-2xl mx-auto">
+            <Badge className="bg-green-100 text-green-800 text-sm px-3 py-1">
+              ✅ พร้อมใช้งาน Production
+            </Badge>
+          </div>
           
           {/* Search */}
           <div className="max-w-md mx-auto relative">
@@ -320,17 +325,90 @@ const DocumentationSystem = () => {
         </Card>
 
         {/* Main Documentation */}
-        <Tabs defaultValue="tech-stack" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
-            <TabsTrigger value="tech-stack" className="text-xs">Tech Stack</TabsTrigger>
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10">
+            <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
+            <TabsTrigger value="tech-stack" className="text-xs">Technology</TabsTrigger>
             <TabsTrigger value="architecture" className="text-xs">Architecture</TabsTrigger>
             <TabsTrigger value="database" className="text-xs">Database</TabsTrigger>
-            <TabsTrigger value="issues" className="text-xs">Issues</TabsTrigger>
+            <TabsTrigger value="pm" className="text-xs">PM</TabsTrigger>
+            <TabsTrigger value="sa" className="text-xs">SA</TabsTrigger>
             <TabsTrigger value="api" className="text-xs">API</TabsTrigger>
             <TabsTrigger value="security" className="text-xs">Security</TabsTrigger>
-            <TabsTrigger value="performance" className="text-xs">Performance</TabsTrigger>
+            <TabsTrigger value="issues" className="text-xs">Issues</TabsTrigger>
             <TabsTrigger value="deployment" className="text-xs">Deployment</TabsTrigger>
           </TabsList>
+
+          {/* Project Overview */}
+          <TabsContent value="overview">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Book className="h-5 w-5" />
+                    ภาพรวมโครงการ
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold mb-2">วัตถุประสงค์</h3>
+                    <p className="text-sm text-muted-foreground">
+                      พัฒนาระบบติดตามการส่งไฟล์เอกสารภายในองค์กร TOA Group 
+                      เพื่อเพิ่มประสิทธิภาพในการจัดการและติดตามสถานะการส่งไฟล์
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2">ขอบเขตโครงการ</h3>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• ระบบยื่นคำขอส่งไฟล์</li>
+                      <li>• ระบบอนุมัติ/ปฏิเสธคำขอ</li>
+                      <li>• ระบบติดตามสถานะ</li>
+                      <li>• ระบบจัดการผู้ใช้งาน</li>
+                      <li>• ระบบรายงาน</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2">ผลลัพธ์ที่ได้</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Badge className="bg-green-100 text-green-800 justify-center">ลดเวลาในการอนุมัติ</Badge>
+                      <Badge className="bg-blue-100 text-blue-800 justify-center">เพิ่มความโปร่งใส</Badge>
+                      <Badge className="bg-purple-100 text-purple-800 justify-center">ติดตามได้ทันที</Badge>
+                      <Badge className="bg-orange-100 text-orange-800 justify-center">จัดการได้ง่าย</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    สถิติโครงการ
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-4 border rounded">
+                      <div className="text-2xl font-bold text-primary">45</div>
+                      <div className="text-sm text-muted-foreground">วันพัฒนา</div>
+                    </div>
+                    <div className="text-center p-4 border rounded">
+                      <div className="text-2xl font-bold text-green-600">8</div>
+                      <div className="text-sm text-muted-foreground">หน้าจอหลัก</div>
+                    </div>
+                    <div className="text-center p-4 border rounded">
+                      <div className="text-2xl font-bold text-blue-600">3</div>
+                      <div className="text-sm text-muted-foreground">User Roles</div>
+                    </div>
+                    <div className="text-center p-4 border rounded">
+                      <div className="text-2xl font-bold text-purple-600">15+</div>
+                      <div className="text-sm text-muted-foreground">Components</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
           {/* Tech Stack */}
           <TabsContent value="tech-stack">
@@ -424,6 +502,218 @@ const DocumentationSystem = () => {
                       <div className="ml-8">└── index.ts</div>
                     </div>
                   </ScrollArea>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Project Management */}
+          <TabsContent value="pm">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    การจัดการโครงการ (PM)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold mb-2">ระยะเวลาโครงการ</h3>
+                    <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div className="text-center p-2 bg-muted rounded">
+                        <div className="font-medium">เริ่มต้น</div>
+                        <div className="text-muted-foreground">มิ.ย. 2025</div>
+                      </div>
+                      <div className="text-center p-2 bg-muted rounded">
+                        <div className="font-medium">พัฒนา</div>
+                        <div className="text-muted-foreground">45 วัน</div>
+                      </div>
+                      <div className="text-center p-2 bg-green-100 text-green-800 rounded">
+                        <div className="font-medium">เสร็จ</div>
+                        <div>ก.ค. 2025</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2">ขั้นตอนการพัฒนา</h3>
+                    <div className="space-y-2">
+                      {[
+                        { phase: "1. Analysis & Design", status: "completed", days: "5 วัน" },
+                        { phase: "2. Database Setup", status: "completed", days: "7 วัน" },
+                        { phase: "3. Frontend Development", status: "completed", days: "15 วัน" },
+                        { phase: "4. Backend Integration", status: "completed", days: "10 วัน" },
+                        { phase: "5. Testing & Debugging", status: "completed", days: "5 วัน" },
+                        { phase: "6. Deployment", status: "completed", days: "3 วัน" }
+                      ].map((phase, i) => (
+                        <div key={i} className="flex items-center justify-between p-2 border rounded">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            <span className="text-sm">{phase.phase}</span>
+                          </div>
+                          <Badge variant="outline">{phase.days}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="h-5 w-5" />
+                    ทีมพัฒนา & ทรัพยากร
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold mb-2">ทีมงาน</h3>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Full-Stack Developer</span>
+                        <Badge className="bg-blue-100 text-blue-800">1 คน</Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">System Analyst</span>
+                        <Badge className="bg-green-100 text-green-800">1 คน</Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">UI/UX Design</span>
+                        <Badge className="bg-purple-100 text-purple-800">Built-in</Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2">เครื่องมือที่ใช้</h3>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-2 bg-muted rounded text-center">VS Code</div>
+                      <div className="p-2 bg-muted rounded text-center">Supabase</div>
+                      <div className="p-2 bg-muted rounded text-center">GitHub</div>
+                      <div className="p-2 bg-muted rounded text-center">Lovable</div>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2">ความท้าทาย</h3>
+                    <ul className="text-xs text-muted-foreground space-y-1">
+                      <li>• Row Level Security configuration</li>
+                      <li>• Mock authentication for testing</li>
+                      <li>• Real-time status updates</li>
+                      <li>• Multi-role access control</li>
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* System Analysis */}
+          <TabsContent value="sa">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    System Analysis (SA)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div>
+                      <h3 className="font-semibold mb-3">Functional Requirements</h3>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          User Authentication & Authorization
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          File Request Management
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          Approval Workflow
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          Status Tracking
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          Dashboard & Reporting
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          User Management
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-semibold mb-3">Non-Functional Requirements</h3>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          Security (RLS + Authentication)
+                        </div>
+                         <div className="flex items-center gap-2">
+                           <CheckCircle className="h-3 w-3 text-green-500" />
+                           Performance (&lt; 2s load time)
+                         </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          Scalability (Cloud-based)
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          Usability (Responsive UI)
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          Reliability (99% uptime)
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          Maintainability (TypeScript)
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold mb-3">Business Rules</h3>
+                      <div className="space-y-2 text-sm">
+                        <div className="p-2 border rounded">
+                          <div className="font-medium">BR001</div>
+                          <div className="text-muted-foreground">เฉพาะ fa_admin อนุมัติได้</div>
+                        </div>
+                        <div className="p-2 border rounded">
+                          <div className="font-medium">BR002</div>
+                          <div className="text-muted-foreground">Requester แก้ไขได้เฉพาะ pending/rework</div>
+                        </div>
+                        <div className="p-2 border rounded">
+                          <div className="font-medium">BR003</div>
+                          <div className="text-muted-foreground">Receiver เห็นเฉพาะที่อนุมัติแล้ว</div>
+                        </div>
+                        <div className="p-2 border rounded">
+                          <div className="font-medium">BR004</div>
+                          <div className="text-muted-foreground">Auto tracking number เมื่ออนุมัติ</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>System Flow Diagram</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-muted p-4 rounded text-center">
+                    <div className="text-sm font-mono">
+                      Requester → [Create Request] → Pending → fa_admin → [Approve/Reject] → Approved → Receiver → [Confirm Receipt] → Completed
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
