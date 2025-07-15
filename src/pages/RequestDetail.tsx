@@ -93,16 +93,19 @@ const RequestDetail = () => {
       
       console.log('Update data:', updateData);
       
-      const { error } = await supabase
+      const { data: updateResult, error } = await supabase
         .from('requests')
         .update(updateData)
-        .eq('id', request.id);
+        .eq('id', request.id)
+        .select();
       
       if (error) {
         console.error('Supabase error:', error);
         toast.error('ไม่สามารถอนุมัติคำขอได้: ' + error.message);
         return;
       }
+      
+      console.log('Update result:', updateResult);
       
       // Update local state
       setRequest({
