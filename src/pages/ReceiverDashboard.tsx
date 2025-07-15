@@ -24,13 +24,30 @@ const ReceiverDashboard = () => {
         setLoading(true);
         setError(null);
         
+        // Get user's actual email - use profile email or session email  
+        let userEmail = user.email;
+        
+        // If user.email is empty, fetch from profile table
+        if (!userEmail) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('id', user.id)
+            .single();
+          userEmail = profile?.email || '';
+        }
+        
+        console.log('ReceiverDashboard - User email for filtering:', userEmail);
+        
         // Fetch approved requests sent to this receiver's email
         const { data, error } = await supabase
           .from('requests')
           .select('*')
           .eq('status', 'approved')
-          .eq('receiver_email', user.email)
+          .eq('receiver_email', userEmail)
           .order('created_at', { ascending: false });
+        
+        console.log('ReceiverDashboard - Query result:', { data, error, userEmail });
         
         if (error) {
           console.error('Error fetching requests:', error);
