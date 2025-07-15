@@ -184,153 +184,186 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>{request ? 'แก้ไขคำขอส่งไฟล์' : 'สร้างคำขอส่งไฟล์ใหม่'}</CardTitle>
-        <CardDescription>
-          กรอกข้อมูลและแนบไฟล์ที่ต้องการส่ง
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent>
-        {error && (
-          <Alert className="mb-4 border-red-200 bg-red-50">
-            <AlertDescription className="text-red-800">
-              {error}
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="documentName">ชื่อเอกสาร *</Label>
-            <Input
-              id="documentName"
-              name="documentName"
-              value={formData.documentName}
-              onChange={handleInputChange}
-              placeholder="ระบุชื่อเอกสารที่ต้องการส่ง"
-              required
-              disabled={isSubmitting}
-            />
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+      <div className="max-w-4xl mx-auto">
+        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg">
+            <CardTitle className="text-2xl font-bold text-center">
+              {request ? 'แก้ไขคำขอส่งไฟล์' : 'สร้างคำขอส่งไฟล์ใหม่'}
+            </CardTitle>
+            <CardDescription className="text-blue-100 text-center">
+              กรอกข้อมูลและแนบไฟล์ที่ต้องการส่ง
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="p-8">
+            {error && (
+              <Alert className="mb-6 border-red-200 bg-red-50 animate-fade-in">
+                <AlertDescription className="text-red-800 font-medium">
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Document Information Section */}
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-xl border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <div className="w-2 h-6 bg-blue-500 rounded mr-3"></div>
+                  ข้อมูลเอกสาร
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="documentName" className="text-gray-700 font-medium">ชื่อเอกสาร *</Label>
+                    <Input
+                      id="documentName"
+                      name="documentName"
+                      value={formData.documentName}
+                      onChange={handleInputChange}
+                      placeholder="ระบุชื่อเอกสารที่ต้องการส่ง"
+                      required
+                      disabled={isSubmitting}
+                      className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="documentCount">จำนวนเอกสารที่ฝากส่ง *</Label>
-            <Input
-              id="documentCount"
-              name="documentCount"
-              type="number"
-              min="1"
-              value={formData.documentCount}
-              onChange={handleInputChange}
-              placeholder="จำนวนเอกสาร"
-              required
-              disabled={isSubmitting}
-            />
-          </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="documentCount" className="text-gray-700 font-medium">จำนวนเอกสารที่ฝากส่ง *</Label>
+                    <Input
+                      id="documentCount"
+                      name="documentCount"
+                      type="number"
+                      min="1"
+                      value={formData.documentCount}
+                      onChange={handleInputChange}
+                      placeholder="จำนวนเอกสาร"
+                      required
+                      disabled={isSubmitting}
+                      className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="receiverName">ชื่อของผู้รับเอกสาร *</Label>
-            <Input
-              id="receiverName"
-              name="receiverName"
-              value={formData.receiverName}
-              onChange={handleInputChange}
-              placeholder="ชื่อผู้รับ"
-              required
-              disabled={isSubmitting}
-            />
-          </div>
+                <div className="mt-6 space-y-2">
+                  <Label htmlFor="documentDescription" className="text-gray-700 font-medium">รายละเอียดไฟล์</Label>
+                  <Textarea
+                    id="documentDescription"
+                    name="documentDescription"
+                    value={formData.documentDescription}
+                    onChange={handleInputChange}
+                    placeholder="ระบุรายละเอียดเพิ่มเติมเกี่ยวกับไฟล์ (ไม่บังคับ)"
+                    disabled={isSubmitting}
+                    rows={3}
+                    className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="receiverDepartment">ฝ่ายของผู้รับเอกสาร *</Label>
-            <Input
-              id="receiverDepartment"
-              name="receiverDepartment"
-              value={formData.receiverDepartment}
-              onChange={handleInputChange}
-              placeholder="ฝ่าย/แผนก"
-              required
-              disabled={isSubmitting}
-            />
-          </div>
+              {/* Receiver Information Section */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-100 p-6 rounded-xl border border-green-200">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <div className="w-2 h-6 bg-green-500 rounded mr-3"></div>
+                  ข้อมูลผู้รับ
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="receiverName" className="text-gray-700 font-medium">ชื่อของผู้รับเอกสาร *</Label>
+                    <Input
+                      id="receiverName"
+                      name="receiverName"
+                      value={formData.receiverName}
+                      onChange={handleInputChange}
+                      placeholder="ชื่อผู้รับ"
+                      required
+                      disabled={isSubmitting}
+                      className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
+                    />
+                  </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="countryName">ชื่อประเทศ *</Label>
-            <Input
-              id="countryName"
-              name="countryName"
-              value={formData.countryName}
-              onChange={handleInputChange}
-              placeholder="ประเทศ"
-              required
-              disabled={isSubmitting}
-            />
-          </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="receiverDepartment" className="text-gray-700 font-medium">ฝ่ายของผู้รับเอกสาร *</Label>
+                    <Input
+                      id="receiverDepartment"
+                      name="receiverDepartment"
+                      value={formData.receiverDepartment}
+                      onChange={handleInputChange}
+                      placeholder="ฝ่าย/แผนก"
+                      required
+                      disabled={isSubmitting}
+                      className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
+                    />
+                  </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="receiverCompany">ชื่อบริษัทผู้รับ *</Label>
-            <Input
-              id="receiverCompany"
-              name="receiverCompany"
-              value={formData.receiverCompany}
-              onChange={handleInputChange}
-              placeholder="บริษัท/องค์กร"
-              required
-              disabled={isSubmitting}
-            />
-          </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="receiverCompany" className="text-gray-700 font-medium">ชื่อบริษัทผู้รับ *</Label>
+                    <Input
+                      id="receiverCompany"
+                      name="receiverCompany"
+                      value={formData.receiverCompany}
+                      onChange={handleInputChange}
+                      placeholder="บริษัท/องค์กร"
+                      required
+                      disabled={isSubmitting}
+                      className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
+                    />
+                  </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="receiverEmail">อีเมลผู้รับ *</Label>
-            <Input
-              id="receiverEmail"
-              name="receiverEmail"
-              type="email"
-              value={formData.receiverEmail}
-              onChange={handleInputChange}
-              placeholder="user@example.com"
-              required
-              disabled={isSubmitting}
-            />
-          </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="countryName" className="text-gray-700 font-medium">ชื่อประเทศ *</Label>
+                    <Input
+                      id="countryName"
+                      name="countryName"
+                      value={formData.countryName}
+                      onChange={handleInputChange}
+                      placeholder="ประเทศ"
+                      required
+                      disabled={isSubmitting}
+                      className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
+                    />
+                  </div>
+                </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="documentDescription">รายละเอียดไฟล์</Label>
-            <Textarea
-              id="documentDescription"
-              name="documentDescription"
-              value={formData.documentDescription}
-              onChange={handleInputChange}
-              placeholder="ระบุรายละเอียดเพิ่มเติมเกี่ยวกับไฟล์ (ไม่บังคับ)"
-              disabled={isSubmitting}
-              rows={3}
-            />
-          </div>
+                <div className="mt-6 space-y-2">
+                  <Label htmlFor="receiverEmail" className="text-gray-700 font-medium">อีเมลผู้รับ *</Label>
+                  <Input
+                    id="receiverEmail"
+                    name="receiverEmail"
+                    type="email"
+                    value={formData.receiverEmail}
+                    onChange={handleInputChange}
+                    placeholder="user@example.com"
+                    required
+                    disabled={isSubmitting}
+                    className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
+                  />
+                </div>
+              </div>
 
-          <div className="flex gap-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => window.history.back()}
-              disabled={isSubmitting}
-              className="flex-1"
-            >
-              ยกเลิก
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1"
-            >
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {request ? 'บันทึกการแก้ไข' : 'สร้างคำขอ'}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+              {/* Action Buttons */}
+              <div className="flex gap-4 pt-6 border-t border-gray-200">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => window.history.back()}
+                  disabled={isSubmitting}
+                  className="flex-1 h-12 border-gray-300 hover:bg-gray-50 text-gray-700"
+                >
+                  ยกเลิก
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium shadow-lg"
+                >
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {request ? 'บันทึกการแก้ไข' : 'สร้างคำขอ'}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };
 
