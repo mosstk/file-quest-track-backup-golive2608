@@ -42,29 +42,17 @@ const ReportsPage = () => {
     try {
       setLoading(true);
 
-      // Fetch all requests with profile data
+      // Fetch all requests using the database function
       const { data: requests, error: requestsError } = await supabase
-        .from('requests')
-        .select(`
-          *,
-          requester:profiles!requester_id(
-            id,
-            full_name,
-            email,
-            username,
-            employee_id,
-            company,
-            department,
-            division
-          )
-        `)
-        .order('created_at', { ascending: false });
+        .rpc('get_all_requests');
 
       if (requestsError) {
         console.error('Error fetching requests:', requestsError);
         toast.error('ไม่สามารถโหลดข้อมูลคำขอได้');
         return;
       }
+
+      console.log('Fetched requests from function:', requests);
 
       // Fetch all users
       const { data: users, error: usersError } = await supabase
