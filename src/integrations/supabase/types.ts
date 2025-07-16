@@ -79,6 +79,7 @@ export type Database = {
           receiver_name: string | null
           receiver_phone: string | null
           requester_id: string
+          shipping_vendor: string | null
           status: Database["public"]["Enums"]["request_status"]
           tracking_number: string | null
           updated_at: string
@@ -99,6 +100,7 @@ export type Database = {
           receiver_name?: string | null
           receiver_phone?: string | null
           requester_id: string
+          shipping_vendor?: string | null
           status?: Database["public"]["Enums"]["request_status"]
           tracking_number?: string | null
           updated_at?: string
@@ -119,6 +121,7 @@ export type Database = {
           receiver_name?: string | null
           receiver_phone?: string | null
           requester_id?: string
+          shipping_vendor?: string | null
           status?: Database["public"]["Enums"]["request_status"]
           tracking_number?: string | null
           updated_at?: string
