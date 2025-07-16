@@ -91,10 +91,14 @@ const ReportsPage = () => {
         };
       }) || [];
 
-      // Calculate receiver statistics
+      // Calculate receiver statistics - แก้ไขให้ใช้ข้อมูลที่ถูกต้อง
       const uniqueEmails = new Set(requests?.map(r => r.receiver_email.toLowerCase()) || []);
-      const uniqueCountries = new Set(requests?.filter(r => (r as any).country_name).map(r => (r as any).country_name) || []);
-      const uniqueCompanies = new Set(requests?.filter(r => (r as any).receiver_company).map(r => (r as any).receiver_company) || []);
+      const uniqueCountries = new Set(
+        requests?.filter(r => (r as any).country_name).map(r => (r as any).country_name) || []
+      );
+      const uniqueCompanies = new Set(
+        requests?.filter(r => (r as any).receiver_company).map(r => (r as any).receiver_company) || []
+      );
 
       const receiverStats = {
         totalReceivers: uniqueEmails.size,
