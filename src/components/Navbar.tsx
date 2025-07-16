@@ -15,7 +15,7 @@ import { useAuth } from '@/context/AuthContext';
 import { UserRole } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { MenuIcon, FileText, LayoutDashboard, UserCog, FolderTree, X, Menu, Book } from 'lucide-react';
+import { MenuIcon, FileText, LayoutDashboard, UserCog, FolderTree, X, Menu, Book, BarChart3 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const NavbarMenuItems = ({ onClose }: { onClose?: () => void }) => {
@@ -55,10 +55,17 @@ const NavbarMenuItems = ({ onClose }: { onClose?: () => void }) => {
       )}
       
       {user.role === 'fa_admin' && (
-        <Link to="/admin" className={linkClass('/admin')} onClick={handleClick}>
-          <UserCog size={18} />
-          <span>จัดการระบบ</span>
-        </Link>
+        <>
+          <Link to="/admin" className={linkClass('/admin')} onClick={handleClick}>
+            <UserCog size={18} />
+            <span>จัดการระบบ</span>
+          </Link>
+          
+          <Link to="/reports" className={linkClass('/reports')} onClick={handleClick}>
+            <BarChart3 size={18} />
+            <span>รายงานระบบ</span>
+          </Link>
+        </>
       )}
     </div>
   );

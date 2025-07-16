@@ -16,6 +16,7 @@ import CreateEditRequest from "./pages/CreateEditRequest";
 import AdminPanel from "./pages/AdminPanel";
 import UserSystemPathsPage from "./pages/UserSystemPathsPage";
 import DocumentationSystem from "./pages/DocumentationSystem";
+import ReportsPage from "./pages/ReportsPage";
 import NotFound from "./pages/NotFound";
 // Debug panels removed
 
@@ -40,6 +41,7 @@ const App = () => {
               <Route path="/requests/edit/:id" element={<CreateEditRequest />} />
               <Route path="/request/:id" element={<RequestDetail />} />
               <Route path="/admin" element={<AdminPanel />} />
+              <Route path="/reports" element={<ReportsPage />} />
               <Route path="/documentation" element={<DocumentationSystem />} />
               <Route path="/system-paths" element={<UserSystemPathsPage />} />
               <Route path="*" element={<NotFound />} />
