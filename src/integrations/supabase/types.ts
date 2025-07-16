@@ -193,25 +193,18 @@ export type Database = {
         Returns: Json
       }
       create_request: {
-        Args:
-          | {
-              p_document_name: string
-              p_receiver_email: string
-              p_file_path?: string
-              p_requester_id?: string
-            }
-          | {
-              p_document_name: string
-              p_receiver_email: string
-              p_file_path?: string
-              p_requester_id?: string
-              p_document_count?: number
-              p_receiver_name?: string
-              p_receiver_department?: string
-              p_country_name?: string
-              p_receiver_company?: string
-              p_receiver_phone?: string
-            }
+        Args: {
+          p_document_name: string
+          p_receiver_email: string
+          p_file_path?: string
+          p_requester_id?: string
+          p_document_count?: number
+          p_receiver_name?: string
+          p_receiver_department?: string
+          p_country_name?: string
+          p_receiver_company?: string
+          p_receiver_phone?: string
+        }
         Returns: Json
       }
       force_delete_user_admin: {
