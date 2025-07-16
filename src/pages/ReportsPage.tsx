@@ -24,6 +24,7 @@ interface ReportData {
 }
 
 const ReportsPage = () => {
+  console.log('ReportsPage component loaded');
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
 
