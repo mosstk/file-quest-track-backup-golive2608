@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,8 +30,7 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
     receiverDepartment: '',
     countryName: '',
     receiverCompany: '',
-    receiverPhone: '',
-    shippingVendor: ''
+    receiverPhone: ''
   });
 
   useEffect(() => {
@@ -46,22 +44,13 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
         receiverDepartment: '',
         countryName: '',
         receiverCompany: '',
-        receiverPhone: '',
-        shippingVendor: ''
+        receiverPhone: ''
       });
     }
   }, [request]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    setError(null);
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -96,10 +85,6 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
     }
     if (!formData.receiverCompany.trim()) {
       setError('กรุณากรอกชื่อบริษัทผู้รับ');
-      return false;
-    }
-    if (!formData.shippingVendor.trim()) {
-      setError('กรุณาเลือกผู้ให้บริการขนส่ง');
       return false;
     }
     
@@ -174,8 +159,7 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
           p_receiver_department: formData.receiverDepartment,
           p_country_name: formData.countryName,
           p_receiver_company: formData.receiverCompany,
-          p_receiver_phone: formData.receiverPhone,
-          p_shipping_vendor: formData.shippingVendor
+          p_receiver_phone: formData.receiverPhone
         });
 
         if (error) {
@@ -362,7 +346,7 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="mt-6 space-y-2">
                   <Label htmlFor="receiverPhone" className="text-gray-700 font-medium">เบอร์โทร</Label>
                   <Input
                     id="receiverPhone"
@@ -374,31 +358,6 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
                     disabled={isSubmitting}
                     className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
                   />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="shippingVendor" className="text-gray-700 font-medium">ผู้ให้บริการขนส่ง *</Label>
-                  <Select 
-                    value={formData.shippingVendor} 
-                    onValueChange={(value) => handleSelectChange('shippingVendor', value)}
-                    disabled={isSubmitting}
-                  >
-                    <SelectTrigger className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500">
-                      <SelectValue placeholder="เลือกผู้ให้บริการขนส่ง" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                      <SelectItem value="DHL">DHL</SelectItem>
-                      <SelectItem value="FedEx">FedEx</SelectItem>
-                      <SelectItem value="UPS">UPS</SelectItem>
-                      <SelectItem value="TNT">TNT</SelectItem>
-                      <SelectItem value="Kerry Express">Kerry Express</SelectItem>
-                      <SelectItem value="J&T Express">J&T Express</SelectItem>
-                      <SelectItem value="ไปรษณีย์ไทย">ไปรษณีย์ไทย</SelectItem>
-                      <SelectItem value="Flash Express">Flash Express</SelectItem>
-                      <SelectItem value="Best Express">Best Express</SelectItem>
-                      <SelectItem value="SCG Express">SCG Express</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
 
