@@ -21,6 +21,11 @@ interface ReportData {
   adminUsers: number;
   recentRequests: any[];
   userStats: any[];
+  receiverStats?: {
+    totalReceivers: number;
+    uniqueCountries: number;
+    uniqueCompanies: number;
+  };
 }
 
 const ReportsPage = () => {
@@ -84,6 +89,17 @@ const ReportsPage = () => {
         };
       }) || [];
 
+      // Calculate receiver statistics
+      const uniqueEmails = new Set(requests?.map(r => r.receiver_email.toLowerCase()) || []);
+      const uniqueCountries = new Set(requests?.filter(r => (r as any).country_name).map(r => (r as any).country_name) || []);
+      const uniqueCompanies = new Set(requests?.filter(r => (r as any).receiver_company).map(r => (r as any).receiver_company) || []);
+
+      const receiverStats = {
+        totalReceivers: uniqueEmails.size,
+        uniqueCountries: uniqueCountries.size,
+        uniqueCompanies: uniqueCompanies.size,
+      };
+
       setReportData({
         totalRequests,
         pendingRequests,
@@ -96,6 +112,7 @@ const ReportsPage = () => {
         adminUsers,
         recentRequests,
         userStats,
+        receiverStats,
       });
 
     } catch (error) {
@@ -120,7 +137,7 @@ const ReportsPage = () => {
       ['คำขอที่อนุมัติแล้ว', reportData.approvedRequests],
       ['คำขอที่ปฏิเสธ', reportData.rejectedRequests],
       ['คำขอที่ต้องแก้ไข', reportData.reworkRequests],
-      ['คำขอที่เสร็จสิ้น', reportData.completedRequests],
+      ['คำขอที่รับเอกสารแล้ว', reportData.completedRequests],
       ['', ''],
       ['ข้อมูลผู้ใช้งาน', ''],
       ['จำนวนผู้ใช้ทั้งหมด', reportData.totalUsers],
@@ -215,7 +232,7 @@ const ReportsPage = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">คำขอทั้งหมด</CardTitle>
@@ -248,6 +265,16 @@ const ReportsPage = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">รับเอกสารแล้ว</CardTitle>
+              <CheckCircle className="h-4 w-4 text-emerald-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-emerald-600">{reportData.completedRequests}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">ผู้ใช้งานทั้งหมด</CardTitle>
               <Users className="h-4 w-4 text-purple-600" />
             </CardHeader>
@@ -266,8 +293,8 @@ const ReportsPage = () => {
             <CardContent className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="flex items-center">
-                  <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                  เสร็จสิ้น
+                  <CheckCircle className="h-4 w-4 text-emerald-600 mr-2" />
+                  รับเอกสารแล้ว
                 </span>
                 <Badge variant="secondary">{reportData.completedRequests}</Badge>
               </div>
@@ -322,7 +349,7 @@ const ReportsPage = () => {
                 </Badge>
               </div>
               <div className="flex justify-between items-center">
-                <span>อัตราการเสร็จสิ้น</span>
+                <span>อัตราการรับเอกสาร</span>
                 <Badge variant="secondary">
                   {reportData.totalRequests > 0 
                     ? Math.round((reportData.completedRequests / reportData.totalRequests) * 100) 
@@ -332,6 +359,30 @@ const ReportsPage = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Receiver Statistics */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">ข้อมูลผู้รับเอกสาร</CardTitle>
+            <CardDescription>สถิติของผู้รับเอกสารในระบบ</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">{reportData.receiverStats?.totalReceivers || 0}</div>
+                <div className="text-sm text-gray-600">จำนวนผู้รับทั้งหมด</div>
+              </div>
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">{reportData.receiverStats?.uniqueCountries || 0}</div>
+                <div className="text-sm text-gray-600">จำนวนประเทศ</div>
+              </div>
+              <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">{reportData.receiverStats?.uniqueCompanies || 0}</div>
+                <div className="text-sm text-gray-600">จำนวนบริษัท</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Recent Requests Table */}
         <Card>
@@ -366,11 +417,11 @@ const ReportsPage = () => {
                             'destructive'
                           }
                         >
-                          {request.status === 'pending' ? 'รอการอนุมัติ' :
-                           request.status === 'approved' ? 'อนุมัติแล้ว' :
-                           request.status === 'completed' ? 'เสร็จสิ้น' :
-                           request.status === 'rejected' ? 'ปฏิเสธ' :
-                           request.status === 'rework' ? 'ต้องแก้ไข' : request.status}
+                           {request.status === 'pending' ? 'รอการอนุมัติ' :
+                            request.status === 'approved' ? 'อนุมัติแล้ว' :
+                            request.status === 'completed' ? 'รับเอกสารแล้ว' :
+                            request.status === 'rejected' ? 'ปฏิเสธ' :
+                            request.status === 'rework' ? 'ต้องแก้ไข' : request.status}
                         </Badge>
                       </td>
                       <td className="border border-gray-200 p-3">
