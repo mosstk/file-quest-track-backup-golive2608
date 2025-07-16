@@ -142,8 +142,8 @@ const ReceiverDashboard = () => {
           
           <Card className="bg-white/50 shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">เสร็จสิ้น</CardTitle>
-              <CardDescription>เอกสารที่เสร็จสิ้นแล้ว</CardDescription>
+              <CardTitle className="text-lg">รับเอกสารแล้ว</CardTitle>
+              <CardDescription>เอกสารที่ได้รับแล้ว</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-emerald-600">{requestStats.completed}</p>
