@@ -63,7 +63,7 @@ const NavbarMenuItems = ({ onClose }: { onClose?: () => void }) => {
           
           <Link to="/reports" className={linkClass('/reports')} onClick={handleClick}>
             <BarChart3 size={18} />
-            <span>Report</span>
+            <span>รายงาน</span>
           </Link>
         </>
       )}
