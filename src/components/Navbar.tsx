@@ -80,7 +80,7 @@ const Navbar: React.FC = () => {
     { path: '/dashboard', label: 'Dashboard', roles: ['fa_admin', 'requester', 'receiver'] },
     { path: '/requests', label: 'File Requests', roles: ['fa_admin', 'requester'] },
     { path: '/admin', label: 'Admin Panel', roles: ['fa_admin'] },
-    { path: '/reports', label: 'รายงาน', roles: ['fa_admin'] },
+    { path: '/reports', label: 'Report', roles: ['fa_admin'] },
   ];
 
   const filteredRoutes = routes.filter(route => 
