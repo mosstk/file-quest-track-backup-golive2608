@@ -108,7 +108,7 @@ const RequesterDashboard = () => {
           <Button onClick={handleCreateRequest}>สร้างคำขอใหม่</Button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           <Card className="bg-white/50 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">คำขอทั้งหมด</CardTitle>
@@ -146,6 +146,16 @@ const RequesterDashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-amber-600">{statusCounts.rework + statusCounts.rejected}</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white/50 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">เสร็จสิ้น</CardTitle>
+              <CardDescription>คำขอที่เสร็จสิ้นแล้ว</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-emerald-600">{statusCounts.completed}</p>
             </CardContent>
           </Card>
         </div>

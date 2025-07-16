@@ -51,13 +51,14 @@ const ReceiverDashboard = () => {
     fetchRequests();
   }, [user]);
    
-  // Count requests by status and delivery
+   // Count requests by status and delivery
   const requestStats = React.useMemo(() => {
     const stats = {
       total: requests.length,
       approved: 0,
       pending: 0,
       rejected: 0,
+      completed: 0,
       delivered: 0,
       notDelivered: 0,
     };
@@ -67,6 +68,7 @@ const ReceiverDashboard = () => {
       if (req.status === 'approved') stats.approved++;
       else if (req.status === 'pending') stats.pending++;
       else if (req.status === 'rejected') stats.rejected++;
+      else if (req.status === 'completed') stats.completed++;
       
       // Count delivery status - คำนวณจากสถานะ completed และ isDelivered
       if (req.status === 'completed' || (req.status === 'approved' && req.isDelivered)) {
@@ -107,7 +109,7 @@ const ReceiverDashboard = () => {
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Card className="bg-white/50 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">เอกสารทั้งหมด</CardTitle>
@@ -135,6 +137,16 @@ const ReceiverDashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-orange-600">{requestStats.notDelivered}</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white/50 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">เสร็จสิ้น</CardTitle>
+              <CardDescription>เอกสารที่เสร็จสิ้นแล้ว</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-emerald-600">{requestStats.completed}</p>
             </CardContent>
           </Card>
         </div>
