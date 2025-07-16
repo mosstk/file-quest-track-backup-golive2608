@@ -293,13 +293,6 @@ const ReportsPage = () => {
             <CardContent className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="flex items-center">
-                  <CheckCircle className="h-4 w-4 text-emerald-600 mr-2" />
-                  รับเอกสารแล้ว
-                </span>
-                <Badge variant="secondary">{reportData.completedRequests}</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="flex items-center">
                   <XCircle className="h-4 w-4 text-red-600 mr-2" />
                   ปฏิเสธ
                 </span>
