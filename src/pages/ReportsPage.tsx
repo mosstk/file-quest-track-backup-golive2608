@@ -44,7 +44,20 @@ const ReportsPage = () => {
 
       // Fetch all requests
       const { data: requests, error: requestsError } = await supabase
-        .rpc('get_all_requests');
+        .from('requests')
+        .select(`
+          *,
+          requester:profiles!requests_requester_id_fkey(
+            full_name,
+            email,
+            username,
+            employee_id,
+            company,
+            department,
+            division
+          )
+        `)
+        .order('created_at', { ascending: false });
 
       if (requestsError) {
         console.error('Error fetching requests:', requestsError);
@@ -155,7 +168,7 @@ const ReportsPage = () => {
       requestsData.push([
         request.id,
         request.document_name,
-        request.requester_name || 'ไม่ระบุ',
+        request.requester?.full_name || 'ไม่ระบุ',
         request.receiver_email,
         request.status,
         new Date(request.created_at).toLocaleDateString('th-TH'),
@@ -406,7 +419,7 @@ const ReportsPage = () => {
                   {reportData.recentRequests.map((request) => (
                     <tr key={request.id} className="hover:bg-gray-50">
                       <td className="border border-gray-200 p-3">{request.document_name}</td>
-                      <td className="border border-gray-200 p-3">{request.requester_name || 'ไม่ระบุ'}</td>
+                      <td className="border border-gray-200 p-3">{request.requester?.full_name || 'ไม่ระบุ'}</td>
                       <td className="border border-gray-200 p-3">{request.receiver_email}</td>
                       <td className="border border-gray-200 p-3">
                         <Badge
