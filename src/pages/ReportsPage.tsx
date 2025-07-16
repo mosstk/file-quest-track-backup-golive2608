@@ -29,6 +29,7 @@ const ReportsPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('ReportsPage mounted, fetching data...');
     fetchReportData();
   }, []);
 
