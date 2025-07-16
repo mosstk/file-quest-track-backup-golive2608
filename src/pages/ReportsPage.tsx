@@ -28,41 +28,13 @@ const ReportsPage = () => {
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Add authentication check
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.log('No session found, redirecting to login');
-        window.location.href = '/';
-        return;
-      }
-      console.log('Session found:', session.user?.email);
-    };
-    checkAuth();
-  }, []);
-
-  useEffect(() => {
-    // Only fetch data if component is mounted and authenticated
-    const timer = setTimeout(() => {
-      fetchReportData();
-    }, 100);
-    
-    return () => clearTimeout(timer);
+    fetchReportData();
   }, []);
 
   const fetchReportData = async () => {
     try {
       setLoading(true);
-
-      // Check authentication first
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.log('No session found during data fetch');
-        toast.error('กรุณาเข้าสู่ระบบใหม่');
-        window.location.href = '/';
-        return;
-      }
 
       // Fetch all requests
       const { data: requests, error: requestsError } = await supabase
