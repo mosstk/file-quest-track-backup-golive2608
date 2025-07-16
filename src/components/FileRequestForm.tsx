@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -57,6 +58,30 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
     }));
     setError(null);
   };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    setError(null);
+  };
+
+  const countries = [
+    'ไทย', 'สหรัฐอเมริกา', 'จีน', 'ญี่ปุ่น', 'เกาหลีใต้', 'สิงคโปร์', 'มาเลเซีย', 'อินโดนีเซีย', 
+    'ฟิลิปปินส์', 'เวียดนาม', 'ลาว', 'กัมพูชา', 'เมียนมาร์', 'บรูไน', 'อินเดีย', 'บังกลาเทศ', 
+    'ศรีลังกา', 'เนปาล', 'ปากีสถาน', 'อัฟกานิสถาน', 'อิหร่าน', 'อิรัก', 'ซาอุดีอาระเบีย', 
+    'สหรัฐอาหรับเอมิเรตส์', 'กาตาร์', 'คูเวต', 'บาห์เรน', 'โอมาน', 'เยเมน', 'อิสราเอล', 'ปาเลสไตน์',
+    'เลบานอน', 'ซีเรีย', 'จอร์แดน', 'ตุรกี', 'อียิปต์', 'ลิเบีย', 'ซูดาน', 'เอธิโอเปีย', 'เคนยา',
+    'แทนซาเนีย', 'อูกันดา', 'รวันดา', 'แอฟริกาใต้', 'นิจีเรีย', 'กานา', 'เซเนกัล', 'โมร็อกโก',
+    'แอลจีเรีย', 'ตูนิเซีย', 'ฝรั่งเศส', 'เยอรมนี', 'สหราชอาณาจักร', 'อิตาลี', 'สเปน', 'โปรตุเกส',
+    'เนเธอร์แลนด์', 'เบลเยียม', 'สวิตเซอร์แลนด์', 'ออสเตรีย', 'ฟินแลนด์', 'สวีเดน', 'นอร์เวย์',
+    'เดนมาร์ก', 'โปแลนด์', 'เช็ก', 'สโลวาเกีย', 'ฮังการี', 'โรมาเนีย', 'บัลแกเรีย', 'กรีซ',
+    'อาร์เจนตินา', 'บราซิล', 'ชิลี', 'โคลอมเบีย', 'เอกวาดอร์', 'เปรู', 'โบลิเวีย', 'ปารากวัย',
+    'อุรุกวัย', 'เวเนซุเอลา', 'การ์ยานา', 'ซูรินาม', 'เม็กซิโก', 'แคนาดา', 'ออสเตรเลีย', 
+    'นิวซีแลนด์', 'ปาปัวนิวกินี', 'ฟิจิ', 'รัสเซีย', 'จอร์เจีย', 'อาร์มีเนีย', 'อาเซอร์ไบจาน',
+    'คาซัคสถาน', 'อุซเบกิสถาน', 'ตุร์กเมนิสถาน', 'คีร์กีซสถาน', 'ทาจิกิสถาน', 'มองโกเลีย'
+  ];
 
   const validateForm = () => {
     if (!formData.documentName.trim()) {
@@ -290,16 +315,22 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
 
                   <div className="space-y-2">
                     <Label htmlFor="countryName" className="text-gray-700 font-medium">ประเทศ *</Label>
-                    <Input
-                      id="countryName"
-                      name="countryName"
-                      value={formData.countryName}
-                      onChange={handleInputChange}
-                      placeholder="ประเทศ"
-                      required
+                    <Select 
+                      value={formData.countryName} 
+                      onValueChange={(value) => handleSelectChange('countryName', value)}
                       disabled={isSubmitting}
-                      className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500"
-                    />
+                    >
+                      <SelectTrigger className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500">
+                        <SelectValue placeholder="เลือกประเทศ" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg z-50 max-h-60">
+                        {countries.map((country) => (
+                          <SelectItem key={country} value={country}>
+                            {country}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-2">
