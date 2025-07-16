@@ -180,11 +180,18 @@ export type Database = {
         Returns: Json
       }
       approve_request: {
-        Args: {
-          p_request_id: string
-          p_tracking_number: string
-          p_admin_id: string
-        }
+        Args:
+          | {
+              p_request_id: string
+              p_tracking_number: string
+              p_admin_id: string
+            }
+          | {
+              p_request_id: string
+              p_tracking_number: string
+              p_admin_id: string
+              p_shipping_vendor: string
+            }
         Returns: Json
       }
       can_insert_profile: {

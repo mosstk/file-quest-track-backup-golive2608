@@ -75,12 +75,13 @@ const RequestDetail = () => {
     }).format(date);
   };
   
-  const handleApprove = async (trackingNumber: string) => {
+  const handleApprove = async (trackingNumber: string, shippingVendor: string) => {
     if (!request || !user?.id) return;
     
     console.log('Approving request:', request.id);
     console.log('User:', user);
     console.log('Tracking number:', trackingNumber);
+    console.log('Shipping vendor:', shippingVendor);
     
     try {
       // ใช้ database function ใหม่สำหรับการอนุมัติ
@@ -88,7 +89,8 @@ const RequestDetail = () => {
         .rpc('approve_request', {
           p_request_id: request.id,
           p_tracking_number: trackingNumber,
-          p_admin_id: user.id
+          p_admin_id: user.id,
+          p_shipping_vendor: shippingVendor
         });
       
       if (error) {
