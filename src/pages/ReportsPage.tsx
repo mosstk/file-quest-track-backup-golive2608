@@ -42,9 +42,14 @@ const ReportsPage = () => {
     try {
       setLoading(true);
 
-      // Fetch all requests using the database function
+      // Fetch all requests directly from the table to get all fields
       const { data: requests, error: requestsError } = await supabase
-        .rpc('get_all_requests');
+        .from('requests')
+        .select(`
+          *,
+          requester:profiles!requester_id(*)
+        `)
+        .order('created_at', { ascending: false });
 
       if (requestsError) {
         console.error('Error fetching requests:', requestsError);
@@ -91,8 +96,8 @@ const ReportsPage = () => {
 
       // Calculate receiver statistics
       const uniqueEmails = new Set(requests?.map(r => r.receiver_email.toLowerCase()) || []);
-      const uniqueCountries = new Set(requests?.filter(r => (r as any).country_name).map(r => (r as any).country_name) || []);
-      const uniqueCompanies = new Set(requests?.filter(r => (r as any).receiver_company).map(r => (r as any).receiver_company) || []);
+      const uniqueCountries = new Set(requests?.filter(r => r.country_name).map(r => r.country_name) || []);
+      const uniqueCompanies = new Set(requests?.filter(r => r.receiver_company).map(r => r.receiver_company) || []);
 
       const receiverStats = {
         totalReceivers: uniqueEmails.size,
