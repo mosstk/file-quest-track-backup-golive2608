@@ -231,12 +231,19 @@ export type Database = {
           requester_id: string
           document_name: string
           receiver_email: string
+          receiver_name: string
+          receiver_company: string
+          receiver_department: string
+          receiver_phone: string
+          country_name: string
+          document_count: number
           file_path: string
           status: Database["public"]["Enums"]["request_status"]
           tracking_number: string
           admin_feedback: string
           is_delivered: boolean
           approved_by: string
+          shipping_vendor: string
           requester_name: string
           requester_email: string
           requester_employee_id: string
