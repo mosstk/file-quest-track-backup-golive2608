@@ -1,516 +1,271 @@
-# File Request Tracking System - Complete Documentation
+# ระบบจัดการคำขอส่งเอกสาร (Document Request Management System)
 
-## Overview
-ระบบติดตามการส่งไฟล์สำหรับ TOA Group ที่ใช้ React + TypeScript + Supabase 
+## ภาพรวมระบบ
 
-## System Architecture
+ระบบจัดการคำขอส่งเอกสารเป็นเว็บแอปพลิเคชันที่พัฒนาด้วย React + TypeScript + Supabase สำหรับจัดการการขอส่งเอกสารภายในองค์กร
 
-### Tech Stack
-- **Frontend**: React 18, TypeScript, Tailwind CSS, Shadcn UI
-- **Backend**: Supabase (PostgreSQL + Auth + RLS)
-- **State Management**: React Context
-- **Routing**: React Router Dom
-- **UI Components**: Shadcn UI with custom design system
+### เทคโนโลยีที่ใช้
+- **Frontend**: React 18, TypeScript, Tailwind CSS, Lucide React
+- **Backend**: Supabase (PostgreSQL, Authentication, RLS)
+- **State Management**: React Context API
+- **Routing**: React Router DOM
+- **UI Components**: shadcn/ui
+- **Build Tool**: Vite
 
-### User Roles
-1. **fa_admin** - ผู้ดูแลระบบ (สามารถจัดการทุกอย่าง)
-2. **requester** - ผู้ขอส่งไฟล์ 
-3. **receiver** - ผู้รับไฟล์
+## โครงสร้างระบบ
 
-## Database Schema
-
-### Tables
-
-#### 1. profiles
-```sql
-CREATE TABLE public.profiles (
-  id uuid NOT NULL PRIMARY KEY,
-  updated_at timestamptz NOT NULL DEFAULT timezone('utc'::text, now()),
-  username text,
-  full_name text,
-  avatar_url text,
-  employee_id text,
-  company text,
-  department text,
-  division text,
-  role text NOT NULL,
-  password varchar,
-  is_active boolean NOT NULL DEFAULT true,
-  email text
-);
+### 1. ระบบผู้ใช้งาน (User Management)
+```
+├── fa_admin (ผู้ดูแลระบบ)
+├── requester (ผู้ขอเอกสาร)
+└── receiver (ผู้รับเอกสาร)
 ```
 
-#### 2. requests
-```sql
-CREATE TYPE public.request_status AS ENUM (
-  'pending',
-  'approved', 
-  'rejected',
-  'rework',
-  'completed'
-);
+### 2. โครงสร้างฐานข้อมูล
 
-CREATE TABLE public.requests (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at timestamptz DEFAULT timezone('utc'::text, now()) NOT NULL,
-  updated_at timestamptz DEFAULT timezone('utc'::text, now()) NOT NULL,
-  requester_id uuid REFERENCES public.profiles(id) NOT NULL,
-  document_name text NOT NULL,
-  receiver_email text NOT NULL,
-  file_path text,
-  status public.request_status DEFAULT 'pending'::public.request_status NOT NULL,
-  tracking_number text,
-  admin_feedback text,
-  is_delivered boolean DEFAULT false,
-  approved_by uuid REFERENCES public.profiles(id)
-);
+#### ตาราง `profiles`
+```sql
+- id (uuid, PK)
+- username (text)
+- full_name (text)
+- email (text)
+- employee_id (text)
+- company (text)
+- department (text)
+- division (text)
+- role (text) -- fa_admin, requester, receiver
+- password (text)
+- is_active (boolean)
+- avatar_url (text)
+- updated_at (timestamptz)
 ```
 
-#### 3. user_paths
+#### ตาราง `requests`
 ```sql
-CREATE TABLE public.user_paths (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id uuid NOT NULL,
-  path_name text NOT NULL,
-  path_value text NOT NULL,
-  created_at timestamptz DEFAULT now() NOT NULL,
-  updated_at timestamptz DEFAULT now() NOT NULL
-);
+- id (uuid, PK)
+- created_at (timestamptz)
+- updated_at (timestamptz)
+- requester_id (uuid, FK → profiles.id)
+- document_name (text)
+- receiver_email (text)
+- receiver_name (text)
+- receiver_company (text)
+- receiver_department (text)
+- receiver_phone (text)
+- country_name (text)
+- document_count (integer)
+- file_path (text)
+- status (enum) -- pending, approved, rejected, rework, completed
+- tracking_number (text)
+- admin_feedback (text)
+- is_delivered (boolean)
+- approved_by (uuid, FK → profiles.id)
+- shipping_vendor (text)
 ```
 
-### Database Functions
-
-#### 1. get_current_user_id()
+#### ตาราง `user_paths`
 ```sql
-CREATE OR REPLACE FUNCTION public.get_current_user_id()
-RETURNS uuid
-LANGUAGE sql
-STABLE SECURITY DEFINER
-AS $$
-  SELECT COALESCE(
-    auth.uid(),
-    '11111111-1111-1111-1111-111111111111'::uuid
-  );
-$$;
+- id (uuid, PK)
+- user_id (uuid)
+- path_name (text)
+- path_value (text)
+- created_at (timestamptz)
+- updated_at (timestamptz)
 ```
 
-#### 2. create_request()
-```sql
-CREATE OR REPLACE FUNCTION public.create_request(
-  p_document_name TEXT,
-  p_receiver_email TEXT,
-  p_file_path TEXT DEFAULT NULL,
-  p_requester_id UUID DEFAULT NULL
-)
-RETURNS json
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-  result_record public.requests;
-  actual_requester_id UUID;
-BEGIN
-  actual_requester_id := COALESCE(
-    p_requester_id,
-    auth.uid(),
-    '11111111-1111-1111-1111-111111111111'::uuid
-  );
-  
-  INSERT INTO public.requests (
-    document_name,
-    receiver_email,
-    file_path,
-    requester_id,
-    status
-  )
-  VALUES (
-    p_document_name,
-    p_receiver_email,
-    p_file_path,
-    actual_requester_id,
-    'pending'
-  )
-  RETURNING * INTO result_record;
-  
-  RETURN row_to_json(result_record);
-END;
-$$;
-```
+### 3. ฟังก์ชันฐานข้อมูลสำคัญ
 
-#### 3. get_all_requests()
+#### `get_all_requests()`
 ```sql
-CREATE OR REPLACE FUNCTION public.get_all_requests()
+-- ดึงข้อมูลคำขอทั้งหมดพร้อมข้อมูลผู้ขอ
 RETURNS TABLE (
-  id uuid,
-  created_at timestamptz,
-  updated_at timestamptz,
-  requester_id uuid,
-  document_name text,
-  receiver_email text,
-  file_path text,
-  status public.request_status,
-  tracking_number text,
-  admin_feedback text,
-  is_delivered boolean,
-  approved_by uuid,
-  requester_name text,
-  requester_email text,
-  requester_employee_id text,
-  requester_company text,
-  requester_department text,
-  requester_division text
+  id, created_at, updated_at, requester_id,
+  document_name, receiver_email, receiver_name,
+  receiver_company, receiver_department, receiver_phone,
+  country_name, document_count, file_path, status,
+  tracking_number, admin_feedback, is_delivered,
+  approved_by, shipping_vendor,
+  requester_name, requester_email, requester_employee_id,
+  requester_company, requester_department, requester_division
 )
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-BEGIN
-  RETURN QUERY
-  SELECT 
-    r.id,
-    r.created_at,
-    r.updated_at,
-    r.requester_id,
-    r.document_name,
-    r.receiver_email,
-    r.file_path,
-    r.status,
-    r.tracking_number,
-    r.admin_feedback,
-    r.is_delivered,
-    r.approved_by,
-    p.full_name as requester_name,
-    COALESCE(p.email, p.username) as requester_email,
-    p.employee_id as requester_employee_id,
-    p.company as requester_company,
-    p.department as requester_department,
-    p.division as requester_division
-  FROM public.requests r
-  LEFT JOIN public.profiles p ON r.requester_id = p.id
-  ORDER BY r.created_at DESC;
-END;
-$$;
 ```
 
-### Row Level Security (RLS) Policies
-
-#### Profiles Table
+#### `create_request()`
 ```sql
--- Public profiles are viewable by everyone
-CREATE POLICY "Public profiles are viewable by everyone" 
-  ON public.profiles FOR SELECT 
-  USING (true);
-
--- Users can update their own profile
-CREATE POLICY "Users can update their own profile" 
-  ON public.profiles FOR UPDATE 
-  USING (auth.uid() = id);
-
--- Enable read access for authenticated users
-CREATE POLICY "Enable read access for authenticated users" 
-  ON public.profiles FOR SELECT 
-  USING (auth.uid() IS NOT NULL);
-
--- Enable update for own profile or admin
-CREATE POLICY "Enable update for own profile or admin" 
-  ON public.profiles FOR UPDATE 
-  USING ((auth.uid() = id) OR is_fa_admin() OR is_mock_user_by_id(id));
-
--- Admins can create any user profile
-CREATE POLICY "Admins can create any user profile" 
-  ON public.profiles FOR INSERT 
-  WITH CHECK (
-    (EXISTS (SELECT 1 FROM profiles profiles_1 WHERE ((profiles_1.id = auth.uid()) AND (profiles_1.role = 'fa_admin'::text)))) 
-    OR (id = ANY (ARRAY['11111111-1111-1111-1111-111111111111'::uuid, '22222222-2222-2222-2222-222222222222'::uuid, '33333333-3333-3333-3333-333333333333'::uuid])) 
-    OR (auth.uid() IS NULL)
-  );
+-- สร้างคำขอใหม่
+CREATE OR REPLACE FUNCTION public.create_request(
+  p_document_name text,
+  p_receiver_email text,
+  p_file_path text DEFAULT NULL,
+  p_requester_id uuid DEFAULT NULL,
+  p_document_count integer DEFAULT 1,
+  p_receiver_name text DEFAULT NULL,
+  p_receiver_department text DEFAULT NULL,
+  p_country_name text DEFAULT NULL,
+  p_receiver_company text DEFAULT NULL,
+  p_receiver_phone text DEFAULT NULL,
+  p_shipping_vendor text DEFAULT NULL
+)
 ```
 
-#### Requests Table
+#### `approve_request()`
 ```sql
--- FA Admins can view all requests
-CREATE POLICY "FA Admins can view all requests"
-  ON public.requests FOR SELECT 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE id = auth.uid() 
-      AND role = 'fa_admin'
-      AND is_active = true
-    )
-  );
-
--- Users can view their own requests
-CREATE POLICY "Users can view their own requests"
-  ON public.requests FOR SELECT 
-  USING (
-    requester_id = auth.uid()
-    OR 
-    requester_id IN (
-      '11111111-1111-1111-1111-111111111111'::uuid,
-      '22222222-2222-2222-2222-222222222222'::uuid,
-      '33333333-3333-3333-3333-333333333333'::uuid
-    )
-  );
-
--- Receivers can view approved requests sent to them
-CREATE POLICY "Receivers can view approved requests sent to them"
-  ON public.requests FOR SELECT 
-  USING (
-    status = 'approved' 
-    AND receiver_email = (
-      SELECT email FROM public.profiles WHERE id = auth.uid()
-    )
-  );
-
--- Authenticated users can create requests
-CREATE POLICY "Authenticated users can create requests"
-  ON public.requests FOR INSERT 
-  WITH CHECK (
-    requester_id = public.get_current_user_id()
-    OR 
-    requester_id IN (
-      '11111111-1111-1111-1111-111111111111'::uuid,
-      '22222222-2222-2222-2222-222222222222'::uuid,
-      '33333333-3333-3333-3333-333333333333'::uuid
-    )
-  );
-
--- Users can update own pending/rework requests
-CREATE POLICY "Users can update own pending/rework requests"
-  ON public.requests FOR UPDATE 
-  USING (
-    (requester_id = auth.uid()) 
-    OR is_fa_admin() 
-    OR is_mock_user_by_id(requester_id) 
-    OR (requester_id IN (SELECT profiles.id FROM profiles WHERE (profiles.email = ((SELECT users.email FROM auth.users WHERE (users.id = auth.uid())))::text)))
-  );
-
--- Block anonymous access
-CREATE POLICY "Anonymous users cannot view requests" 
-  ON public.requests FOR SELECT 
-  USING (false);
-
-CREATE POLICY "Anonymous users cannot update requests" 
-  ON public.requests FOR UPDATE 
-  USING (false);
-
-CREATE POLICY "Anonymous users cannot delete requests" 
-  ON public.requests FOR DELETE 
-  USING (false);
+-- อนุมัติคำขอ (เวอร์ชันมี shipping_vendor)
+CREATE OR REPLACE FUNCTION public.approve_request(
+  p_request_id uuid,
+  p_tracking_number text,
+  p_admin_id uuid,
+  p_shipping_vendor text
+)
 ```
 
-## Major Issues Encountered & Solutions
-
-### 1. Authentication Problems
-**Problem**: Mock admin login ไม่สร้าง Supabase session ทำให้ RLS policies ไม่ทำงาน
-
-**Solution**: 
-- สร้าง mock session ใน AuthContext
-- ใช้ SECURITY DEFINER functions เพื่อ bypass RLS
-- สร้าง get_current_user_id() function สำหรับ fallback
-
-### 2. RLS Policy Violations
-**Problem**: "new row violates row-level security policy for table requests"
-
-**Solution**:
-- สร้าง create_request() function ที่ bypass RLS
-- ปรับปรุง RLS policies ให้รองรับ mock users
-- ใช้ COALESCE สำหรับ fallback user IDs
-
-### 3. Data Visibility Issues
-**Problem**: fa_admin ไม่เห็นข้อมูล requests ทั้งหมด
-
-**Solution**:
-- สร้าง get_all_requests() function ที่ JOIN กับ profiles
-- แยก logic การดึงข้อมูลสำหรับ fa_admin และ roles อื่น
-- ใช้ RPC calls แทน direct table queries
-
-### 4. Duplicate Supabase Clients
-**Problem**: Multiple GoTrueClient instances detected
-
-**Solution**:
-- ลบ `src/lib/supabase.ts` 
-- ใช้เฉพาะ client จาก `src/integrations/supabase/client.ts`
-
-### 5. User Deletion Problems
-**Problem**: ไม่สามารถลบ users ได้เพราะ RLS
-
-**Solution**:
-- สร้าง force_delete_user_admin() function
-- ใช้ EXECUTE format() เพื่อ bypass RLS
-- **Note**: ตัดสินใจเอาฟีเจอร์ลบ user ออกแทน
-
-## System Prompts & Best Practices
-
-### Initial System Creation Prompt
-```
-สร้างระบบติดตามการส่งไฟล์สำหรับ TOA Group ด้วย:
-- React + TypeScript + Supabase
-- User roles: fa_admin, requester, receiver  
-- Features: สร้างคำขอ, อนุมัติ/ปฏิเสธ, ติดตามสถานะ
-- Authentication system
-- Admin panel สำหรับจัดการ users
-- Responsive design ด้วย Tailwind CSS
+#### `confirm_delivery()`
+```sql
+-- ยืนยันการรับเอกสาร
+CREATE OR REPLACE FUNCTION public.confirm_delivery(
+  p_request_id uuid,
+  p_receiver_id uuid
+)
 ```
 
-### Problem Solving Approach
-1. **ตรวจสอบ Console Logs** ก่อนเสมอ
-2. **Query ฐานข้อมูลตรงๆ** เพื่อยืนยันข้อมูล
-3. **ใช้ SECURITY DEFINER functions** เมื่อ RLS ขัดขวาง
-4. **Test ทีละขั้นตอน** จากง่ายไปยาก
+### 4. นโยบาย Row Level Security (RLS)
 
-### Database Best Practices
-1. **ใช้ RLS** สำหรับ security
-2. **สร้าง functions** เมื่อต้อง bypass RLS
-3. **JOIN ข้อมูล** ใน database function แทน frontend
-4. **Mock users** สำหรับ testing (11111111-1111-1111-1111-111111111111)
+#### ตาราง `profiles`
+- ทุกคนสามารถดูข้อมูล profiles ได้
+- ผู้ใช้สามารถแก้ไขข้อมูลตัวเองได้
+- fa_admin สามารถจัดการข้อมูลทุกคนได้
 
-### Frontend Best Practices
-1. **Normalize data** ระหว่าง snake_case และ camelCase
-2. **Centralized error handling** ด้วย toast
-3. **Loading states** ทุกที่
-4. **Role-based rendering** ด้วย Layout component
+#### ตาราง `requests`
+- ผู้ขอสามารถดูคำขอของตัวเองได้
+- ผู้รับสามารถดูคำขอที่ส่งมาหาตัวเองได้
+- fa_admin สามารถดูคำขอทั้งหมดได้
+- ผู้ใช้สามารถแก้ไขคำขอที่ยังเป็น pending/rework ได้
 
-## File Structure
+#### ตาราง `user_paths`
+- ผู้ใช้สามารถจัดการ paths ของตัวเองได้
+- fa_admin สามารถจัดการ paths ทุกคนได้
+
+## โครงสร้างไฟล์
+
 ```
 src/
 ├── components/
-│   ├── ui/                     # Shadcn UI components
-│   ├── Layout.tsx              # Main layout with auth
-│   ├── Navbar.tsx              # Navigation
-│   ├── RequestTable.tsx        # Data table
-│   ├── RequestStatusBadge.tsx  # Status display
-│   ├── FileRequestForm.tsx     # Form component
-│   └── ApprovalForm.tsx        # Admin approval
+│   ├── ui/                    # shadcn/ui components
+│   ├── ApprovalForm.tsx       # ฟอร์มอนุมัติคำขอ
+│   ├── FileRequestForm.tsx    # ฟอร์มสร้างคำขอ
+│   ├── Layout.tsx             # Layout หลัก
+│   ├── Navbar.tsx             # Navigation bar
+│   ├── RequestStatusBadge.tsx # Badge แสดงสถานะ
+│   ├── RequestTable.tsx       # ตารางแสดงคำขอ
+│   ├── TrackingDetails.tsx    # รายละเอียดการติดตาม
+│   └── UserPathsManager.tsx   # จัดการ paths ผู้ใช้
 ├── context/
-│   └── AuthContext.tsx         # Authentication state
-├── pages/
-│   ├── Index.tsx               # Landing page
-│   ├── Dashboard.tsx           # Role-based dashboard
-│   ├── AdminDashboard.tsx      # Admin overview
-│   ├── RequesterDashboard.tsx  # Requester view
-│   ├── ReceiverDashboard.tsx   # Receiver view
-│   ├── Requests.tsx            # Request list
-│   ├── CreateEditRequest.tsx   # Request form page
-│   ├── AdminPanel.tsx          # User management
-│   └── RequestDetail.tsx       # Request details
+│   └── AuthContext.tsx        # Context สำหรับ Authentication
+├── hooks/
+│   ├── use-mobile.tsx         # Hook สำหรับ responsive
+│   └── use-toast.ts           # Hook สำหรับ toast notifications
+├── integrations/
+│   └── supabase/
+│       ├── client.ts          # Supabase client config
+│       └── types.ts           # TypeScript types (auto-generated)
 ├── lib/
+│   ├── utils.ts               # Utility functions
 │   └── utils/
-│       ├── formatters.ts       # Data normalization
-│       ├── admin-users.ts      # Admin utilities
-│       └── auth-helpers.ts     # Auth utilities
+│       ├── admin-users.ts     # จัดการผู้ใช้ admin
+│       ├── auth-helpers.ts    # ฟังก์ชันช่วย authentication
+│       ├── formatters.ts      # ฟังก์ชันจัดรูปแบบข้อมูล
+│       └── user-paths.ts      # จัดการ user paths
+├── pages/
+│   ├── AdminDashboard.tsx     # หน้า Dashboard สำหรับ admin
+│   ├── AdminPanel.tsx         # หน้าจัดการผู้ใช้
+│   ├── CreateEditRequest.tsx  # หน้าสร้าง/แก้ไขคำขอ
+│   ├── Dashboard.tsx          # หน้า Dashboard หลัก
+│   ├── DocumentationSystem.tsx # หน้าเอกสารระบบ
+│   ├── Index.tsx              # หน้าแรก
+│   ├── NotFound.tsx           # หน้า 404
+│   ├── ReceiverDashboard.tsx  # หน้า Dashboard สำหรับผู้รับ
+│   ├── ReportsPage.tsx        # หน้ารายงาน
+│   ├── RequestDetail.tsx      # หน้ารายละเอียดคำขอ
+│   ├── RequesterDashboard.tsx # หน้า Dashboard สำหรับผู้ขอ
+│   ├── Requests.tsx           # หน้าแสดงรายการคำขอ
+│   └── UserSystemPathsPage.tsx # หน้าจัดการ system paths
 ├── types/
-│   ├── index.ts               # Main types
-│   └── supabase.ts            # Generated types
-└── integrations/
-    └── supabase/
-        ├── client.ts          # Supabase client
-        └── types.ts           # Generated types
+│   ├── index.ts               # Types หลัก
+│   ├── supabase.ts            # Supabase types (custom)
+│   └── user-paths.ts          # Types สำหรับ user paths
+└── main.tsx                   # Entry point
 ```
 
-## Mock Data for Testing
-```typescript
-// Mock Admin User
-{
-  id: '11111111-1111-1111-1111-111111111111',
-  username: 'admin',
-  password: 'admin',
-  role: 'fa_admin',
-  full_name: 'TOA Admin'
-}
+## การพัฒนาและการติดตั้ง
 
-// Mock Requester User  
-{
-  id: '22222222-2222-2222-2222-222222222222',
-  username: 'requester', 
-  password: 'requester',
-  role: 'requester',
-  full_name: 'TOA Requester'
-}
+### Requirements
+- Node.js 18+
+- npm หรือ yarn
+- Supabase Account
 
-// Mock Receiver User
-{
-  id: '33333333-3333-3333-3333-333333333333',
-  username: 'receiver',
-  password: 'receiver', 
-  role: 'receiver',
-  full_name: 'Test Receiver'
-}
+### การติดตั้ง
+```bash
+# Clone repository
+git clone <repository-url>
+cd document-request-system
+
+# ติดตั้ง dependencies
+npm install
+
+# ตั้งค่า environment variables
+cp .env.example .env.local
+# แก้ไข VITE_SUPABASE_URL และ VITE_SUPABASE_ANON_KEY
+
+# รันในโหมด development
+npm run dev
+
+# Build สำหรับ production
+npm run build
 ```
 
-## API Endpoints (RPC Functions)
+### การตั้งค่า Supabase
 
-### 1. create_request
-**Purpose**: สร้างคำขอใหม่ (bypass RLS)
-**Parameters**: 
-- p_document_name: TEXT
-- p_receiver_email: TEXT  
-- p_file_path: TEXT (optional)
-- p_requester_id: UUID (optional)
+1. สร้างโปรเจค Supabase ใหม่
+2. รัน migrations ทั้งหมดในโฟลเดอร์ `supabase/migrations/`
+3. ตั้งค่า Authentication (Email/Password)
+4. ตั้งค่า RLS policies ตามที่ระบุในเอกสาร
 
-### 2. get_all_requests  
-**Purpose**: ดึงข้อมูลคำขอทั้งหมดพร้อม requester info
-**Returns**: TABLE with joined data
+## การใช้งานระบบ
 
-### 3. is_fa_admin
-**Purpose**: ตรวจสอบว่า user เป็น fa_admin หรือไม่
-**Returns**: BOOLEAN
+### สำหรับผู้ขอเอกสาร (Requester)
+1. เข้าสู่ระบบ
+2. สร้างคำขอส่งเอกสารใหม่
+3. ติดตามสถานะคำขอ
+4. ดูประวัติคำขอ
 
-### 4. get_current_user_id
-**Purpose**: ได้ user ID ปัจจุบัน (fallback สำหรับ mock users)
-**Returns**: UUID
+### สำหรับผู้รับเอกสาร (Receiver)
+1. เข้าสู่ระบบ
+2. ดูคำขอที่ส่งมา
+3. ยืนยันการรับเอกสาร
 
-## Security Considerations
+### สำหรับผู้ดูแลระบบ (FA Admin)
+1. อนุมัติ/ปฏิเสธคำขอ
+2. จัดการผู้ใช้งาน
+3. ดูรายงานระบบ
+4. จัดการ system paths
 
-1. **RLS Policies** ป้องกันการเข้าถึงข้อมูลโดยไม่ได้รับอนุญาต
-2. **SECURITY DEFINER** functions ทำงานด้วยสิทธิ์ของ owner
-3. **Mock user validation** ป้องกัน unauthorized access
-4. **Role-based access control** ใน frontend และ backend
+## ฟีเจอร์หลัก
 
-## Performance Optimizations
+- ✅ ระบบ Authentication และ Authorization
+- ✅ การจัดการผู้ใช้ 3 ระดับ (Admin, Requester, Receiver)
+- ✅ การสร้างและติดตามคำขอส่งเอกสาร
+- ✅ ระบบอนุมัติ/ปฏิเสธคำขอ
+- ✅ การยืนยันการรับเอกสาร
+- ✅ รายงานและสถิติการใช้งาน
+- ✅ ระบบจัดการ System Paths
+- ✅ Responsive Design
+- ✅ Dark/Light Mode Support
+- ✅ Export ข้อมูลเป็น Excel
 
-1. **Database functions** ลด network calls
-2. **JOIN ใน database** แทน multiple queries
-3. **Proper indexing** บน foreign keys
-4. **React.useMemo** สำหรับ expensive calculations
+## ข้อมูลเพิ่มเติม
 
-## Future Enhancements
-
-1. **File upload** integration กับ Supabase Storage
-2. **Email notifications** ด้วย Resend
-3. **Real-time updates** ด้วย Supabase Realtime
-4. **Audit trail** สำหรับ admin actions
-5. **Advanced search** และ filtering
-6. **Export/Import** features
-7. **Mobile app** compatibility
-
-## Deployment Checklist
-
-1. ✅ Database migrations applied
-2. ✅ RLS policies configured  
-3. ✅ Mock users created
-4. ✅ Functions deployed
-5. ⚠️ Environment variables set
-6. ⚠️ CORS policies configured
-7. ⚠️ Production URL whitelisted
-
----
-
-**Document Created**: 2025-07-14  
-**Last Updated**: 2025-07-14  
-**Version**: 1.0  
-**System Status**: ✅ Production Ready
-
----
-
-## Summary
-
-ระบบ File Request Tracking นี้สามารถใช้งานได้เต็มรูปแบบ โดยมีการแก้ไขปัญหาหลักๆ ดังนี้:
-
-1. **Authentication** - ใช้ mock session + SECURITY DEFINER functions
-2. **RLS Bypass** - สร้าง database functions เฉพาะ  
-3. **Data Visibility** - ใช้ RPC calls แทน direct queries
-4. **User Management** - ระบบจัดการ users ที่สมบูรณ์
-5. **Role-based Access** - แยก permissions ตาม role
-
-ระบบพร้อมสำหรับการใช้งานจริงและสามารถขยายความสามารถเพิ่มเติมได้ตามความต้องการ
+- ระบบใช้ Custom Authentication (ไม่ใช่ Supabase Auth)
+- ข้อมูลผู้ใช้เก็บใน profiles table
+- รองรับการส่งเอกสารไปต่างประเทศ
+- ติดตามหมายเลขพัสดุ
+- รองรับ Multiple shipping vendors

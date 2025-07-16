@@ -1,374 +1,280 @@
-# คู่มือแก้ปัญหา (Troubleshooting Guide)
+# คู่มือแก้ไขปัญหา (Troubleshooting Guide)
 
-## เคส: User Role และ Dashboard Display ไม่ตรงกัน
+## ปัญหาที่พบบ่อยและวิธีการแก้ไข
 
-### ปัญหาที่เกิดขึ้น
-- User มี `full_name` เป็น "Requester" แต่ระบบแสดง AdminDashboard
-- ผู้ใช้คาดหวังว่าจะเห็น RequesterDashboard ตาม full_name
-- เกิดความสับสนระหว่าง role ในฐานข้อมูลกับสิ่งที่แสดงใน UI
+### 1. ปัญหาการแสดงข้อมูลในหน้ารายงาน (Reports Page Issues)
 
-### สาเหตุของปัญหา
-1. **ข้อมูลไม่สอดคล้องกัน**: Role ในฐานข้อมูลเป็น `fa_admin` แต่ `full_name` เป็น "Requester"
-2. **การแสดงผลถูกต้อง**: ระบบทำงานตาม role จริงในฐานข้อมูล ไม่ใช่ตาม full_name
-3. **ความคาดหวังไม่ตรง**: ผู้ใช้คิดว่า full_name จะเป็นตัวกำหนด dashboard
+#### 1.1 ปัญหา: ข้อมูลไม่แสดงเลย (No Data Display)
+**อาการ**: หน้ารายงานแสดง 0 ทุกค่า ไม่มีข้อมูลแสดง
 
-### วิธีการ Debug
-1. **ตรวจสอบ Console Logs**
-   ```javascript
-   console.log('Dashboard - User role:', user.role, 'User data:', user);
-   ```
-
-2. **Query ฐานข้อมูลเพื่อยืนยัน**
-   ```sql
-   SELECT id, full_name, email, role FROM profiles WHERE id = 'user-id';
-   ```
-
-3. **ตรวจสอบการทำงานของ Dashboard Router**
-   ```javascript
-   switch (user.role) {
-     case 'fa_admin':
-       return <AdminDashboard />;
-     case 'requester':
-       return <RequesterDashboard />;
-     // ...
-   }
-   ```
-
-### วิธีแก้ไข
-
-#### ขั้นตอนที่ 1: ยืนยันปัญหา
-```sql
--- ตรวจสอบข้อมูล user ที่มีปัญหา
-SELECT id, full_name, email, role, is_active 
-FROM profiles 
-WHERE full_name LIKE '%Requester%' OR role != 'requester';
-```
-
-#### ขั้นตอนที่ 2: แก้ไขข้อมูลในฐานข้อมูล
-```sql
--- แก้ไข role ให้ตรงกับความต้องการ
-UPDATE public.profiles 
-SET role = 'requester' 
-WHERE id = 'user-id' 
-  AND full_name = 'Requester';
-```
-
-#### ขั้นตอนที่ 3: ตรวจสอบ RLS Policies
-```sql
--- ตรวจสอบและปรับปรุง RLS policies
-DROP POLICY IF EXISTS "Users can view their own requests" ON public.requests;
-
-CREATE POLICY "Requesters can view only their own requests"
-ON public.requests 
-FOR SELECT 
-USING (requester_id = auth.uid());
-```
-
-### การป้องกันปัญหาในอนาคต
-
-#### 1. Data Consistency Validation
-- สร้าง validation ให้ full_name สอดคล้องกับ role
-- ใช้ trigger หรือ function ตรวจสอบความถูกต้องของข้อมูล
-
-#### 2. Clear Naming Convention
-```sql
--- ตัวอย่าง naming convention ที่ชัดเจน
-UPDATE profiles SET 
-  full_name = CASE 
-    WHEN role = 'fa_admin' THEN 'Admin: ' || full_name
-    WHEN role = 'requester' THEN 'Requester: ' || full_name
-    WHEN role = 'receiver' THEN 'Receiver: ' || full_name
-  END;
-```
-
-#### 3. Enhanced Debugging
-```javascript
-// เพิ่ม debug information ใน Dashboard component
-const Dashboard = () => {
-  const { user, loading } = useAuth();
-  
-  // Debug logging
-  useEffect(() => {
-    if (user) {
-      console.log('🔍 Dashboard Debug:', {
-        userId: user.id,
-        role: user.role,
-        fullName: user.full_name,
-        email: user.email
-      });
-    }
-  }, [user]);
-  
-  // ... rest of component
-};
-```
-
-#### 4. Role-based Access Control (RBAC) Best Practices
-```javascript
-// สร้าง utility function สำหรับตรวจสอบ role
-export const hasRole = (user: User, requiredRole: string): boolean => {
-  return user?.role === requiredRole;
-};
-
-export const canAccessAdminFeatures = (user: User): boolean => {
-  return hasRole(user, 'fa_admin');
-};
-```
-
-### Test Cases สำหรับยืนยันการแก้ไข
-
-#### Test 1: Admin User
-```javascript
-// Expected: Admin user เห็น AdminDashboard
-const adminUser = { role: 'fa_admin', full_name: 'Admin User' };
-// Should render: <AdminDashboard />
-```
-
-#### Test 2: Requester User  
-```javascript
-// Expected: Requester user เห็น RequesterDashboard
-const requesterUser = { role: 'requester', full_name: 'Requester User' };
-// Should render: <RequesterDashboard />
-```
-
-#### Test 3: Data Access Rights
-```sql
--- Test: Requester ควรเห็นเฉพาะข้อมูลของตัวเอง
--- Test: Admin ควรเห็นข้อมูลทั้งหมด
-```
-
----
-
-## เคสอื่น ๆ ที่พบบ่อย
-
-### เคส: RLS Policy ไม่ทำงาน
-**ปัญหา**: User ไม่เห็นข้อมูลที่ควรจะเห็น
+**สาเหตุ**: 
+- RLS policies ไม่อนุญาตให้ดึงข้อมูลจากตาราง requests ตรงๆ
+- Function `get_all_requests()` ไม่ครอบคลุมฟิลด์ที่จำเป็น
 
 **วิธีแก้ไข**:
-1. ตรวจสอบ auth.uid() ใน RLS policy
-2. ใช้ security definer function หลีกเลี่ยง infinite recursion
-3. ทดสอบ policy ด้วย different user roles
+```typescript
+// ใช้ function แทนการ query ตรงๆ
+const { data: requests, error: requestsError } = await supabase
+  .rpc('get_all_requests'); // แทนที่จะใช้ .from('requests')
+```
 
-### เคส: Dashboard Loading ไม่เสร็จ
-**ปัญหา**: Dashboard แสดง loading state ตลอดเวลา
+#### 1.2 ปัญหา: ข้อมูลผู้รับเอกสารไม่ถูกต้อง (Receiver Data Issues)
+**อาการ**: จำนวนประเทศ/บริษัทผู้รับแสดง 0 แม้ว่าจะมีข้อมูลในฐานข้อมูล
+
+**สาเหตุ**: Function `get_all_requests()` ไม่ return ฟิลด์ `country_name` และ `receiver_company`
 
 **วิธีแก้ไข**:
-1. ตรวจสอบ useAuth hook
-2. ยืนยัน user object structure
-3. เช็ค network requests ใน browser dev tools
-
----
-
-## Checklist สำหรับการแก้ปัญหา
-
-- [ ] ตรวจสอบ console logs
-- [ ] ยืนยันข้อมูลในฐานข้อมูล
-- [ ] ทดสอบ RLS policies
-- [ ] ตรวจสอบ user authentication state
-- [ ] ยืนยัน component rendering logic
-- [ ] ทดสอบกับ different user roles
-- [ ] อัพเดท documentation
-
----
-
-## เคส: สถานะคำขอไม่อัปเดตหลังจากการอนุมัติ
-
-### ปัญหาที่เกิดขึ้น
-- Admin กดปุ่มอนุมัติแล้ว
-- ระบบแสดงข้อความสำเร็จ
-- แต่สถานะในหน้าจอยังคงเป็น "รอการอนุมัติ" ไม่เปลี่ยนเป็น "อนุมัติแล้ว"
-- ข้อมูลในฐานข้อมูลยังคงเป็น status: "pending"
-
-### สาเหตุของปัญหา
-1. **RLS (Row Level Security) Policy** ป้องกันการอัปเดตข้อมูล
-2. การใช้ `supabase.from('requests').update()` โดยตรงไม่สามารถผ่าน RLS policy ได้
-3. User ที่ทำการอัปเดตไม่มีสิทธิ์ตาม policy ที่กำหนดไว้
-
-### การ Debug ปัญหา
-
-#### 1. ตรวจสอบ Console Logs
-```javascript
-console.log('Approving request:', request.id);
-console.log('User:', user);
-console.log('Update data:', updateData);
-console.log('Update result:', updateResult);
-```
-
-#### 2. ตรวจสอบข้อมูลในฐานข้อมูล
 ```sql
-SELECT * FROM requests WHERE id = 'request-id';
-```
+-- อัพเดต function เพื่อรวมฟิลด์ผู้รับ
+DROP FUNCTION public.get_all_requests();
 
-#### 3. ตรวจสอบ RLS Policies
-```sql
-SELECT * FROM pg_policies WHERE tablename = 'requests';
-```
-
-### วิธีแก้ไข: สร้าง Database Function แบบ SECURITY DEFINER
-
-#### Step 1: สร้าง Function ใน Supabase
-```sql
-CREATE OR REPLACE FUNCTION public.approve_request(
-  p_request_id uuid,
-  p_tracking_number text,
-  p_admin_id uuid
+CREATE OR REPLACE FUNCTION public.get_all_requests()
+RETURNS TABLE (
+  id uuid,
+  created_at timestamptz,
+  updated_at timestamptz,
+  requester_id uuid,
+  document_name text,
+  receiver_email text,
+  receiver_name text,
+  receiver_company text,
+  receiver_department text,
+  receiver_phone text,
+  country_name text,
+  document_count integer,
+  -- ... ฟิลด์อื่นๆ
 )
-RETURNS json
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
-DECLARE
-  admin_role text;
-  updated_request record;
 BEGIN
-  -- ตรวจสอบว่าผู้ใช้เป็น fa_admin หรือไม่
-  SELECT role INTO admin_role 
-  FROM public.profiles 
-  WHERE id = p_admin_id AND is_active = true;
-  
-  -- ถ้าไม่ใช่ fa_admin ให้ throw error
-  IF admin_role != 'fa_admin' THEN
-    RAISE EXCEPTION 'ไม่มีสิทธิ์ในการอนุมัติคำขอ';
-  END IF;
-  
-  -- อัปเดตคำขอ
-  UPDATE public.requests 
-  SET 
-    status = 'approved',
-    tracking_number = p_tracking_number,
-    approved_by = p_admin_id,
-    updated_at = now()
-  WHERE id = p_request_id
-  RETURNING * INTO updated_request;
-  
-  -- ถ้าไม่มีข้อมูลถูกอัปเดต
-  IF updated_request IS NULL THEN
-    RAISE EXCEPTION 'ไม่พบคำขอที่ต้องการอนุมัติ';
-  END IF;
-  
-  RETURN json_build_object(
-    'success', true,
-    'message', 'อนุมัติคำขอเรียบร้อย',
-    'data', row_to_json(updated_request)
-  );
-  
-EXCEPTION
-  WHEN OTHERS THEN
-    RETURN json_build_object(
-      'success', false,
-      'error', SQLERRM
-    );
+  RETURN QUERY
+  SELECT 
+    r.id,
+    r.created_at,
+    r.updated_at,
+    r.requester_id,
+    r.document_name,
+    r.receiver_email,
+    r.receiver_name,
+    r.receiver_company,
+    r.receiver_department,
+    r.receiver_phone,
+    r.country_name,
+    r.document_count,
+    -- ... ฟิลด์อื่นๆ
+  FROM public.requests r
+  LEFT JOIN public.profiles p ON r.requester_id = p.id
+  ORDER BY r.created_at DESC;
 END;
 $$;
 ```
 
-#### Step 2: แก้ไข Frontend Code
-```typescript
-const handleApprove = async (trackingNumber: string) => {
-  if (!request || !user?.id) return;
-  
-  try {
-    // ใช้ database function แทนการ update โดยตรง
-    const { data: result, error } = await supabase
-      .rpc('approve_request', {
-        p_request_id: request.id,
-        p_tracking_number: trackingNumber,
-        p_admin_id: user.id
-      });
-    
-    if (error) {
-      console.error('Supabase error:', error);
-      toast.error('ไม่สามารถอนุมัติคำขอได้: ' + error.message);
-      return;
-    }
-    
-    // Type cast for result
-    const typedResult = result as { success: boolean; error?: string; message?: string };
-    
-    if (!typedResult.success) {
-      toast.error('ไม่สามารถอนุมัติคำขอได้: ' + typedResult.error);
-      return;
-    }
-    
-    // Force re-fetch to ensure UI updates
-    await fetchRequest();
-    
-    toast.success('อนุมัติคำขอเรียบร้อย');
-  } catch (error) {
-    console.error('Error:', error);
-    toast.error('เกิดข้อผิดพลาดในการอนุมัติคำขอ');
-  }
-};
+### 2. ปัญหา TypeScript Errors
+
+#### 2.1 ปัญหา: Property does not exist on type
+**อาการ**: 
+```
+Property 'country_name' does not exist on type
+Property 'receiver_company' does not exist on type
 ```
 
-### ข้อดีของการใช้ SECURITY DEFINER Function
-- **ผ่าน RLS Policy**: Function ทำงานด้วยสิทธิ์ของเจ้าของ function
-- **ความปลอดภัย**: ยังคงตรวจสอบสิทธิ์ admin ในระดับ database
-- **ทำงานได้แน่นอน**: ไม่มีปัญหาเรื่อง permission
-- **ง่ายต่อการ maintain**: logic อยู่ใน database ทำให้ควบคุมได้ดี
+**วิธีแก้ไข**:
+```typescript
+// ใช้ type assertion เมื่อ TypeScript ไม่รู้จักฟิลด์
+const uniqueCountries = new Set(
+  requests?.filter(r => (r as any).country_name).map(r => (r as any).country_name) || []
+);
+```
 
-### การป้องกันปัญหาในอนาคต
+### 3. ปัญหา Authentication
 
-#### 1. ใช้ Database Functions สำหรับ Critical Operations
+#### 3.1 ปัญหา: "Invalid login credentials"
+**อาการ**: ล็อกอินไม่ได้แม้ว่า username/password จะถูกต้อง
+
+**สาเหตุ**: ระบบใช้ Custom Authentication แทน Supabase Auth
+
+**วิธีแก้ไข**:
+```typescript
+// ตรวจสอบว่าใช้ custom auth function
+const { data: userData } = await supabase
+  .from('profiles')
+  .select('*')
+  .eq('username', username)
+  .eq('password', password)
+  .eq('is_active', true)
+  .single();
+```
+
+### 4. ปัญหา Database Functions
+
+#### 4.1 ปัญหา: "cannot change return type of existing function"
+**อาการ**: ไม่สามารถ update function ที่มี return type ต่างจากเดิม
+
+**วิธีแก้ไข**:
 ```sql
--- สร้าง functions สำหรับการดำเนินการสำคัญ
-CREATE OR REPLACE FUNCTION public.reject_request(...)
-CREATE OR REPLACE FUNCTION public.request_rework(...)
-CREATE OR REPLACE FUNCTION public.confirm_delivery(...)
+-- ต้อง DROP function ก่อนแล้วค่อย CREATE ใหม่
+DROP FUNCTION public.get_all_requests();
+CREATE OR REPLACE FUNCTION public.get_all_requests()
+-- ... function definition
 ```
 
-#### 2. ทดสอบ RLS Policies อย่างสม่ำเสมอ
-```javascript
-// Test script สำหรับทดสอบ CRUD operations
-const testCRUDOperations = async () => {
-  // Test as admin
-  // Test as requester  
-  // Test as receiver
-};
+#### 4.2 ปัญหา: RLS Policy Conflicts
+**อาการ**: ไม่สามารถดึงข้อมูลได้แม้ว่าจะมีสิทธิ์
+
+**วิธีแก้ไข**:
+```sql
+-- ใช้ SECURITY DEFINER ใน function เพื่อข้าม RLS
+CREATE OR REPLACE FUNCTION public.get_all_requests()
+-- ...
+LANGUAGE plpgsql
+SECURITY DEFINER  -- สำคัญ!
 ```
 
-#### 3. Error Handling ที่ดี
+### 5. ปัญหา Performance
+
+#### 5.1 ปัญหา: การโหลดช้า
+**อาการ**: หน้าเว็บโหลดนาน โดยเฉพาะหน้ารายงาน
+
+**วิธีแก้ไข**:
+1. เพิ่ม indexes ที่จำเป็น:
+```sql
+CREATE INDEX idx_requests_created_at ON requests(created_at DESC);
+CREATE INDEX idx_requests_status ON requests(status);
+CREATE INDEX idx_requests_requester_id ON requests(requester_id);
+```
+
+2. จำกัดข้อมูลที่ดึงมา:
 ```typescript
-// Pattern สำหรับ error handling
-try {
-  const { data, error } = await supabase.rpc('function_name', params);
-  
-  if (error) {
-    console.error('Database error:', error);
-    toast.error('ข้อผิดพลาด: ' + error.message);
-    return;
-  }
-  
-  const result = data as { success: boolean; error?: string };
-  
-  if (!result.success) {
-    toast.error(result.error || 'การดำเนินการไม่สำเร็จ');
-    return;
-  }
-  
-  // Success handling
-  toast.success('ดำเนินการสำเร็จ');
-  await refetchData();
-  
-} catch (error) {
-  console.error('Unexpected error:', error);
-  toast.error('เกิดข้อผิดพลาดที่ไม่คาดคิด');
+// ดึงเฉพาะข้อมูลที่จำเป็นสำหรับรายงาน
+const { data: recentRequests } = await supabase
+  .rpc('get_all_requests')
+  .limit(100); // จำกัดจำนวน
+```
+
+### 6. ปัญหา UI/UX
+
+#### 6.1 ปัญหา: Mobile Responsive
+**อาการ**: หน้าเว็บแสดงผลไม่ดีบนมือถือ
+
+**วิธีแก้ไข**:
+```typescript
+// ใช้ responsive classes ของ Tailwind
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+```
+
+#### 6.2 ปัญหา: Toast ไม่แสดง
+**อาการ**: การแจ้งเตือนไม่ปรากฏ
+
+**วิธีแก้ไข**:
+```typescript
+// ตรวจสอบว่ามี Toaster component ใน main layout
+import { Toaster } from "@/components/ui/sonner";
+
+function App() {
+  return (
+    <>
+      {/* ... app content */}
+      <Toaster />
+    </>
+  );
 }
 ```
 
----
+### 7. วิธีการ Debug
 
-## Checklist สำหรับการแก้ปัญหา
+#### 7.1 เช็ค Console Logs
+```typescript
+// เพิ่ม logging ในจุดสำคัญ
+console.log('Fetched requests:', requests);
+console.log('Request error:', requestsError);
+```
 
-- [ ] ตรวจสอบ console logs
-- [ ] ยืนยันข้อมูลในฐานข้อมูล
-- [ ] ทดสอบ RLS policies
-- [ ] ตรวจสอบ user authentication state
-- [ ] ยืนยัน component rendering logic
-- [ ] ทดสอบกับ different user roles
-- [ ] อัพเดท documentation
+#### 7.2 เช็ค Network Requests
+1. เปิด Developer Tools (F12)
+2. ไปที่แท็บ Network
+3. ดูว่า API calls ส่งกลับข้อมูลอะไร
 
----
+#### 7.3 เช็ค Supabase Dashboard
+1. ไปที่ Supabase Dashboard
+2. เช็ค Table Editor เพื่อดูข้อมูลจริง
+3. เช็ค SQL Editor เพื่อทดสอบ queries
+4. เช็ค Logs เพื่อดู errors
 
-**วันที่อัพเดทล่าสุด**: 15 กรกฎาคม 2568
-**ผู้อัพเดท**: System Documentation
+### 8. การ Backup และ Recovery
+
+#### 8.1 Backup Database
+```sql
+-- Export ข้อมูลสำคัญ
+COPY (SELECT * FROM profiles) TO '/path/to/profiles_backup.csv' CSV HEADER;
+COPY (SELECT * FROM requests) TO '/path/to/requests_backup.csv' CSV HEADER;
+```
+
+#### 8.2 Recovery Procedures
+1. สำรอง migrations ทั้งหมด
+2. เก็บ environment variables ไว้ที่ปลอดภัย
+3. มี rollback plan สำหรับ database changes
+
+### 9. การ Monitor ระบบ
+
+#### 9.1 Health Check
+```typescript
+// ฟังก์ชันเช็คการเชื่อมต่อฐานข้อมูล
+const healthCheck = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('count')
+      .limit(1);
+    
+    if (error) throw error;
+    return { status: 'healthy' };
+  } catch (error) {
+    return { status: 'error', error };
+  }
+};
+```
+
+#### 9.2 Performance Monitoring
+```typescript
+// ตรวจสอบเวลาในการโหลดข้อมูล
+const startTime = performance.now();
+const { data } = await supabase.rpc('get_all_requests');
+const endTime = performance.now();
+console.log(`Query took ${endTime - startTime} milliseconds`);
+```
+
+### 10. Best Practices
+
+#### 10.1 Code Organization
+- แยก business logic ออกจาก UI components
+- ใช้ custom hooks สำหรับ data fetching
+- จัดกลุม utility functions ให้เป็นระเบียบ
+
+#### 10.2 Error Handling
+```typescript
+// Handle errors gracefully
+try {
+  const { data, error } = await supabase.rpc('some_function');
+  if (error) throw error;
+  return data;
+} catch (error) {
+  console.error('Operation failed:', error);
+  toast.error('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+  return null;
+}
+```
+
+#### 10.3 Security
+- ใช้ RLS policies อย่างถูกต้อง
+- ไม่เก็บ sensitive data ใน client-side
+- ตรวจสอบ permissions ในทุก operation
+
+## การติดต่อขอความช่วยเหลือ
+
+หากพบปัญหาที่ไม่สามารถแก้ไขได้ด้วยคู่มือนี้:
+
+1. ตรวจสอบ console logs และ network requests
+2. เก็บ error messages ที่เกิดขึ้น
+3. บันทึกขั้นตอนที่ทำให้เกิดปัญหา
+4. เตรียมข้อมูล environment และ version ที่ใช้
