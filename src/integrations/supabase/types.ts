@@ -66,12 +66,18 @@ export type Database = {
         Row: {
           admin_feedback: string | null
           approved_by: string | null
+          country_name: string | null
           created_at: string
+          document_count: number | null
           document_name: string
           file_path: string | null
           id: string
           is_delivered: boolean | null
+          receiver_company: string | null
+          receiver_department: string | null
           receiver_email: string
+          receiver_name: string | null
+          receiver_phone: string | null
           requester_id: string
           status: Database["public"]["Enums"]["request_status"]
           tracking_number: string | null
@@ -80,12 +86,18 @@ export type Database = {
         Insert: {
           admin_feedback?: string | null
           approved_by?: string | null
+          country_name?: string | null
           created_at?: string
+          document_count?: number | null
           document_name: string
           file_path?: string | null
           id?: string
           is_delivered?: boolean | null
+          receiver_company?: string | null
+          receiver_department?: string | null
           receiver_email: string
+          receiver_name?: string | null
+          receiver_phone?: string | null
           requester_id: string
           status?: Database["public"]["Enums"]["request_status"]
           tracking_number?: string | null
@@ -94,12 +106,18 @@ export type Database = {
         Update: {
           admin_feedback?: string | null
           approved_by?: string | null
+          country_name?: string | null
           created_at?: string
+          document_count?: number | null
           document_name?: string
           file_path?: string | null
           id?: string
           is_delivered?: boolean | null
+          receiver_company?: string | null
+          receiver_department?: string | null
           receiver_email?: string
+          receiver_name?: string | null
+          receiver_phone?: string | null
           requester_id?: string
           status?: Database["public"]["Enums"]["request_status"]
           tracking_number?: string | null
@@ -175,12 +193,25 @@ export type Database = {
         Returns: Json
       }
       create_request: {
-        Args: {
-          p_document_name: string
-          p_receiver_email: string
-          p_file_path?: string
-          p_requester_id?: string
-        }
+        Args:
+          | {
+              p_document_name: string
+              p_receiver_email: string
+              p_file_path?: string
+              p_requester_id?: string
+            }
+          | {
+              p_document_name: string
+              p_receiver_email: string
+              p_file_path?: string
+              p_requester_id?: string
+              p_document_count?: number
+              p_receiver_name?: string
+              p_receiver_department?: string
+              p_country_name?: string
+              p_receiver_company?: string
+              p_receiver_phone?: string
+            }
         Returns: Json
       }
       force_delete_user_admin: {
