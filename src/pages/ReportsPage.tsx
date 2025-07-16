@@ -42,22 +42,9 @@ const ReportsPage = () => {
     try {
       setLoading(true);
 
-      // Fetch all requests
+      // Fetch all requests using the database function
       const { data: requests, error: requestsError } = await supabase
-        .from('requests')
-        .select(`
-          *,
-          requester:profiles!requests_requester_id_fkey(
-            full_name,
-            email,
-            username,
-            employee_id,
-            company,
-            department,
-            division
-          )
-        `)
-        .order('created_at', { ascending: false });
+        .rpc('get_all_requests');
 
       if (requestsError) {
         console.error('Error fetching requests:', requestsError);
