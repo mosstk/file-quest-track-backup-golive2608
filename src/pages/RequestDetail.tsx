@@ -75,7 +75,7 @@ const RequestDetail = () => {
     }).format(date);
   };
   
-  const handleApprove = async (trackingNumber: string) => {
+  const handleApprove = async (trackingNumber: string, vendor?: string) => {
     if (!request || !user?.id) return;
     
     console.log('Approving request:', request.id);

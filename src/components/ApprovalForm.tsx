@@ -6,12 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { FileRequest } from '@/types';
 
 interface ApprovalFormProps {
   request: FileRequest;
-  onApprove: (trackingNumber: string) => void;
+  onApprove: (trackingNumber: string, vendor?: string) => void;
   onRework: (feedback: string) => void;
   onReject: (feedback: string) => void;
 }
@@ -25,6 +26,7 @@ const ApprovalForm: React.FC<ApprovalFormProps> = ({
   const [action, setAction] = useState<'approve' | 'rework' | 'reject' | ''>('');
   const [feedback, setFeedback] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [vendor, setVendor] = useState('');
   const [error, setError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -40,7 +42,11 @@ const ApprovalForm: React.FC<ApprovalFormProps> = ({
         setError('กรุณาระบุเลขพัสดุ');
         return;
       }
-      onApprove(trackingNumber);
+      if (!vendor) {
+        setError('กรุณาเลือกบริษัทขนส่ง');
+        return;
+      }
+      onApprove(trackingNumber, vendor);
     } else if (action === 'rework' || action === 'reject') {
       if (!feedback.trim()) {
         setError('กรุณาระบุข้อมูลเพิ่มเติม');
@@ -89,14 +95,36 @@ const ApprovalForm: React.FC<ApprovalFormProps> = ({
           </div>
 
           {action === 'approve' && (
-            <div className="space-y-2">
-              <Label htmlFor="trackingNumber">เลขพัสดุ (Tracking Number)</Label>
-              <Input
-                id="trackingNumber"
-                value={trackingNumber}
-                onChange={(e) => setTrackingNumber(e.target.value)}
-                placeholder="กรุณาระบุเลขพัสดุ"
-              />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="vendor">เลือกบริษัทขนส่ง</Label>
+                <Select value={vendor} onValueChange={setVendor}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="เลือกบริษัทขนส่ง" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DHL">DHL</SelectItem>
+                    <SelectItem value="FedEx">FedEx</SelectItem>
+                    <SelectItem value="UPS">UPS</SelectItem>
+                    <SelectItem value="TNT">TNT</SelectItem>
+                    <SelectItem value="Kerry Express">Kerry Express</SelectItem>
+                    <SelectItem value="J&T Express">J&T Express</SelectItem>
+                    <SelectItem value="ไปรษณีย์ไทย">ไปรษณีย์ไทย</SelectItem>
+                    <SelectItem value="Flash Express">Flash Express</SelectItem>
+                    <SelectItem value="Best Express">Best Express</SelectItem>
+                    <SelectItem value="SCG Express">SCG Express</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="trackingNumber">เลขพัสดุ (Tracking Number)</Label>
+                <Input
+                  id="trackingNumber"
+                  value={trackingNumber}
+                  onChange={(e) => setTrackingNumber(e.target.value)}
+                  placeholder="กรุณาระบุเลขพัสดุ"
+                />
+              </div>
             </div>
           )}
 
