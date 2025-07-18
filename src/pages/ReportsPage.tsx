@@ -55,6 +55,7 @@ const ReportsPage = () => {
       }
 
       console.log('Fetched requests from function:', requests);
+      console.log('Sample request data:', requests?.[0]);
 
       // Fetch all users
       const { data: users, error: usersError } = await supabase
