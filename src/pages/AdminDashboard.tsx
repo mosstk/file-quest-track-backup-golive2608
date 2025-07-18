@@ -104,12 +104,16 @@ const AdminDashboard = () => {
       approved: 0,
       rejected: 0,
       rework: 0,
-      completed: 0,
+      completed: 0, // จะนับจาก is_delivered แทน
       total: requests.length,
     };
     
     requests.forEach(req => {
       counts[req.status]++;
+      // นับ completed จาก is_delivered แทน status
+      if (req.is_delivered === true) {
+        counts.completed++;
+      }
     });
     
     return counts;

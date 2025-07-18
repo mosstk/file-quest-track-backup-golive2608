@@ -149,11 +149,15 @@ const Requests = () => {
       approved: 0,
       rejected: 0,
       rework: 0,
-      completed: 0,
+      completed: 0, // จะนับจาก is_delivered แทน
     };
     
     requests.forEach(req => {
       counts[req.status as keyof typeof counts]++;
+      // นับ completed จาก is_delivered แทน status
+      if (req.is_delivered === true || req.isDelivered === true) {
+        counts.completed++;
+      }
     });
     
     return counts;

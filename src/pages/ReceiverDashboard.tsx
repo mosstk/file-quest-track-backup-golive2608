@@ -58,7 +58,7 @@ const ReceiverDashboard = () => {
       approved: 0,
       pending: 0,
       rejected: 0,
-      completed: 0,
+      completed: 0, // จะนับจาก is_delivered แทน
       delivered: 0,
       notDelivered: 0,
     };
@@ -68,10 +68,10 @@ const ReceiverDashboard = () => {
       if (req.status === 'approved') stats.approved++;
       else if (req.status === 'pending') stats.pending++;
       else if (req.status === 'rejected') stats.rejected++;
-      else if (req.status === 'completed') stats.completed++;
       
-      // Count delivery status - คำนวณจากสถานะ completed และ isDelivered
-      if (req.status === 'completed' || (req.status === 'approved' && req.isDelivered)) {
+      // Count delivery status - ใช้ is_delivered แทน status completed
+      if (req.isDelivered === true || req.is_delivered === true) {
+        stats.completed++;
         stats.delivered++;
       } else if (req.status === 'approved' || req.status === 'pending') {
         stats.notDelivered++;
