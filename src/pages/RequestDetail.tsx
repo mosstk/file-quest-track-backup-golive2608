@@ -341,16 +341,58 @@ const RequestDetail = () => {
                   <h3 className="text-sm font-medium text-muted-foreground mb-1">ชื่อไฟล์เอกสาร</h3>
                   <p className="font-medium">{request.document_name || request.documentName}</p>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">อีเมล์ของผู้ส่ง</h3>
-                    <p className="font-medium">{request.requesterEmail}</p>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">จำนวนเอกสาร</h3>
+                    <p className="font-medium">{request.document_count || 1} เอกสาร</p>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">อีเมล์ของผู้รับ</h3>
-                    <p className="font-medium">{request.receiver_email || request.receiverEmail}</p>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-primary">ข้อมูลผู้รับ</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-1">ชื่อผู้รับเอกสาร</h3>
+                      <p className="font-medium">{request.receiver_name || request.receiverName || '-'}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-1">ประเทศ</h3>
+                      <p className="font-medium">{request.country_name || request.countryName || '-'}</p>
+                    </div>
                   </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-1">ชื่อบริษัท</h3>
+                      <p className="font-medium">{request.receiver_company || request.receiverCompany || '-'}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-1">ฝ่าย/แผนก</h3>
+                      <p className="font-medium">{request.receiver_department || request.receiverDepartment || '-'}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-1">อีเมล</h3>
+                      <p className="font-medium">{request.receiver_email || request.receiverEmail}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-1">เบอร์โทร</h3>
+                      <p className="font-medium">{request.receiver_phone || request.receiverPhone || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-1">อีเมล์ของผู้ส่ง</h3>
+                  <p className="font-medium">{request.requesterEmail}</p>
                 </div>
                 
                 <div>

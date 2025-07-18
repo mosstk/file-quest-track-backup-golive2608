@@ -23,8 +23,19 @@ export interface FileRequest {
   requester_id: string;
   document_name: string;
   documentName?: string;
+  document_count?: number;
   receiver_email: string;
   receiverEmail?: string;
+  receiver_name?: string;
+  receiverName?: string;
+  receiver_company?: string;
+  receiverCompany?: string;
+  receiver_department?: string;
+  receiverDepartment?: string;
+  receiver_phone?: string;
+  receiverPhone?: string;
+  country_name?: string;
+  countryName?: string;
   file_path?: string;
   fileAttachment?: string;
   status: RequestStatus;
@@ -39,6 +50,8 @@ export interface FileRequest {
   is_delivered?: boolean;
   isDelivered?: boolean;
   approved_by?: string;
+  shipping_vendor?: string;
+  shippingVendor?: string;
   
   // Additional props for UI display
   requesterName?: string;
