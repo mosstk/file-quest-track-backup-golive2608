@@ -95,11 +95,22 @@ const ReportsPage = () => {
 
       // Calculate receiver statistics - ตอนนี้ใช้ข้อมูลจาก function ที่อัพเดตแล้ว
       const uniqueEmails = new Set(requests?.map(r => r.receiver_email.toLowerCase()) || []);
+      
+      // แก้ไขการนับประเทศ - รวมประเทศที่เป็นชื่อเดียวกัน
+      const normalizeCountryName = (country: string) => {
+        const normalized = country.toLowerCase().trim();
+        if (normalized === 'vietnam' || normalized === 'เวียดนาม') return 'Vietnam';
+        if (normalized === 'america' || normalized === 'สหรัฐอเมริกา') return 'America';
+        if (normalized === 'thailand' || normalized === 'ไทย') return 'Thailand';
+        return country;
+      };
+      
       const uniqueCountries = new Set(
-        requests?.filter(r => r.country_name).map(r => r.country_name) || []
+        requests?.filter(r => r.country_name && r.country_name.trim())
+          .map(r => normalizeCountryName(r.country_name)) || []
       );
       const uniqueCompanies = new Set(
-        requests?.filter(r => r.receiver_company).map(r => r.receiver_company) || []
+        requests?.filter(r => r.receiver_company && r.receiver_company.trim()).map(r => r.receiver_company) || []
       );
 
       // Group by country with receiver count
