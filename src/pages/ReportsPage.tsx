@@ -96,12 +96,17 @@ const ReportsPage = () => {
       // Calculate receiver statistics - ตอนนี้ใช้ข้อมูลจาก function ที่อัพเดตแล้ว
       const uniqueEmails = new Set(requests?.map(r => r.receiver_email.toLowerCase()) || []);
       
-      // แก้ไขการนับประเทศ - รวมประเทศที่เป็นชื่อเดียวกัน
+      // แก้ไขการนับประเทศ - รวมประเทศที่เป็นชื่อเดียวกัน และแสดงเป็นภาษาอังกฤษ
       const normalizeCountryName = (country: string) => {
         const normalized = country.toLowerCase().trim();
         if (normalized === 'vietnam' || normalized === 'เวียดนาม') return 'Vietnam';
-        if (normalized === 'america' || normalized === 'สหรัฐอเมริกา') return 'America';
+        if (normalized === 'america' || normalized === 'สหรัฐอเมริกา' || normalized === 'united states') return 'United States';
         if (normalized === 'thailand' || normalized === 'ไทย') return 'Thailand';
+        if (normalized === 'laos' || normalized === 'ลาว') return 'Laos';
+        if (normalized === 'malaysia' || normalized === 'มาเลเซีย') return 'Malaysia';
+        if (normalized === 'indonesia' || normalized === 'อินโดนีเซีย') return 'Indonesia';
+        if (normalized === 'myanmar' || normalized === 'เมียนมาร์') return 'Myanmar';
+        if (normalized === 'cambodia' || normalized === 'กัมพูชา') return 'Cambodia';
         return country;
       };
       
@@ -113,21 +118,22 @@ const ReportsPage = () => {
         requests?.filter(r => r.receiver_company && r.receiver_company.trim()).map(r => r.receiver_company) || []
       );
 
-      // Group by country with receiver count
+      // Group by country with receiver count - ใช้ข้อมูลที่ normalize แล้ว
       const countryStats: Record<string, Set<string>> = {};
       requests?.forEach(r => {
-        if (r.country_name) {
-          if (!countryStats[r.country_name]) {
-            countryStats[r.country_name] = new Set();
+        if (r.country_name && r.country_name.trim()) {
+          const normalizedCountry = normalizeCountryName(r.country_name);
+          if (!countryStats[normalizedCountry]) {
+            countryStats[normalizedCountry] = new Set();
           }
-          countryStats[r.country_name].add(r.receiver_email.toLowerCase());
+          countryStats[normalizedCountry].add(r.receiver_email.toLowerCase());
         }
       });
 
       // Group by company with receiver count
       const companyStats: Record<string, Set<string>> = {};
       requests?.forEach(r => {
-        if (r.receiver_company) {
+        if (r.receiver_company && r.receiver_company.trim()) {
           if (!companyStats[r.receiver_company]) {
             companyStats[r.receiver_company] = new Set();
           }

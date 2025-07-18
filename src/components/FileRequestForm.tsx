@@ -68,7 +68,7 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
   };
 
   const countries = [
-    'Vietnam', 'Laos', 'Malaysia', 'Indonesia', 'Myanmar', 'Cambodia'
+    'Thailand', 'Vietnam', 'Laos', 'Malaysia', 'Indonesia', 'Myanmar', 'Cambodia', 'United States'
   ];
 
   const companies = [
