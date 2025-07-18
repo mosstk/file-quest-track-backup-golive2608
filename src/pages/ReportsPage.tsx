@@ -73,7 +73,7 @@ const ReportsPage = () => {
       const approvedRequests = requests?.filter(r => r.status === 'approved').length || 0;
       const rejectedRequests = requests?.filter(r => r.status === 'rejected').length || 0;
       const reworkRequests = requests?.filter(r => r.status === 'rework').length || 0;
-      const completedRequests = requests?.filter(r => r.status === 'completed').length || 0;
+      const completedRequests = requests?.filter(r => r.is_delivered === true).length || 0;
 
       const totalUsers = users?.length || 0;
       const activeUsers = users?.filter(u => u.is_active).length || 0;
