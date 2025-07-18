@@ -215,7 +215,7 @@ const ReportsPage = () => {
       requestsData.push([
         request.id,
         request.document_name,
-        request.requester?.full_name || 'ไม่ระบุ',
+        request.requester_name || 'ไม่ระบุ',
         request.receiver_email,
         request.status,
         new Date(request.created_at).toLocaleDateString('th-TH'),
