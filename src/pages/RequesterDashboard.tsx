@@ -72,7 +72,12 @@ const RequesterDashboard = () => {
     };
     
     requests.forEach(req => {
-      counts[req.status]++;
+      // นับตาม status ยกเว้น completed
+      if (req.status === 'pending') counts.pending++;
+      else if (req.status === 'approved') counts.approved++;
+      else if (req.status === 'rejected') counts.rejected++;
+      else if (req.status === 'rework') counts.rework++;
+      
       // นับ completed จาก is_delivered แทน status
       if (req.is_delivered === true || req.isDelivered === true) {
         counts.completed++;
