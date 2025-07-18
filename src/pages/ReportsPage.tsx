@@ -507,7 +507,7 @@ const ReportsPage = () => {
                   {reportData.recentRequests.map((request) => (
                     <tr key={request.id} className="hover:bg-gray-50">
                       <td className="border border-gray-200 p-3">{request.document_name}</td>
-                      <td className="border border-gray-200 p-3">{request.requester?.full_name || 'ไม่ระบุ'}</td>
+                      <td className="border border-gray-200 p-3">{request.requester_name || 'ไม่ระบุ'}</td>
                       <td className="border border-gray-200 p-3">{request.receiver_email}</td>
                       <td className="border border-gray-200 p-3">
                         <Badge
