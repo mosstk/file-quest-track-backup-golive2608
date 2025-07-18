@@ -25,6 +25,8 @@ interface ReportData {
     totalReceivers: number;
     uniqueCountries: number;
     uniqueCompanies: number;
+    countryList: { name: string; count: number }[];
+    companyList: { name: string; count: number }[];
   };
 }
 
@@ -100,10 +102,45 @@ const ReportsPage = () => {
         requests?.filter(r => r.receiver_company).map(r => r.receiver_company) || []
       );
 
+      // Group by country with receiver count
+      const countryStats: Record<string, Set<string>> = {};
+      requests?.forEach(r => {
+        if (r.country_name) {
+          if (!countryStats[r.country_name]) {
+            countryStats[r.country_name] = new Set();
+          }
+          countryStats[r.country_name].add(r.receiver_email.toLowerCase());
+        }
+      });
+
+      // Group by company with receiver count
+      const companyStats: Record<string, Set<string>> = {};
+      requests?.forEach(r => {
+        if (r.receiver_company) {
+          if (!companyStats[r.receiver_company]) {
+            companyStats[r.receiver_company] = new Set();
+          }
+          companyStats[r.receiver_company].add(r.receiver_email.toLowerCase());
+        }
+      });
+
+      // Convert to arrays with count
+      const countryList = Object.entries(countryStats).map(([country, emails]) => ({
+        name: country,
+        count: emails.size
+      })).sort((a, b) => b.count - a.count);
+
+      const companyList = Object.entries(companyStats).map(([company, emails]) => ({
+        name: company,
+        count: emails.size
+      })).sort((a, b) => b.count - a.count);
+
       const receiverStats = {
         totalReceivers: uniqueEmails.size,
         uniqueCountries: uniqueCountries.size,
         uniqueCompanies: uniqueCompanies.size,
+        countryList,
+        companyList,
       };
 
       setReportData({
@@ -360,28 +397,76 @@ const ReportsPage = () => {
         </div>
 
         {/* Receiver Statistics */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">ข้อมูลผู้รับเอกสาร</CardTitle>
-            <CardDescription>สถิติของผู้รับเอกสารในระบบ</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">{reportData.receiverStats?.totalReceivers || 0}</div>
-                <div className="text-sm text-gray-600">จำนวนผู้รับทั้งหมด</div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">ข้อมูลผู้รับเอกสาร</CardTitle>
+              <CardDescription>สถิติของผู้รับเอกสารในระบบ</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">{reportData.receiverStats?.totalReceivers || 0}</div>
+                  <div className="text-sm text-gray-600">จำนวนผู้รับทั้งหมด</div>
+                </div>
+                <div className="text-center p-4 bg-green-50 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">{reportData.receiverStats?.uniqueCountries || 0}</div>
+                  <div className="text-sm text-gray-600">จำนวนประเทศ</div>
+                </div>
+                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                  <div className="text-2xl font-bold text-purple-600">{reportData.receiverStats?.uniqueCompanies || 0}</div>
+                  <div className="text-sm text-gray-600">จำนวนบริษัท</div>
+                </div>
               </div>
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{reportData.receiverStats?.uniqueCountries || 0}</div>
-                <div className="text-sm text-gray-600">จำนวนประเทศ</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">ประเทศปลายทาง</CardTitle>
+              <CardDescription>ประเทศที่มีการส่งเอกสารไป</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {reportData.receiverStats?.countryList && reportData.receiverStats.countryList.length > 0 ? (
+                  reportData.receiverStats.countryList.map((country, index) => (
+                    <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                      <span className="text-sm font-medium">{country.name}</span>
+                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                        {country.count} ผู้รับ
+                      </Badge>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-gray-500 py-4">ยังไม่มีข้อมูลประเทศ</div>
+                )}
               </div>
-              <div className="text-center p-4 bg-purple-50 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600">{reportData.receiverStats?.uniqueCompanies || 0}</div>
-                <div className="text-sm text-gray-600">จำนวนบริษัท</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">บริษัทปลายทาง</CardTitle>
+              <CardDescription>บริษัทที่มีการส่งเอกสารไป</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {reportData.receiverStats?.companyList && reportData.receiverStats.companyList.length > 0 ? (
+                  reportData.receiverStats.companyList.map((company, index) => (
+                    <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                      <span className="text-sm font-medium">{company.name}</span>
+                      <Badge variant="outline" className="bg-purple-50 text-purple-700">
+                        {company.count} ผู้รับ
+                      </Badge>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-gray-500 py-4">ยังไม่มีข้อมูลบริษัท</div>
+                )}
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Recent Requests Table */}
         <Card>
