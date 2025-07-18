@@ -590,7 +590,7 @@ const DocumentationSystem = () => {
                       <div className="p-2 bg-muted rounded text-center">VS Code</div>
                       <div className="p-2 bg-muted rounded text-center">Supabase</div>
                       <div className="p-2 bg-muted rounded text-center">GitHub</div>
-                      <div className="p-2 bg-muted rounded text-center">Lovable</div>
+                      <div className="p-2 bg-muted rounded text-center">TOA : Digital Transformation</div>
                     </div>
                   </div>
                   <div>
