@@ -113,7 +113,7 @@ const Navbar: React.FC = () => {
                 style={{ minWidth: 40 }}
               />
               <span className="text-xl font-semibold text-primary">
-                FileQuest<span className="text-muted-foreground">Track</span>
+                Document <span className="text-muted-foreground">Tracking</span>
               </span>
             </Link>
           </div>
