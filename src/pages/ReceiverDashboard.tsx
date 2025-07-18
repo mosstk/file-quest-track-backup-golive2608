@@ -24,10 +24,20 @@ const ReceiverDashboard = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch all requests sent to this receiver (RLS will filter automatically)
+        // Fetch all requests sent to this receiver (RLS will filter automatically) with requester details
         const { data, error } = await supabase
           .from('requests')
-          .select('*')
+          .select(`
+            *,
+            requester:profiles!requester_id(
+              full_name,
+              email,
+              employee_id,
+              company,
+              department,
+              division
+            )
+          `)
           .order('created_at', { ascending: false });
         
         console.log('ReceiverDashboard - Query result:', { data, error });
@@ -38,7 +48,19 @@ const ReceiverDashboard = () => {
           return;
         }
         
-        const normalizedRequests = data?.map(normalizeFileRequest) || [];
+        const normalizedRequests = data?.map(item => {
+          const normalized = normalizeFileRequest(item);
+          // เพิ่มข้อมูลผู้ส่งจาก relation
+          if (item.requester) {
+            normalized.requesterName = item.requester.full_name || '';
+            normalized.requesterEmail = item.requester.email || '';
+            normalized.requesterEmployeeId = item.requester.employee_id || '';
+            normalized.requesterCompany = item.requester.company || '';
+            normalized.requesterDepartment = item.requester.department || '';
+            normalized.requesterDivision = item.requester.division || '';
+          }
+          return normalized;
+        }) || [];
         setRequests(normalizedRequests);
       } catch (error) {
         console.error('Error fetching requests:', error);
