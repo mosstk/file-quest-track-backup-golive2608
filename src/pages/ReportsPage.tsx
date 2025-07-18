@@ -343,7 +343,7 @@ const ReportsPage = () => {
                 <span>อัตราการอนุมัติ</span>
                 <Badge variant="secondary">
                   {reportData.totalRequests > 0 
-                    ? Math.round((reportData.approvedRequests / reportData.totalRequests) * 100) 
+                    ? Math.round(((reportData.approvedRequests + reportData.completedRequests) / reportData.totalRequests) * 100) 
                     : 0}%
                 </Badge>
               </div>
