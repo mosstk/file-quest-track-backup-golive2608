@@ -59,7 +59,7 @@ const AdminDashboard = () => {
             is_delivered: item.is_delivered,
             isDelivered: item.is_delivered,
             approved_by: item.approved_by,
-            requesterName: item.requester_name,
+            requesterName: item.requester_name || 'ไม่ระบุ',
             requesterEmail: item.requester_email,
             requesterEmployeeId: item.requester_employee_id,
             requesterCompany: item.requester_company,
