@@ -494,11 +494,14 @@ const ReportsPage = () => {
                       <td className="border border-gray-200 p-3">{request.receiver_email}</td>
                       <td className="border border-gray-200 p-3">
                         <Badge
-                          variant={
-                            request.status === 'approved' ? 'default' :
-                            request.status === 'pending' ? 'secondary' :
-                            request.status === 'completed' ? 'default' :
-                            'destructive'
+                          variant="outline"
+                          className={
+                            request.status === 'pending' ? 'bg-red-100 text-red-800 hover:bg-red-100' :
+                            request.status === 'approved' ? 'bg-green-100 text-green-800 hover:bg-green-100' :
+                            request.status === 'completed' ? 'bg-gray-100 text-gray-800 hover:bg-gray-100' :
+                            request.status === 'rejected' ? 'bg-red-100 text-red-800 hover:bg-red-100' :
+                            request.status === 'rework' ? 'bg-amber-100 text-amber-800 hover:bg-amber-100' :
+                            'bg-gray-100 text-gray-800 hover:bg-gray-100'
                           }
                         >
                            {request.status === 'pending' ? 'รอการอนุมัติ' :
