@@ -51,7 +51,7 @@ const DocumentationSystem = () => {
     },
     {
       role: "requester", 
-      title: "ผู้ขอส่งไฟล์",
+      title: "ผู้ส่งไฟล์",
       permissions: ["สร้างคำขอ", "แก้ไขคำขอ", "ติดตามสถานะ"],
       color: "bg-blue-100 text-blue-800"
     },

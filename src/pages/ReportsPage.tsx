@@ -209,7 +209,7 @@ const ReportsPage = () => {
 
     // Recent requests sheet
     const requestsData = [
-      ['ID', 'ชื่อเอกสาร', 'ผู้ขอ', 'อีเมลผู้รับ', 'สถานะ', 'วันที่สร้าง', 'เลขพัสดุ']
+      ['ID', 'ชื่อเอกสาร', 'ผู้ส่ง', 'อีเมลผู้รับ', 'สถานะ', 'วันที่สร้าง', 'เลขพัสดุ']
     ];
     reportData.recentRequests.forEach(request => {
       requestsData.push([
@@ -497,7 +497,7 @@ const ReportsPage = () => {
                 <thead>
                   <tr className="bg-gray-50">
                     <th className="border border-gray-200 p-3 text-left">ชื่อเอกสาร</th>
-                    <th className="border border-gray-200 p-3 text-left">ผู้ขอ</th>
+                    <th className="border border-gray-200 p-3 text-left">ผู้ส่ง</th>
                     <th className="border border-gray-200 p-3 text-left">อีเมลผู้รับ</th>
                     <th className="border border-gray-200 p-3 text-left">สถานะ</th>
                     <th className="border border-gray-200 p-3 text-left">วันที่สร้าง</th>

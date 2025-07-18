@@ -108,7 +108,7 @@ const RequesterDashboard = () => {
       <div className="container py-8 animate-fade-in">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold">แดชบอร์ดผู้ขอเอกสาร</h1>
+            <h1 className="text-3xl font-bold">แดชบอร์ดผู้ส่งเอกสาร</h1>
             <p className="text-muted-foreground mt-1">
               ยินดีต้อนรับ, {user?.name || user?.full_name}
             </p>
