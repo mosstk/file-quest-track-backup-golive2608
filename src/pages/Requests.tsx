@@ -159,8 +159,8 @@ const Requests = () => {
       else if (req.status === 'rejected') counts.rejected++;
       else if (req.status === 'rework') counts.rework++;
       
-      // นับ completed จาก is_delivered แทน status
-      if (req.is_delivered === true || req.isDelivered === true) {
+      // นับ completed จาก is_delivered หรือ status completed
+      if (req.is_delivered === true || req.isDelivered === true || req.status === 'completed') {
         counts.completed++;
       }
     });
