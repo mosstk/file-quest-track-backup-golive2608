@@ -49,6 +49,13 @@ const TrackingDetails: React.FC<TrackingDetailsProps> = ({
             </div>
           )}
           
+          {(request.shipping_vendor || request.shippingVendor) && (
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-muted-foreground">ผู้ให้บริการขนส่ง:</span>
+              <span className="font-medium">{request.shipping_vendor || request.shippingVendor}</span>
+            </div>
+          )}
+          
           <div className="flex justify-between items-center">
             <span className="text-sm font-medium text-muted-foreground">ผู้รับ:</span>
             <span className="font-medium">{request.receiver_email || request.receiverEmail}</span>
