@@ -408,8 +408,8 @@ const ReportsPage = () => {
               <div className="flex justify-between items-center">
                 <span>อัตราการรับเอกสาร</span>
                 <Badge variant="secondary">
-                  {reportData.approvedRequests > 0 
-                    ? Math.round((reportData.completedRequests / reportData.approvedRequests) * 100) 
+                  {reportData.totalApprovedRequests > 0 
+                    ? Math.round((reportData.completedRequests / reportData.totalApprovedRequests) * 100)
                     : 0}%
                 </Badge>
               </div>
