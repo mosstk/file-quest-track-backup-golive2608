@@ -108,6 +108,13 @@ const AdminDashboard = () => {
       total: requests.length,
     };
     
+    console.log('Debug: All requests data:', requests.map(r => ({
+      id: r.id,
+      status: r.status,
+      is_delivered: r.is_delivered,
+      document_name: r.document_name
+    })));
+    
     requests.forEach(req => {
       // นับตาม status ยกเว้น completed
       if (req.status === 'pending') counts.pending++;
@@ -120,6 +127,9 @@ const AdminDashboard = () => {
         counts.completed++;
       }
     });
+    
+    console.log('Debug: Status counts:', counts);
+    console.log('Debug: Sum check:', counts.pending + counts.approved + counts.completed + counts.rejected + counts.rework, '=', counts.total);
     
     return counts;
   }, [requests]);
