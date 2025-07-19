@@ -111,7 +111,7 @@ const AdminDashboard = () => {
     requests.forEach(req => {
       // นับตาม status ยกเว้น completed
       if (req.status === 'pending') counts.pending++;
-      else if (req.status === 'approved') counts.approved++;
+      else if (req.status === 'approved' && !req.is_delivered) counts.approved++; // ไม่นับที่ได้รับแล้ว
       else if (req.status === 'rejected') counts.rejected++;
       else if (req.status === 'rework') counts.rework++;
       
