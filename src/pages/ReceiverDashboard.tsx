@@ -77,26 +77,23 @@ const ReceiverDashboard = () => {
   const requestStats = React.useMemo(() => {
     const stats = {
       total: requests.length,
-      approved: 0,
-      pending: 0,
-      rejected: 0,
-      completed: 0, // จะนับจาก is_delivered แทน
-      delivered: 0,
-      notDelivered: 0,
+      pending: 0, // เอกสารรออนุมัติ
+      shipping: 0, // เอกสารอยู่ระหว่างจัดส่ง
+      received: 0, // เอกสารที่ได้รับแล้ว
     };
     
     requests.forEach(req => {
-      // Count by status
-      if (req.status === 'approved') stats.approved++;
-      else if (req.status === 'pending') stats.pending++;
-      else if (req.status === 'rejected') stats.rejected++;
-      
-      // Count delivery status - ใช้ is_delivered แทน status completed
-      if (req.isDelivered === true || req.is_delivered === true) {
-        stats.completed++;
-        stats.delivered++;
-      } else if (req.status === 'approved' || req.status === 'pending') {
-        stats.notDelivered++;
+      // เอกสารรออนุมัติ
+      if (req.status === 'pending') {
+        stats.pending++;
+      }
+      // เอกสารอยู่ระหว่างจัดส่ง (อนุมัติแล้วแต่ยังไม่ได้รับ)
+      else if (req.status === 'approved' && !req.isDelivered && !req.is_delivered) {
+        stats.shipping++;
+      }
+      // เอกสารที่ได้รับแล้ว
+      else if (req.isDelivered === true || req.is_delivered === true) {
+        stats.received++;
       }
     });
     
@@ -135,7 +132,7 @@ const ReceiverDashboard = () => {
           <Card className="bg-white/50 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">เอกสารทั้งหมด</CardTitle>
-              <CardDescription>เอกสารที่ส่งมาถึงคุณ</CardDescription>
+              <CardDescription>เอกสารที่ระบุส่งมาถึงคุณทั้งหมด</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold">{requestStats.total}</p>
@@ -144,31 +141,31 @@ const ReceiverDashboard = () => {
           
           <Card className="bg-white/50 shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">รับแล้ว</CardTitle>
-              <CardDescription>เอกสารที่ยืนยันการรับแล้ว</CardDescription>
+              <CardTitle className="text-lg">รออนุมัติ</CardTitle>
+              <CardDescription>เอกสารที่ระบุส่งถึงคุณ แต่รออนุมัติ</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-green-600">{requestStats.delivered}</p>
+              <p className="text-3xl font-bold text-orange-600">{requestStats.pending}</p>
             </CardContent>
           </Card>
           
           <Card className="bg-white/50 shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">ยังไม่ได้รับ</CardTitle>
-              <CardDescription>เอกสารที่รอการยืนยัน</CardDescription>
+              <CardTitle className="text-lg">อยู่ระหว่างจัดส่ง</CardTitle>
+              <CardDescription>เอกสารที่กำลังทำการขนส่ง</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-orange-600">{requestStats.notDelivered}</p>
+              <p className="text-3xl font-bold text-blue-600">{requestStats.shipping}</p>
             </CardContent>
           </Card>
           
           <Card className="bg-white/50 shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">รับเอกสารแล้ว</CardTitle>
-              <CardDescription>เอกสารที่ได้รับแล้ว</CardDescription>
+              <CardTitle className="text-lg">ได้รับแล้ว</CardTitle>
+              <CardDescription>เอกสารที่คุณได้รับเอกสารแล้ว</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-emerald-600">{requestStats.completed}</p>
+              <p className="text-3xl font-bold text-green-600">{requestStats.received}</p>
             </CardContent>
           </Card>
         </div>
