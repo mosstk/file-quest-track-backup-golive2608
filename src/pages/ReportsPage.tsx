@@ -71,7 +71,7 @@ const ReportsPage = () => {
       // Calculate statistics
       const totalRequests = requests?.length || 0;
       const pendingRequests = requests?.filter(r => r.status === 'pending').length || 0;
-      const approvedRequests = requests?.filter(r => r.status === 'approved' && !r.is_delivered).length || 0; // ไม่นับที่ได้รับแล้ว
+      const approvedRequests = requests?.filter(r => r.status === 'approved' || r.is_delivered === true || r.status === 'completed').length || 0; // นับทั้งที่อนุมัติและเสร็จสิ้น
       const rejectedRequests = requests?.filter(r => r.status === 'rejected').length || 0;
       const reworkRequests = requests?.filter(r => r.status === 'rework').length || 0;
       const completedRequests = requests?.filter(r => r.is_delivered === true || r.status === 'completed').length || 0;
