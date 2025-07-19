@@ -91,7 +91,7 @@ const ReportsPage = () => {
         return {
           ...user,
           requestCount: userRequests.length,
-          approvedCount: userRequests.filter(r => r.status === 'approved').length,
+          approvedCount: userRequests.filter(r => r.status === 'approved' || r.is_delivered === true || r.status === 'completed').length, // รวมอนุมัติแล้ว + ได้รับเอกสารแล้ว
           pendingCount: userRequests.filter(r => r.status === 'pending').length,
         };
       }) || [];
