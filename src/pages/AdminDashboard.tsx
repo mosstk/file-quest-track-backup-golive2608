@@ -116,15 +116,42 @@ const AdminDashboard = () => {
     })));
     
     requests.forEach(req => {
-      // นับตาม status ยกเว้น completed
-      if (req.status === 'pending') counts.pending++;
-      else if (req.status === 'approved' && !req.is_delivered) counts.approved++; // ไม่นับที่ได้รับแล้ว
-      else if (req.status === 'rejected') counts.rejected++;
-      else if (req.status === 'rework') counts.rework++;
+      console.log('Processing request:', {
+        id: req.id,
+        status: req.status,
+        is_delivered: req.is_delivered,
+        document_name: req.document_name
+      });
       
-      // นับ completed จาก is_delivered แทน status
+      // นับ completed ก่อน (เพื่อไม่ให้ซ้ำ)
       if (req.is_delivered === true) {
         counts.completed++;
+        console.log('Counted as completed:', req.document_name);
+      }
+      // แล้วค่อยนับ status อื่นๆ (ยกเว้นที่ delivered แล้ว)
+      else if (req.status === 'pending') {
+        counts.pending++;
+        console.log('Counted as pending:', req.document_name);
+      }
+      else if (req.status === 'approved') {
+        counts.approved++;
+        console.log('Counted as approved:', req.document_name);
+      }
+      else if (req.status === 'rejected') {
+        counts.rejected++;
+        console.log('Counted as rejected:', req.document_name);
+      }
+      else if (req.status === 'rework') {
+        counts.rework++;
+        console.log('Counted as rework:', req.document_name);
+      }
+      else if (req.status === 'completed') {
+        // กรณีที่ status เป็น completed แต่ is_delivered ไม่ใช่ true
+        counts.completed++;
+        console.log('Counted as completed by status:', req.document_name);
+      }
+      else {
+        console.log('Uncounted request:', req.document_name, 'Status:', req.status, 'Is delivered:', req.is_delivered);
       }
     });
     
