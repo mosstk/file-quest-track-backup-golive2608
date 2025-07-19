@@ -13,7 +13,7 @@ const RequestStatusBadge: React.FC<RequestStatusBadgeProps> = ({ status }) => {
       case 'pending':
         return { label: 'รอการอนุมัติ', variant: 'destructive', className: 'bg-red-100 text-red-800 hover:bg-red-100' };
       case 'approved':
-        return { label: 'อนุมัติแล้ว', variant: 'outline', className: 'bg-green-100 text-green-800 hover:bg-green-100' };
+        return { label: 'กำลังจัดส่ง', variant: 'outline', className: 'bg-green-100 text-green-800 hover:bg-green-100' };
       case 'rejected':
         return { label: 'ปฏิเสธ', variant: 'destructive', className: 'bg-red-100 text-red-800 hover:bg-red-100' };
       case 'rework':

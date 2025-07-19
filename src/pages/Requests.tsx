@@ -226,7 +226,7 @@ const Requests = () => {
             <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="all">ทั้งหมด ({statusCounts.all})</TabsTrigger>
               <TabsTrigger value="pending">รอดำเนินการ ({statusCounts.pending})</TabsTrigger>
-              <TabsTrigger value="approved">อนุมัติแล้ว ({statusCounts.approved})</TabsTrigger>
+              <TabsTrigger value="approved">กำลังจัดส่ง ({statusCounts.approved})</TabsTrigger>
               <TabsTrigger value="rework">ต้องแก้ไข ({statusCounts.rework})</TabsTrigger>
               <TabsTrigger value="rejected">ปฏิเสธ ({statusCounts.rejected})</TabsTrigger>
               <TabsTrigger value="completed">เสร็จสิ้น ({statusCounts.completed})</TabsTrigger>

@@ -152,8 +152,8 @@ const RequesterDashboard = () => {
           
           <Card className="bg-white/50 shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">อนุมัติแล้ว</CardTitle>
-              <CardDescription>คำขอที่อนุมัติแล้ว</CardDescription>
+              <CardTitle className="text-lg">กำลังจัดส่ง</CardTitle>
+              <CardDescription>คำขอที่กำลังจัดส่ง</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-green-600">{statusCounts.approved}</p>

@@ -58,7 +58,7 @@ const DocumentationSystem = () => {
     {
       role: "receiver",
       title: "ผู้รับไฟล์", 
-      permissions: ["ดูคำขอที่อนุมัติแล้ว", "รับไฟล์"],
+      permissions: ["ดูคำขอที่กำลังจัดส่ง", "รับไฟล์"],
       color: "bg-green-100 text-green-800"
     }
   ];
@@ -692,7 +692,7 @@ const DocumentationSystem = () => {
                         </div>
                         <div className="p-2 border rounded">
                           <div className="font-medium">BR003</div>
-                          <div className="text-muted-foreground">Receiver เห็นเฉพาะที่อนุมัติแล้ว</div>
+                          <div className="text-muted-foreground">Receiver เห็นเฉพาะที่กำลังจัดส่ง</div>
                         </div>
                         <div className="p-2 border rounded">
                           <div className="font-medium">BR004</div>

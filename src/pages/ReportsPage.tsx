@@ -72,7 +72,7 @@ const ReportsPage = () => {
       // Calculate statistics
       const totalRequests = requests?.length || 0;
       const pendingRequests = requests?.filter(r => r.status === 'pending').length || 0;
-      const approvedRequests = requests?.filter(r => r.status === 'approved' && !r.is_delivered).length || 0; // เฉพาะอนุมัติแล้วแต่ยังไม่ได้รับ
+      const approvedRequests = requests?.filter(r => r.status === 'approved' && !r.is_delivered).length || 0; // เฉพาะกำลังจัดส่งแต่ยังไม่ได้รับ
       const rejectedRequests = requests?.filter(r => r.status === 'rejected').length || 0;
       const reworkRequests = requests?.filter(r => r.status === 'rework').length || 0;
       const completedRequests = requests?.filter(r => r.is_delivered === true || r.status === 'completed').length || 0;
@@ -91,7 +91,7 @@ const ReportsPage = () => {
         return {
           ...user,
           requestCount: userRequests.length,
-          approvedCount: userRequests.filter(r => r.status === 'approved' || r.is_delivered === true || r.status === 'completed').length, // รวมอนุมัติแล้ว + ได้รับเอกสารแล้ว
+          approvedCount: userRequests.filter(r => r.status === 'approved' || r.is_delivered === true || r.status === 'completed').length, // รวมกำลังจัดส่ง + ได้รับเอกสารแล้ว
           pendingCount: userRequests.filter(r => r.status === 'pending').length,
         };
       }) || [];
@@ -198,7 +198,7 @@ const ReportsPage = () => {
       ['ข้อมูลสรุประบบ', ''],
       ['จำนวนคำขอทั้งหมด', reportData.totalRequests],
       ['คำขอรอการอนุมัติ', reportData.pendingRequests],
-      ['คำขอที่อนุมัติแล้ว', reportData.approvedRequests],
+      ['คำขอที่กำลังจัดส่ง', reportData.approvedRequests],
       ['คำขอที่ปฏิเสธ', reportData.rejectedRequests],
       ['คำขอที่ต้องแก้ไข', reportData.reworkRequests],
       ['คำขอที่รับเอกสารแล้ว', reportData.completedRequests],
@@ -231,7 +231,7 @@ const ReportsPage = () => {
 
     // User statistics sheet
     const userStatsData = [
-      ['ชื่อผู้ใช้', 'อีเมล', 'บทบาท', 'บริษัท', 'แผนก', 'จำนวนคำขอ', 'อนุมัติแล้ว', 'รอการอนุมัติ', 'สถานะ']
+      ['ชื่อผู้ใช้', 'อีเมล', 'บทบาท', 'บริษัท', 'แผนก', 'จำนวนคำขอ', 'กำลังจัดส่ง', 'รอการอนุมัติ', 'สถานะ']
     ];
     reportData.userStats.forEach(user => {
       userStatsData.push([
@@ -319,7 +319,7 @@ const ReportsPage = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">อนุมัติแล้ว</CardTitle>
+              <CardTitle className="text-sm font-medium">กำลังจัดส่ง</CardTitle>
               <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
@@ -526,7 +526,7 @@ const ReportsPage = () => {
                           }
                         >
                            {request.status === 'pending' ? 'รอการอนุมัติ' :
-                            request.status === 'approved' ? 'อนุมัติแล้ว' :
+                            request.status === 'approved' ? 'กำลังจัดส่ง' :
                             request.status === 'completed' ? 'รับเอกสารแล้ว' :
                             request.status === 'rejected' ? 'ปฏิเสธ' :
                             request.status === 'rework' ? 'ต้องแก้ไข' : request.status}
@@ -558,7 +558,7 @@ const ReportsPage = () => {
                     <th className="border border-gray-200 p-3 text-left">บทบาท</th>
                     <th className="border border-gray-200 p-3 text-left">บริษัท</th>
                     <th className="border border-gray-200 p-3 text-center">จำนวนคำขอ</th>
-                    <th className="border border-gray-200 p-3 text-center">อนุมัติแล้ว</th>
+                    <th className="border border-gray-200 p-3 text-center">กำลังจัดส่ง</th>
                     <th className="border border-gray-200 p-3 text-center">รอการอนุมัติ</th>
                   </tr>
                 </thead>

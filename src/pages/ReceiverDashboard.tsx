@@ -87,7 +87,7 @@ const ReceiverDashboard = () => {
       if (req.status === 'pending') {
         stats.pending++;
       }
-      // เอกสารอยู่ระหว่างจัดส่ง (อนุมัติแล้วแต่ยังไม่ได้รับ)
+      // เอกสารอยู่ระหว่างจัดส่ง (กำลังจัดส่งแต่ยังไม่ได้รับ)
       else if (req.status === 'approved' && !req.isDelivered && !req.is_delivered) {
         stats.shipping++;
       }
