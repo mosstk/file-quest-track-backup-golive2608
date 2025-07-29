@@ -17,6 +17,12 @@ interface NotificationRequest {
     receiver_name?: string;
     requester_name?: string;
     requester_email?: string;
+    receiver_company?: string;
+    receiver_department?: string;
+    receiver_phone?: string;
+    country_name?: string;
+    document_count?: number;
+    shipping_vendor?: string;
   };
 }
 
@@ -97,34 +103,88 @@ const handler = async (req: Request): Promise<Response> => {
                   <td style="padding: 8px 0; color: #6b7280;">${requestData.document_name}</td>
                 </tr>
                 <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #374151;">จำนวนเอกสาร:</td>
+                  <td style="padding: 8px 0; color: #6b7280;">${requestData.document_count || 1} ชุด</td>
+                </tr>
+                <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #374151;">ผู้ขอ:</td>
                   <td style="padding: 8px 0; color: #6b7280;">${requestData.requester_name || requestData.requester_email || 'ไม่ระบุ'}</td>
                 </tr>
+                ${requestData.requester_email ? `
                 <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #374151;">ผู้รับ:</td>
-                  <td style="padding: 8px 0; color: #6b7280;">${requestData.receiver_name || requestData.receiver_email}</td>
+                  <td style="padding: 8px 0; font-weight: bold; color: #374151;">อีเมล์ผู้ขอ:</td>
+                  <td style="padding: 8px 0; color: #6b7280;">${requestData.requester_email}</td>
+                </tr>
+                ` : ''}
+              </table>
+            </div>
+
+            <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h3 style="color: #1e40af; margin-top: 0; margin-bottom: 15px;">ข้อมูลผู้รับ</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #374151;">ชื่อผู้รับ:</td>
+                  <td style="padding: 8px 0; color: #6b7280;">${requestData.receiver_name || 'ไม่ระบุ'}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #374151;">อีเมล์ผู้รับ:</td>
                   <td style="padding: 8px 0; color: #6b7280;">${requestData.receiver_email}</td>
                 </tr>
+                ${requestData.receiver_company ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #374151;">บริษัท:</td>
+                  <td style="padding: 8px 0; color: #6b7280;">${requestData.receiver_company}</td>
+                </tr>
+                ` : ''}
+                ${requestData.receiver_department ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #374151;">แผนก:</td>
+                  <td style="padding: 8px 0; color: #6b7280;">${requestData.receiver_department}</td>
+                </tr>
+                ` : ''}
+                ${requestData.receiver_phone ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #374151;">เบอร์โทรศัพท์:</td>
+                  <td style="padding: 8px 0; color: #6b7280;">${requestData.receiver_phone}</td>
+                </tr>
+                ` : ''}
+                ${requestData.country_name ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #374151;">ประเทศ:</td>
+                  <td style="padding: 8px 0; color: #6b7280;">${requestData.country_name}</td>
+                </tr>
+                ` : ''}
+                ${requestData.shipping_vendor ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #374151;">ขนส่ง:</td>
+                  <td style="padding: 8px 0; color: #6b7280;">${requestData.shipping_vendor}</td>
+                </tr>
+                ` : ''}
               </table>
             </div>
 
-            <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; border-left: 4px solid #0ea5e9;">
+            <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; border-left: 4px solid #0ea5e9; margin-bottom: 20px;">
               <p style="margin: 0; color: #0c4a6e;">
                 <strong>📋 สถานะ:</strong> รอการอนุมัติ
+              </p>
+              <p style="margin: 10px 0 0 0; color: #0c4a6e; font-size: 14px;">
+                เข้าสู่ระบบเพื่อดูรายละเอียดเพิ่มเติมและติดตามสถานะ
               </p>
             </div>
 
             <div style="text-align: center; margin-top: 30px;">
-              <p style="color: #6b7280; font-size: 14px; margin-bottom: 10px;">
-                เข้าสู่ระบบเพื่อดูรายละเอียดเพิ่มเติม
+              <a href="https://file-tracking.sales-datacenter.com" 
+                 style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-bottom: 15px;">
+                🔗 เข้าสู่ระบบ File Tracking
+              </a>
+              <p style="color: #6b7280; font-size: 14px; margin: 10px 0;">
+                คลิกปุ่มด้านบนเพื่อเข้าสู่ระบบและติดตามสถานะคำขอของคุณ
               </p>
+              
               <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
                 <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-                  อีเมล์นี้ส่งโดยระบบจัดการคำขอเอกสาร<br>
-                  กรุณาอย่าตอบกลับอีเมล์นี้
+                  อีเมล์นี้ส่งโดยระบบจัดการคำขอเอกสาร File Tracking System<br>
+                  กรุณาอย่าตอบกลับอีเมล์นี้ | Request ID: ${requestId.substring(0, 8)}...
                 </p>
               </div>
             </div>
