@@ -17,6 +17,7 @@ import AdminPanel from "./pages/AdminPanel";
 import UserSystemPathsPage from "./pages/UserSystemPathsPage";
 import DocumentationSystem from "./pages/DocumentationSystem";
 import ReportsPage from "./pages/ReportsPage";
+import EmailTestPage from "./pages/EmailTestPage";
 import NotFound from "./pages/NotFound";
 // Debug panels removed
 
@@ -43,6 +44,7 @@ const App = () => {
               <Route path="/admin" element={<AdminPanel />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/documentation" element={<DocumentationSystem />} />
+              <Route path="/email-test" element={<EmailTestPage />} />
               <Route path="/system-paths" element={<UserSystemPathsPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
