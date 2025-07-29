@@ -197,6 +197,26 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
         }
 
         result = { data, error: null };
+        
+        // Send notification email for new requests
+        try {
+          const requestRecord = data as any;
+          await supabase.functions.invoke('send-request-notification', {
+            body: {
+              requestId: requestRecord?.id || 'unknown',
+              requestData: {
+                document_name: formData.documentName,
+                receiver_email: formData.receiverEmail,
+                receiver_name: formData.receiverName,
+                requester_name: user.full_name || user.name,
+                requester_email: user.email
+              }
+            }
+          });
+        } catch (emailError) {
+          console.error('Failed to send notification email:', emailError);
+          // Don't throw here - request was created successfully
+        }
       }
 
       if (result.error) {
