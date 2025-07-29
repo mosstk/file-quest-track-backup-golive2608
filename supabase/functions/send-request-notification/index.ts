@@ -81,7 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email to all recipients
     const emailResponse = await resend.emails.send({
-      from: "Document Request System <noreply@resend.dev>",
+      from: "Document Request System <webmaster.stf@gmail.com>",
       to: uniqueRecipients,
       subject: `แจ้งเตือน: มีการสร้างคำขอเอกสารใหม่ - ${requestData.document_name}`,
       html: `
