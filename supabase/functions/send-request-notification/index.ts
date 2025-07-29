@@ -85,9 +85,37 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("No recipients found for notification");
     }
 
+    // Plain text version of the email
+    const emailText = `
+แจ้งเตือน: มีการสร้างคำขอเอกสารใหม่ - ${requestData.document_name}
+
+รายละเอียดคำขอ:
+- ชื่อเอกสาร: ${requestData.document_name}
+- จำนวนเอกสาร: ${requestData.document_count || 1} ชุด
+- ผู้ขอ: ${requestData.requester_name || requestData.requester_email || 'ไม่ระบุ'}
+${requestData.requester_email ? `- อีเมล์ผู้ขอ: ${requestData.requester_email}` : ''}
+
+ข้อมูลผู้รับ:
+- ชื่อผู้รับ: ${requestData.receiver_name || 'ไม่ระบุ'}
+- อีเมล์ผู้รับ: ${requestData.receiver_email}
+${requestData.receiver_company ? `- บริษัท: ${requestData.receiver_company}` : ''}
+${requestData.receiver_department ? `- แผนก: ${requestData.receiver_department}` : ''}
+${requestData.receiver_phone ? `- เบอร์โทรศัพท์: ${requestData.receiver_phone}` : ''}
+${requestData.country_name ? `- ประเทศ: ${requestData.country_name}` : ''}
+${requestData.shipping_vendor ? `- ขนส่ง: ${requestData.shipping_vendor}` : ''}
+
+สถานะ: รอการอนุมัติ
+เข้าสู่ระบบเพื่อดูรายละเอียดเพิ่มเติมและติดตามสถานะ
+
+เข้าสู่ระบบ: https://file-tracking.sales-datacenter.com
+
+อีเมล์นี้ส่งโดยระบบจัดการคำขอเอกสาร File Tracking System
+หากมีคำถามกรุณาติดต่อทีมสนับสนุน | Request ID: ${requestId.substring(0, 8)}...
+    `.trim();
+
     // Send email to all recipients
     const emailResponse = await resend.emails.send({
-      from: "Document Request System <noreply@file-tracking.sales-datacenter.com>",
+      from: "Document Request System <support@file-tracking.sales-datacenter.com>",
       to: uniqueRecipients,
       subject: `แจ้งเตือน: มีการสร้างคำขอเอกสารใหม่ - ${requestData.document_name}`,
       html: `
@@ -191,6 +219,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
         </div>
       `,
+      text: emailText,
     });
 
     console.log("Email sent successfully:", emailResponse);
