@@ -48,8 +48,12 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Error fetching admins:", adminError);
     }
 
-    const adminEmails = admins?.map(admin => admin.email).filter(Boolean) || [];
-    console.log("Admin emails:", adminEmails);
+    const adminEmails = admins?.map(admin => admin.email).filter(email => {
+      // กรองเฉพาะอีเมล์ที่ถูกต้อง
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return email && emailRegex.test(email);
+    }) || [];
+    console.log("Valid admin emails:", adminEmails);
 
     // Prepare email recipients
     const recipients = [];
