@@ -191,7 +191,10 @@ const AdminDashboard = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <Card className="bg-white/50 shadow-sm">
+          <Card 
+            className="bg-white/50 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => navigate('/admin')}
+          >
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">ผู้ใช้งานทั้งหมด</CardTitle>
               <CardDescription>จำนวนผู้ใช้งานในระบบ</CardDescription>
@@ -202,7 +205,10 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-white/50 shadow-sm">
+          <Card 
+            className="bg-white/50 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => navigate('/requests')}
+          >
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">คำขอทั้งหมด</CardTitle>
               <CardDescription>จำนวนคำขอในระบบ</CardDescription>
@@ -212,7 +218,10 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-white/50 shadow-sm">
+          <Card 
+            className="bg-white/50 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => navigate('/requests?status=pending')}
+          >
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">รอดำเนินการ</CardTitle>
               <CardDescription>คำขอที่รอการอนุมัติ</CardDescription>
@@ -222,7 +231,10 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-white/50 shadow-sm">
+          <Card 
+            className="bg-white/50 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => navigate('/requests?status=approved')}
+          >
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">กำลังจัดส่ง</CardTitle>
               <CardDescription>คำขอที่กำลังจัดส่ง</CardDescription>
@@ -232,7 +244,10 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-white/50 shadow-sm">
+          <Card 
+            className="bg-white/50 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => navigate('/requests?status=completed')}
+          >
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">รับเอกสารแล้ว</CardTitle>
               <CardDescription>คำขอที่ได้รับเอกสารแล้ว</CardDescription>
