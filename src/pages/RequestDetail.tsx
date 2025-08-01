@@ -112,6 +112,27 @@ const RequestDetail = () => {
       // Force re-fetch to ensure UI updates
       await fetchRequest();
       
+      // Send approval notification email
+      try {
+        await supabase.functions.invoke('send-approval-notification', {
+          body: {
+            requestId: request.id,
+            requestData: {
+              document_name: request.document_name || request.documentName,
+              receiver_email: request.receiver_email || request.receiverEmail,
+              receiver_name: request.receiver_name || request.receiverName,
+              requester_name: request.requesterName,
+              requester_email: request.requesterEmail,
+              tracking_number: trackingNumber,
+              shipping_vendor: shippingVendor
+            }
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send approval notification email:', emailError);
+        // Don't throw here - approval was successful
+      }
+      
       toast.success('อนุมัติคำขอเรียบร้อย');
     } catch (error) {
       console.error('Error:', error);
@@ -222,6 +243,27 @@ const RequestDetail = () => {
       
       // Force re-fetch to ensure UI updates
       await fetchRequest();
+      
+      // Send delivery notification email
+      try {
+        await supabase.functions.invoke('send-delivery-notification', {
+          body: {
+            requestId: request.id,
+            requestData: {
+              document_name: request.document_name || request.documentName,
+              receiver_email: request.receiver_email || request.receiverEmail,
+              receiver_name: request.receiver_name || request.receiverName,
+              requester_name: request.requesterName,
+              requester_email: request.requesterEmail,
+              tracking_number: request.tracking_number || request.trackingNumber,
+              shipping_vendor: request.shipping_vendor || request.shippingVendor
+            }
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send delivery notification email:', emailError);
+        // Don't throw here - delivery confirmation was successful
+      }
       
       toast.success('ยืนยันการได้รับเอกสารเรียบร้อย');
     } catch (error) {

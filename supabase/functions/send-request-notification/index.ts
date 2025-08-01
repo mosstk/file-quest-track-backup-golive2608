@@ -24,6 +24,7 @@ interface NotificationRequest {
     document_count?: number;
     shipping_vendor?: string;
   };
+  action?: 'create' | 'update';
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -35,7 +36,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log("Starting email notification process");
     
-    const { requestId, requestData }: NotificationRequest = await req.json();
+    const { requestId, requestData, action = 'create' }: NotificationRequest = await req.json();
     console.log("Request data:", { requestId, requestData });
 
     const supabase = createClient(
@@ -64,18 +65,16 @@ const handler = async (req: Request): Promise<Response> => {
     // Prepare email recipients
     const recipients = [];
     
-    // Add requester email
+    // Add requester email (Admin, Requester)
     if (requestData.requester_email) {
       recipients.push(requestData.requester_email);
     }
     
-    // Add receiver email
-    if (requestData.receiver_email) {
-      recipients.push(requestData.receiver_email);
-    }
-    
     // Add admin emails
     recipients.push(...adminEmails);
+    
+    // For new requests, don't include receiver
+    // For updates, don't include receiver
 
     // Remove duplicates
     const uniqueRecipients = [...new Set(recipients)];
@@ -87,7 +86,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Plain text version of the email
     const emailText = `
-แจ้งเตือน: มีการสร้างคำขอเอกสารใหม่ - ${requestData.document_name}
+แจ้งเตือน: ${action === 'update' ? 'มีการแก้ไขคำขอเอกสาร' : 'มีการสร้างคำขอเอกสารใหม่'} - ${requestData.document_name}
 
 รายละเอียดคำขอ:
 - ชื่อเอกสาร: ${requestData.document_name}
@@ -117,11 +116,11 @@ ${requestData.shipping_vendor ? `- ขนส่ง: ${requestData.shipping_vendo
     const emailResponse = await resend.emails.send({
       from: "Document Request System <support@file-tracking.sales-datacenter.com>",
       to: uniqueRecipients,
-      subject: `แจ้งเตือน: มีการสร้างคำขอเอกสารใหม่ - ${requestData.document_name}`,
+      subject: `แจ้งเตือน: ${action === 'update' ? 'มีการแก้ไขคำขอเอกสาร' : 'มีการสร้างคำขอเอกสารใหม่'} - ${requestData.document_name}`,
       html: `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
           <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <h1 style="color: #2563eb; margin-bottom: 20px; text-align: center;">🔔 แจ้งเตือนคำขอเอกสารใหม่</h1>
+            <h1 style="color: #2563eb; margin-bottom: 20px; text-align: center;">${action === 'update' ? '📝 แจ้งเตือนการแก้ไขคำขอเอกสาร' : '🔔 แจ้งเตือนคำขอเอกสารใหม่'}</h1>
             
             <div style="background-color: #eff6ff; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
               <h2 style="color: #1e40af; margin-top: 0;">รายละเอียดคำขอ</h2>
