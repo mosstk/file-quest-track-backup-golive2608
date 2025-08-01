@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import RequestTable from '@/components/RequestTable';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FileRequest, RequestStatus } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { normalizeFileRequest } from '@/lib/utils/formatters';
@@ -15,10 +15,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 const Requests = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [requests, setRequests] = useState<FileRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('all');
+  
+  // Set initial tab based on URL parameters
+  useEffect(() => {
+    const statusParam = searchParams.get('status');
+    if (statusParam && ['pending', 'approved', 'completed', 'rejected', 'rework'].includes(statusParam)) {
+      setActiveTab(statusParam);
+    }
+  }, [searchParams]);
   
   useEffect(() => {
     loadRequests();
@@ -138,6 +147,10 @@ const Requests = () => {
   // Filter requests by status for tabs
   const getFilteredRequests = (status: string) => {
     if (status === 'all') return requests;
+    if (status === 'completed') {
+      // สำหรับ completed แสดงคำขอที่ is_delivered = true หรือ status = 'completed'
+      return requests.filter(req => req.is_delivered === true || req.isDelivered === true || req.status === 'completed');
+    }
     return requests.filter(req => req.status === status);
   };
 
