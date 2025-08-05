@@ -39,13 +39,13 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
       setFormData({
         documentName: request.document_name || request.documentName || '',
         receiverEmail: request.receiver_email || request.receiverEmail || '',
-        documentDescription: '',
-        documentCount: '',
-        receiverName: '',
-        receiverDepartment: '',
-        countryName: '',
-        receiverCompany: '',
-        receiverPhone: ''
+        documentDescription: request.file_path || '',
+        documentCount: request.document_count?.toString() || '1',
+        receiverName: request.receiver_name || request.receiverName || '',
+        receiverDepartment: request.receiver_department || request.receiverDepartment || '',
+        countryName: request.country_name || request.countryName || '',
+        receiverCompany: request.receiver_company || request.receiverCompany || '',
+        receiverPhone: request.receiver_phone || request.receiverPhone || ''
       });
     }
   }, [request]);
@@ -158,42 +158,57 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
       
       console.log('Request data to insert:', requestData);
 
-      let result;
+      let result: any;
       
       if (request) {
-        // Update existing request - ยังคงใช้วิธีเดิม
-        result = await supabase
-          .from('requests')
-          .update({
-            document_name: formData.documentName,
-            receiver_email: formData.receiverEmail,
-            file_path: formData.documentDescription
-          })
-          .eq('id', request.id)
-          .select()
-          .single();
-          
-        // Send notification email for request updates
-        if (result.data && !result.error) {
-          try {
-            await supabase.functions.invoke('send-request-notification', {
-              body: {
-                requestId: request.id,
-                requestData: {
-                  document_name: formData.documentName,
-                  receiver_email: formData.receiverEmail,
-                  receiver_name: formData.receiverName,
-                  requester_name: user.full_name || user.name,
-                  requester_email: user.email
-                },
-                action: 'update'
-              }
-            });
-          } catch (emailError) {
-            console.error('Failed to send update notification email:', emailError);
-            // Don't throw here - request was updated successfully
-          }
+        // Update existing request - ใช้ database function ใหม่
+        const { data: updateResult, error } = await supabase
+          .rpc('update_request', {
+            p_request_id: request.id,
+            p_document_name: formData.documentName,
+            p_receiver_email: formData.receiverEmail,
+            p_document_count: parseInt(formData.documentCount),
+            p_receiver_name: formData.receiverName,
+            p_receiver_department: formData.receiverDepartment,
+            p_country_name: formData.countryName,
+            p_receiver_company: formData.receiverCompany,
+            p_receiver_phone: formData.receiverPhone,
+            p_file_path: formData.documentDescription
+          });
+
+        if (error) {
+          console.error('Error updating request:', error);
+          throw new Error('ไม่สามารถแก้ไขคำขอได้: ' + error.message);
         }
+
+        // Type cast for result
+        const typedResult = updateResult as { success: boolean; error?: string; message?: string };
+        
+        if (!typedResult.success) {
+          throw new Error('ไม่สามารถแก้ไขคำขอได้: ' + typedResult.error);
+        }
+        
+        // Send notification email for request updates
+        try {
+          await supabase.functions.invoke('send-request-notification', {
+            body: {
+              requestId: request.id,
+              requestData: {
+                document_name: formData.documentName,
+                receiver_email: formData.receiverEmail,
+                receiver_name: formData.receiverName,
+                requester_name: user.full_name || user.name,
+                requester_email: user.email
+              },
+              action: 'update'
+            }
+          });
+        } catch (emailError) {
+          console.error('Failed to send update notification email:', emailError);
+          // Don't throw here - request was updated successfully
+        }
+
+        result = { data: typedResult, error: null };
       } else {
         // Create new request - ใช้ function
         const { data, error } = await supabase.rpc('create_request', {

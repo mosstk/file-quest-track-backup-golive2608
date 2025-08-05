@@ -276,6 +276,22 @@ export type Database = {
         Args: { p_request_id: string; p_feedback: string }
         Returns: Json
       }
+      update_request: {
+        Args: {
+          p_request_id: string
+          p_document_name: string
+          p_receiver_email: string
+          p_document_count?: number
+          p_receiver_name?: string
+          p_receiver_department?: string
+          p_country_name?: string
+          p_receiver_company?: string
+          p_receiver_phone?: string
+          p_file_path?: string
+          p_shipping_vendor?: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       request_status:
