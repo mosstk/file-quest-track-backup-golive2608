@@ -24,7 +24,8 @@ const ReceiverDashboard = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch all requests sent to this receiver (RLS will filter automatically) with requester details
+        // Fetch all requests sent to this receiver with requester details
+        const userEmail = user.email || (user as any).username;
         const { data, error } = await supabase
           .from('requests')
           .select(`
@@ -38,6 +39,7 @@ const ReceiverDashboard = () => {
               division
             )
           `)
+          .eq('receiver_email', userEmail)
           .order('created_at', { ascending: false });
         
         console.log('ReceiverDashboard - Query result:', { data, error });
