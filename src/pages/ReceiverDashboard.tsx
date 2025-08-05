@@ -26,6 +26,8 @@ const ReceiverDashboard = () => {
         
         // Fetch all requests sent to this receiver with requester details
         const userEmail = user.email || (user as any).username;
+        console.log('ReceiverDashboard - User email for filtering:', userEmail);
+        
         const { data, error } = await supabase
           .from('requests')
           .select(`
@@ -42,7 +44,7 @@ const ReceiverDashboard = () => {
           .eq('receiver_email', userEmail)
           .order('created_at', { ascending: false });
         
-        console.log('ReceiverDashboard - Query result:', { data, error });
+        console.log('ReceiverDashboard - Raw query result:', { data, error, userEmail });
         
         if (error) {
           console.error('Error fetching requests:', error);
