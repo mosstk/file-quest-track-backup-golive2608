@@ -176,6 +176,18 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
             p_file_path: formData.documentDescription
           });
 
+        // เปลี่ยนสถานะเป็น pending หากคำขอเดิมมีสถานะ rework
+        if (!error && request.status === 'rework') {
+          const { error: statusError } = await supabase
+            .from('requests')
+            .update({ status: 'pending' })
+            .eq('id', request.id);
+          
+          if (statusError) {
+            console.error('Error updating status to pending:', statusError);
+          }
+        }
+
         if (error) {
           console.error('Error updating request:', error);
           throw new Error('ไม่สามารถแก้ไขคำขอได้: ' + error.message);
