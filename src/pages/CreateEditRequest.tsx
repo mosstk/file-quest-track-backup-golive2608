@@ -25,20 +25,25 @@ const CreateEditRequest = () => {
       try {
         setLoading(true);
         
-        const { data, error } = await supabase
-          .from('requests')
-          .select('*')
-          .eq('id', id)
-          .single();
+        // ใช้ get_all_requests function เหมือนกับ RequestDetail
+        const { data: allRequests, error } = await supabase
+          .rpc('get_all_requests');
 
         if (error) {
-          console.error('Error fetching request:', error);
+          console.error('Error fetching requests:', error);
           throw error;
         }
         
-        if (data) {
-          setRequest(normalizeFileRequest(data));
+        // หา request ที่ต้องการแก้ไข
+        const requestData = allRequests?.find((req: any) => req.id === id);
+        
+        if (requestData) {
+          console.log('Found request for editing:', requestData);
+          setRequest(normalizeFileRequest(requestData));
+        } else {
+          throw new Error('ไม่พบคำขอที่ต้องการแก้ไข');
         }
+        
       } catch (error) {
         console.error('Error fetching request:', error);
         toast.error('ไม่สามารถโหลดข้อมูลคำขอได้');
