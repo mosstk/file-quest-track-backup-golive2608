@@ -268,6 +268,14 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      test_rejected_status: {
+        Args: { p_request_id: string; p_feedback: string }
+        Returns: Json
+      }
+      test_rework_status: {
+        Args: { p_request_id: string; p_feedback: string }
+        Returns: Json
+      }
     }
     Enums: {
       request_status:

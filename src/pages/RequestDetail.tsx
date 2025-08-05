@@ -144,22 +144,29 @@ const RequestDetail = () => {
     if (!request) return;
     
     try {
-      // Update request in database
-      const { error } = await supabase
-        .from('requests')
-        .update({
-          status: 'rework',
-          admin_feedback: feedback,
-          updated_at: new Date().toISOString(),
-          approved_by: user?.id
-        })
-        .eq('id', request.id);
+      // ใช้ database function สำหรับการอัพเดท rework status
+      const { data: result, error } = await supabase
+        .rpc('test_rework_status', {
+          p_request_id: request.id,
+          p_feedback: feedback
+        });
       
       if (error) {
         console.error('Error requesting rework:', error);
-        toast.error('ไม่สามารถส่งคำขอแก้ไขได้');
+        toast.error('ไม่สามารถส่งคำขอแก้ไขได้: ' + error.message);
         return;
       }
+
+      // Type cast for result
+      const typedResult = result as { success: boolean; error?: string; message?: string };
+      
+      if (!typedResult.success) {
+        toast.error('ไม่สามารถส่งคำขอแก้ไขได้: ' + typedResult.error);
+        return;
+      }
+      
+      // Force re-fetch to ensure UI updates
+      await fetchRequest();
       
       // Send rework notification email
       try {
@@ -179,16 +186,6 @@ const RequestDetail = () => {
         // Don't throw here - rework update was successful
       }
       
-      // Update local state
-      setRequest({
-        ...request,
-        status: 'rework',
-        admin_feedback: feedback,
-        adminFeedback: feedback,
-        updated_at: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-      
       toast.success('ส่งคำขอแก้ไขเรียบร้อย');
     } catch (error) {
       console.error('Error:', error);
@@ -200,22 +197,29 @@ const RequestDetail = () => {
     if (!request) return;
     
     try {
-      // Update request in database
-      const { error } = await supabase
-        .from('requests')
-        .update({
-          status: 'rejected',
-          admin_feedback: feedback,
-          updated_at: new Date().toISOString(),
-          approved_by: user?.id
-        })
-        .eq('id', request.id);
+      // ใช้ database function สำหรับการอัพเดท rejected status
+      const { data: result, error } = await supabase
+        .rpc('test_rejected_status', {
+          p_request_id: request.id,
+          p_feedback: feedback
+        });
       
       if (error) {
         console.error('Error rejecting request:', error);
-        toast.error('ไม่สามารถปฏิเสธคำขอได้');
+        toast.error('ไม่สามารถปฏิเสธคำขอได้: ' + error.message);
         return;
       }
+
+      // Type cast for result
+      const typedResult = result as { success: boolean; error?: string; message?: string };
+      
+      if (!typedResult.success) {
+        toast.error('ไม่สามารถปฏิเสธคำขอได้: ' + typedResult.error);
+        return;
+      }
+      
+      // Force re-fetch to ensure UI updates
+      await fetchRequest();
       
       // Send rejection notification email
       try {
@@ -234,16 +238,6 @@ const RequestDetail = () => {
         console.error('Failed to send rejection notification email:', emailError);
         // Don't throw here - rejection update was successful
       }
-      
-      // Update local state
-      setRequest({
-        ...request,
-        status: 'rejected',
-        admin_feedback: feedback,
-        adminFeedback: feedback,
-        updated_at: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
       
       toast.success('ปฏิเสธคำขอเรียบร้อย');
     } catch (error) {
