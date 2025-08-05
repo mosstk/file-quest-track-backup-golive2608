@@ -95,7 +95,7 @@ Request ID: ${requestId.substring(0, 8)}...
     `.trim();
 
     const emailResponse = await resend.emails.send({
-      from: "Document Request System <support@file-tracking.sales-datacenter.com>",
+      from: "Document Tracking <support@file-tracking.sales-datacenter.com>",
       to: uniqueRecipients,
       subject: `🎉 ได้รับเอกสารเรียบร้อยแล้ว - ${requestData.document_name}`,
       html: `
@@ -153,7 +153,7 @@ Request ID: ${requestId.substring(0, 8)}...
               
               <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
                 <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-                  อีเมล์นี้ส่งโดยระบบจัดการคำขอเอกสาร File Tracking System<br>
+                  อีเมล์นี้ส่งโดยระบบจัดการคำขอเอกสาร Document Tracking<br>
                   กรุณาอย่าตอบกลับอีเมล์นี้ | Request ID: ${requestId.substring(0, 8)}...
                 </p>
               </div>

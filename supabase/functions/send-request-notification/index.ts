@@ -108,13 +108,13 @@ ${requestData.shipping_vendor ? `- ขนส่ง: ${requestData.shipping_vendo
 
 เข้าสู่ระบบ: https://file-tracking.sales-datacenter.com
 
-อีเมล์นี้ส่งโดยระบบจัดการคำขอเอกสาร File Tracking System
+อีเมล์นี้ส่งโดยระบบจัดการคำขอเอกสาร Document Tracking
 หากมีคำถามกรุณาติดต่อทีมสนับสนุน | Request ID: ${requestId.substring(0, 8)}...
     `.trim();
 
     // Send email to all recipients
     const emailResponse = await resend.emails.send({
-      from: "Document Request System <support@file-tracking.sales-datacenter.com>",
+      from: "Document Tracking <support@file-tracking.sales-datacenter.com>",
       to: uniqueRecipients,
       subject: `แจ้งเตือน: ${action === 'update' ? 'มีการแก้ไขคำขอเอกสาร' : 'มีการสร้างคำขอเอกสารใหม่'} - ${requestData.document_name}`,
       html: `
@@ -210,7 +210,7 @@ ${requestData.shipping_vendor ? `- ขนส่ง: ${requestData.shipping_vendo
               
               <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
                 <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-                  อีเมล์นี้ส่งโดยระบบจัดการคำขอเอกสาร File Tracking System<br>
+                  อีเมล์นี้ส่งโดยระบบจัดการคำขอเอกสาร Document Tracking<br>
                   กรุณาอย่าตอบกลับอีเมล์นี้ | Request ID: ${requestId.substring(0, 8)}...
                 </p>
               </div>
