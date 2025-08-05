@@ -340,7 +340,7 @@ const RequestDetail = () => {
   const userEmail = user?.email || (user as any)?.username;
   const isReceiver = userEmail === (request.receiver_email || request.receiverEmail);
   const canApprove = isAdmin && request.status === 'pending';
-  const canEdit = !isAdmin && isRequester && (request.status === 'pending' || request.status === 'rework');
+  const canEdit = !isAdmin && isRequester && request.status === 'rework';
   
   console.log('RequestDetail - User email:', userEmail, 'Receiver email:', request.receiver_email, 'isReceiver:', isReceiver);
 
