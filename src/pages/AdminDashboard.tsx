@@ -190,7 +190,8 @@ const AdminDashboard = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-8">
           <Card 
             className="bg-white/50 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => navigate('/admin')}
@@ -243,6 +244,32 @@ const AdminDashboard = () => {
               <p className="text-3xl font-bold text-green-600">{statusCounts.approved}</p>
             </CardContent>
           </Card>
+
+          <Card 
+            className="bg-white/50 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => navigate('/requests?status=rework')}
+          >
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">ต้องแก้ไข</CardTitle>
+              <CardDescription>คำขอที่ต้องแก้ไข</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-amber-600">{statusCounts.rework}</p>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className="bg-white/50 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => navigate('/requests?status=rejected')}
+          >
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">ปฏิเสธ</CardTitle>
+              <CardDescription>คำขอที่ปฏิเสธ</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-red-600">{statusCounts.rejected}</p>
+            </CardContent>
+          </Card>
           
           <Card 
             className="bg-white/50 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
@@ -270,9 +297,9 @@ const AdminDashboard = () => {
               </Card>
             ) : (
               <>
-                <RequestTable requests={requests.filter(r => r.status === 'pending').slice(0, 5)} />
+                <RequestTable requests={requests.filter(r => r.status === 'pending' || r.status === 'rework').slice(0, 5)} />
                 
-                {statusCounts.pending > 5 && (
+                {(statusCounts.pending + statusCounts.rework) > 5 && (
                   <div className="mt-4 text-center">
                     <Button variant="outline" onClick={() => navigate('/requests')}>
                       ดูคำขอรอดำเนินการทั้งหมด
@@ -280,7 +307,7 @@ const AdminDashboard = () => {
                   </div>
                 )}
                 
-                {statusCounts.pending === 0 && !loading && (
+                {(statusCounts.pending + statusCounts.rework) === 0 && !loading && (
                   <Card className="bg-gray-50 border-gray-200">
                     <CardContent className="pt-6 text-center">
                       <p className="text-gray-600">ไม่มีคำขอที่ต้องดำเนินการ</p>
