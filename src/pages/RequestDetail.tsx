@@ -161,6 +161,24 @@ const RequestDetail = () => {
         return;
       }
       
+      // Send rework notification email
+      try {
+        await supabase.functions.invoke('send-rework-notification', {
+          body: {
+            requestId: request.id,
+            requestData: {
+              document_name: request.document_name || request.documentName,
+              requester_name: request.requesterName,
+              requester_email: request.requesterEmail,
+              admin_feedback: feedback
+            }
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send rework notification email:', emailError);
+        // Don't throw here - rework update was successful
+      }
+      
       // Update local state
       setRequest({
         ...request,
@@ -197,6 +215,24 @@ const RequestDetail = () => {
         console.error('Error rejecting request:', error);
         toast.error('ไม่สามารถปฏิเสธคำขอได้');
         return;
+      }
+      
+      // Send rejection notification email
+      try {
+        await supabase.functions.invoke('send-rejection-notification', {
+          body: {
+            requestId: request.id,
+            requestData: {
+              document_name: request.document_name || request.documentName,
+              requester_name: request.requesterName,
+              requester_email: request.requesterEmail,
+              admin_feedback: feedback
+            }
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send rejection notification email:', emailError);
+        // Don't throw here - rejection update was successful
       }
       
       // Update local state
