@@ -48,36 +48,36 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <div className="flex-1 flex flex-col items-center justify-center p-6">
-        <div className="w-full max-w-3xl mx-auto text-center space-y-6 animate-fade-in">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
+        <div className="w-full max-w-md sm:max-w-3xl mx-auto text-center space-y-4 sm:space-y-6 animate-fade-in">
           {/* TOA Large Logo */}
           <img
             src="https://www.toagroup.com/themes/default/assets/static/images/logo.svg"
             alt="TOA Logo"
-            className="mx-auto w-28 h-auto mb-6"
+            className="mx-auto w-20 sm:w-28 h-auto mb-4 sm:mb-6"
           />
           
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tighter">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tighter px-2">
             Document <span className="text-primary">Tracking</span>
           </h1>
           
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
             ระบบบริหารจัดการเอกสารที่ปลอดภัย ใช้งานง่าย และมีประสิทธิภาพ สำหรับ Document Tracking
           </p>
           
-          <div className="flex justify-center mt-12">
+          <div className="flex justify-center mt-6 sm:mt-12 px-4">
             {/* Login Form */}
-            <Card className="bg-white/50 backdrop-blur-sm shadow-lg max-w-md w-full">
-              <CardHeader>
-                <CardTitle className="text-center">เข้าสู่ระบบ</CardTitle>
-                <CardDescription className="text-center">
+            <Card className="bg-white/50 backdrop-blur-sm shadow-lg w-full max-w-sm sm:max-w-md">
+              <CardHeader className="pb-4 sm:pb-6">
+                <CardTitle className="text-center text-lg sm:text-xl">เข้าสู่ระบบ</CardTitle>
+                <CardDescription className="text-center text-sm sm:text-base">
                   กรุณาใส่ชื่อผู้ใช้และรหัสผ่านเพื่อเข้าสู่ระบบ
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-4 sm:px-6">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="username">ชื่อผู้ใช้</Label>
+                    <Label htmlFor="username" className="text-sm font-medium">ชื่อผู้ใช้</Label>
                     <Input
                       id="username"
                       type="text"
@@ -86,10 +86,11 @@ const Index = () => {
                       placeholder="กรอกชื่อผู้ใช้"
                       disabled={isSubmitting}
                       required
+                      className="h-10 sm:h-11 text-base"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">รหัสผ่าน</Label>
+                    <Label htmlFor="password" className="text-sm font-medium">รหัสผ่าน</Label>
                     <Input
                       id="password"
                       type="password"
@@ -98,11 +99,12 @@ const Index = () => {
                       placeholder="กรอกรหัสผ่าน"
                       disabled={isSubmitting}
                       required
+                      className="h-10 sm:h-11 text-base"
                     />
                   </div>
                   <Button 
                     type="submit" 
-                    className="w-full"
+                    className="w-full h-10 sm:h-11 text-base font-medium mt-6"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
@@ -114,8 +116,8 @@ const Index = () => {
         </div>
       </div>
       
-      <footer className="bg-muted/30 py-8 px-6 border-t">
-        <div className="max-w-5xl mx-auto text-center text-sm text-muted-foreground">
+      <footer className="bg-muted/30 py-4 sm:py-8 px-4 sm:px-6 border-t">
+        <div className="max-w-5xl mx-auto text-center text-xs sm:text-sm text-muted-foreground">
           <p>© {new Date().getFullYear()} TOA. All rights reserved.</p>
         </div>
       </footer>
