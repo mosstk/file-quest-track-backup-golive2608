@@ -23,37 +23,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener first
+    // Force clear all auth data on app start
+    const clearAllAuthData = async () => {
+      console.log('Clearing all auth data on app start');
+      
+      // Clear localStorage
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.clear();
+      
+      // Clear session state
+      setSession(null);
+      setUser(null);
+      
+      // Force sign out from Supabase
+      await supabase.auth.signOut();
+      
+      setLoading(false);
+    };
+
+    // Set up auth state listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       console.log('Auth state changed:', _event, session?.user?.email);
-      setSession(session);
-      if (session?.user) {
-        // Use setTimeout to prevent deadlock
+      
+      // Only handle SIGNED_IN events manually, ignore others
+      if (_event === 'SIGNED_IN' && session?.user) {
+        setSession(session);
         setTimeout(() => {
           fetchUserProfile(session.user.id);
         }, 0);
       } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
-
-    // Then check for existing session but clear it first for security
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.email);
-      
-      // Force clear any existing session on app start for security
-      if (session) {
-        console.log('Clearing existing session for security');
-        await supabase.auth.signOut();
         setSession(null);
         setUser(null);
       }
-      
-      setLoading(false);
     });
+
+    // Clear all auth data first
+    clearAllAuthData();
 
     return () => subscription.unsubscribe();
   }, []);
