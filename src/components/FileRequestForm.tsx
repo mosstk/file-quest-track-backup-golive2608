@@ -347,7 +347,9 @@ const FileRequestForm: React.FC<FileRequestFormProps> = ({ request, onSuccess })
                 </div>
 
                 <div className="mt-6 space-y-2">
-                  <Label htmlFor="documentDescription" className="text-gray-700 font-medium">รายละเอียดไฟล์</Label>
+                  <Label htmlFor="documentDescription" className="text-gray-700 font-medium">
+                    รายละเอียดเอกสาร <span className="text-red-500">(หากเอกสาร Confidential ไม่ต้องระบุ)</span>
+                  </Label>
                   <Textarea
                     id="documentDescription"
                     name="documentDescription"
