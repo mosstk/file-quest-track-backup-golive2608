@@ -410,7 +410,7 @@ const RequestDetail = () => {
                 <Separator />
                 
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-1">ชื่อไฟล์เอกสาร</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-1">ชื่อเอกสาร</h3>
                   <p className="font-medium">{request.document_name || request.documentName}</p>
                 </div>
 
@@ -468,14 +468,11 @@ const RequestDetail = () => {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-1">ไฟล์แนบ</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-1">เอกสาร</h3>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="bg-muted/50">
                       {request.file_path || request.fileAttachment}
                     </Badge>
-                    <Button variant="outline" size="sm">
-                      ดาวน์โหลด
-                    </Button>
                   </div>
                 </div>
                 
