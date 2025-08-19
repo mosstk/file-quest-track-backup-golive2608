@@ -40,13 +40,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
-    // Then check for existing session  
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Then check for existing session but clear it first for security
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log('Initial session check:', session?.user?.email);
-      setSession(session);
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
+      
+      // Force clear any existing session on app start for security
+      if (session) {
+        console.log('Clearing existing session for security');
+        await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
       }
+      
       setLoading(false);
     });
 
