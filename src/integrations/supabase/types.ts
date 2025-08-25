@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -182,15 +182,15 @@ export type Database = {
       approve_request: {
         Args:
           | {
-              p_request_id: string
-              p_tracking_number: string
               p_admin_id: string
+              p_request_id: string
+              p_shipping_vendor: string
+              p_tracking_number: string
             }
           | {
+              p_admin_id: string
               p_request_id: string
               p_tracking_number: string
-              p_admin_id: string
-              p_shipping_vendor: string
             }
         Returns: Json
       }
@@ -199,57 +199,57 @@ export type Database = {
         Returns: boolean
       }
       confirm_delivery: {
-        Args: { p_request_id: string; p_receiver_id: string }
+        Args: { p_receiver_id: string; p_request_id: string }
         Returns: Json
       }
       create_request: {
         Args: {
-          p_document_name: string
-          p_receiver_email: string
-          p_file_path?: string
-          p_requester_id?: string
-          p_document_count?: number
-          p_receiver_name?: string
-          p_receiver_department?: string
           p_country_name?: string
+          p_document_count?: number
+          p_document_name: string
+          p_file_path?: string
           p_receiver_company?: string
+          p_receiver_department?: string
+          p_receiver_email: string
+          p_receiver_name?: string
           p_receiver_phone?: string
+          p_requester_id?: string
           p_shipping_vendor?: string
         }
         Returns: Json
       }
       force_delete_user_admin: {
-        Args: { target_user_id: string; admin_user_id: string }
+        Args: { admin_user_id: string; target_user_id: string }
         Returns: Json
       }
       get_all_requests: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
+          admin_feedback: string
+          approved_by: string
+          country_name: string
           created_at: string
-          updated_at: string
-          requester_id: string
+          document_count: number
           document_name: string
-          receiver_email: string
-          receiver_name: string
+          file_path: string
+          id: string
+          is_delivered: boolean
           receiver_company: string
           receiver_department: string
+          receiver_email: string
+          receiver_name: string
           receiver_phone: string
-          country_name: string
-          document_count: number
-          file_path: string
-          status: Database["public"]["Enums"]["request_status"]
-          tracking_number: string
-          admin_feedback: string
-          is_delivered: boolean
-          approved_by: string
-          shipping_vendor: string
-          requester_name: string
-          requester_email: string
-          requester_employee_id: string
           requester_company: string
           requester_department: string
           requester_division: string
+          requester_email: string
+          requester_employee_id: string
+          requester_id: string
+          requester_name: string
+          shipping_vendor: string
+          status: Database["public"]["Enums"]["request_status"]
+          tracking_number: string
+          updated_at: string
         }[]
       }
       get_current_user_id: {
@@ -269,25 +269,25 @@ export type Database = {
         Returns: boolean
       }
       test_rejected_status: {
-        Args: { p_request_id: string; p_feedback: string }
+        Args: { p_feedback: string; p_request_id: string }
         Returns: Json
       }
       test_rework_status: {
-        Args: { p_request_id: string; p_feedback: string }
+        Args: { p_feedback: string; p_request_id: string }
         Returns: Json
       }
       update_request: {
         Args: {
-          p_request_id: string
-          p_document_name: string
-          p_receiver_email: string
-          p_document_count?: number
-          p_receiver_name?: string
-          p_receiver_department?: string
           p_country_name?: string
-          p_receiver_company?: string
-          p_receiver_phone?: string
+          p_document_count?: number
+          p_document_name: string
           p_file_path?: string
+          p_receiver_company?: string
+          p_receiver_department?: string
+          p_receiver_email: string
+          p_receiver_name?: string
+          p_receiver_phone?: string
+          p_request_id: string
           p_shipping_vendor?: string
         }
         Returns: Json
