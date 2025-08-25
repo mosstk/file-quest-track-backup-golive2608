@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (_event === 'SIGNED_IN' && session?.user) {
         setSession(session);
         setTimeout(() => {
-          fetchUserProfile(session.user.id);
+          fetchUserProfile(session.user.id, session.user.email);
         }, 0);
       } else {
         setSession(null);
@@ -65,14 +65,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = async (userId: string, userEmail?: string) => {
     try {
-      console.log('Fetching profile for user:', userId);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
+      console.log('Fetching profile for user:', userId, 'email:', userEmail);
+      
+      // Try to fetch by email first if available, then fallback to id
+      let query = supabase.from('profiles').select('*');
+      
+      if (userEmail) {
+        query = query.or(`email.eq.${userEmail},username.eq.${userEmail}`);
+      } else {
+        query = query.eq('id', userId);
+      }
+      
+      const { data, error } = await query.maybeSingle();
 
       if (error) {
         console.error('Error fetching user profile:', error);
