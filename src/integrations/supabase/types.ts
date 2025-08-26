@@ -268,6 +268,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      sync_user_display_name: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       test_rejected_status: {
         Args: { p_feedback: string; p_request_id: string }
         Returns: Json
