@@ -23,11 +23,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check for stored admin session first
+    const checkStoredAdminSession = () => {
+      const storedAdminSession = localStorage.getItem('admin_session');
+      if (storedAdminSession) {
+        try {
+          const { session: adminSession, user: adminUser } = JSON.parse(storedAdminSession);
+          console.log('Restoring admin session from localStorage');
+          setSession(adminSession);
+          setUser(adminUser);
+          setLoading(false);
+          return true;
+        } catch (error) {
+          console.error('Error parsing stored admin session:', error);
+          localStorage.removeItem('admin_session');
+        }
+      }
+      return false;
+    };
+
     // Set up auth state listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       console.log('Auth state changed:', _event, session?.user?.email);
+      
+      // Don't clear admin session if it exists in localStorage
+      const hasAdminSession = localStorage.getItem('admin_session');
+      if (hasAdminSession && !session) {
+        console.log('Preserving admin session during auth state change');
+        return;
+      }
       
       if (session?.user) {
         setSession(session);
@@ -41,14 +67,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setSession(session);
-        fetchUserProfile(session.user.id, session.user.email);
-      }
-      setLoading(false);
-    });
+    // Check for stored admin session first, then Supabase session
+    if (!checkStoredAdminSession()) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          setSession(session);
+          fetchUserProfile(session.user.id, session.user.email);
+        }
+        setLoading(false);
+      });
+    }
 
     return () => subscription.unsubscribe();
   }, []);
@@ -157,6 +185,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(mockSession);
         setUser(userObj);
         
+        // Store admin session in localStorage for persistence
+        localStorage.setItem('admin_session', JSON.stringify({
+          session: mockSession,
+          user: userObj
+        }));
+        
         toast.success(`เข้าสู่ระบบสำเร็จ`, {
           description: `ยินดีต้อนรับ ${userObj.full_name}`
         });
@@ -249,6 +283,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Clear local state first
       setUser(null);
       setSession(null);
+      
+      // Clear admin session from localStorage
+      localStorage.removeItem('admin_session');
       
       // Sign out from Supabase Auth if there's an active session
       await supabase.auth.signOut();
