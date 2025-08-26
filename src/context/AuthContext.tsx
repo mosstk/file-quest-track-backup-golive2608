@@ -28,9 +28,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const storedAdminSession = localStorage.getItem('admin_session');
       if (storedAdminSession) {
         try {
-          const { session: adminSession, user: adminUser } = JSON.parse(storedAdminSession);
+          const { user: adminUser } = JSON.parse(storedAdminSession);
           console.log('Restoring admin session from localStorage');
-          setSession(adminSession);
+          
+          // Create a fresh mock session every time to avoid expiration
+          const mockSession = {
+            access_token: 'mock-admin-token-' + Date.now(),
+            token_type: 'bearer',
+            user: {
+              id: adminUser.id,
+              email: adminUser.email,
+              aud: 'authenticated',
+              role: 'authenticated',
+              email_confirmed_at: new Date().toISOString(),
+              phone: '',
+              confirmed_at: new Date().toISOString(),
+              last_sign_in_at: new Date().toISOString(),
+              app_metadata: { provider: 'mock' },
+              user_metadata: { role: adminUser.role },
+              identities: [],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            },
+            expires_in: 86400, // 24 hours
+            expires_at: Math.floor(Date.now() / 1000) + 86400,
+            refresh_token: 'mock-refresh-token-' + Date.now()
+          };
+          
+          setSession(mockSession);
           setUser(adminUser);
           setLoading(false);
           return true;
@@ -42,16 +67,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     };
 
-    // Set up auth state listener
+    // Always check for admin session first - ignore Supabase auth state changes for admin
+    if (checkStoredAdminSession()) {
+      return; // Don't set up Supabase listeners if admin is logged in
+    }
+
+    // Set up auth state listener only for non-admin users
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       console.log('Auth state changed:', _event, session?.user?.email);
       
-      // Don't clear admin session if it exists in localStorage
+      // Always check if admin session exists first
       const hasAdminSession = localStorage.getItem('admin_session');
-      if (hasAdminSession && !session) {
-        console.log('Preserving admin session during auth state change');
+      if (hasAdminSession) {
+        console.log('Admin session exists, ignoring Supabase auth change');
         return;
       }
       
@@ -67,19 +97,65 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
-    // Check for stored admin session first, then Supabase session
-    if (!checkStoredAdminSession()) {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
-          setSession(session);
-          fetchUserProfile(session.user.id, session.user.email);
-        }
-        setLoading(false);
-      });
-    }
+    // Check for existing Supabase session only if no admin session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const hasAdminSession = localStorage.getItem('admin_session');
+      if (hasAdminSession) {
+        return; // Don't process Supabase session if admin exists
+      }
+      
+      if (session?.user) {
+        setSession(session);
+        fetchUserProfile(session.user.id, session.user.email);
+      }
+      setLoading(false);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Add periodic check to ensure admin session stays active
+  useEffect(() => {
+    const adminSessionCheck = setInterval(() => {
+      const storedAdminSession = localStorage.getItem('admin_session');
+      if (storedAdminSession && !user) {
+        console.log('Periodic admin session check - restoring session');
+        try {
+          const { user: adminUser } = JSON.parse(storedAdminSession);
+          setUser(adminUser);
+          
+          const mockSession = {
+            access_token: 'mock-admin-token-' + Date.now(),
+            token_type: 'bearer',
+            user: {
+              id: adminUser.id,
+              email: adminUser.email,
+              aud: 'authenticated',
+              role: 'authenticated',
+              email_confirmed_at: new Date().toISOString(),
+              phone: '',
+              confirmed_at: new Date().toISOString(),
+              last_sign_in_at: new Date().toISOString(),
+              app_metadata: { provider: 'mock' },
+              user_metadata: { role: adminUser.role },
+              identities: [],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            },
+            expires_in: 86400,
+            expires_at: Math.floor(Date.now() / 1000) + 86400,
+            refresh_token: 'mock-refresh-token-' + Date.now()
+          };
+          setSession(mockSession);
+        } catch (error) {
+          console.error('Error in periodic admin check:', error);
+          localStorage.removeItem('admin_session');
+        }
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(adminSessionCheck);
+  }, [user]);
 
   const fetchUserProfile = async (userId: string, userEmail?: string) => {
     try {
