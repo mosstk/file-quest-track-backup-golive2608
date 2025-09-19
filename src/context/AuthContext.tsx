@@ -1,5 +1,4 @@
 
-// AuthContext - Fixed useNavigate error
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -387,3 +386,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+export default AuthProvider;
